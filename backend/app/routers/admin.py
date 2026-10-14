@@ -16,17 +16,18 @@ import os
 import zipfile
 import asyncio
 import uuid
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Callable, Tuple
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.database import get_db, SessionLocal
 from app.models.user import User
 from app.models.match import Match, Replay
 from app.models.submission import Submission
 from app.routers.auth import get_current_user, require_admin
+from app.services.sandbox import load_bot_from_file
 from app.services.live_runner import run_live_match_async
 from app.services.starter_bots.greedy_bot import choose_move as greedy_choose_move
 from app.services.starter_bots.random_bot import choose_move as random_choose_move
@@ -291,22 +292,119 @@ def view_submission_files(submission_id: str, db: Session = Depends(get_db)):
     }
 
 
+def get_bot_for_user(user: Optional[User], db: Session) -> Tuple[Callable, str]:
+    """
+    Tải hàm choose_move từ bài nộp active của thí sinh.
+    Nếu chưa nộp bài hoặc bị lỗi, fallback về bot mẫu theo Tier.
+    """
+    if not user:
+        return random_choose_move, "RandomBot (Mẫu)"
+
+    sub = (
+        db.query(Submission)
+        .filter(Submission.user_id == user.id, Submission.is_active == True)
+        .first()
+    )
+    if sub and sub.validation:
+        val_data = sub.validation
+        extracted_path = val_data.get("extracted_path")
+        if extracted_path and os.path.exists(extracted_path):
+            bot_file = os.path.join(extracted_path, "bot.py")
+            if not os.path.exists(bot_file):
+                for root, _, files in os.walk(extracted_path):
+                    if "bot.py" in files:
+                        bot_file = os.path.join(root, "bot.py")
+                        break
+            if os.path.exists(bot_file):
+                try:
+                    bot_fn = load_bot_from_file(bot_file)
+                    return bot_fn, user.name
+                except Exception:
+                    pass
+
+    # Fallback bot mẫu
+    tier = (user.tier or 'A').upper()
+    if tier in ('B', 'C'):
+        return greedy_choose_move, f"{user.name} (Greedy Fallback)"
+    else:
+        return random_choose_move, f"{user.name} (Random Fallback)"
+
+
+async def run_tournament_queue_async(tier: str, match_ids: List[str], move_delay_sec: float = 0.2):
+    """
+    Hàng đợi thực thi tuần tự tất cả các trận đấu vòng tròn trong giải đấu.
+    Cập nhật Replay, trạng thái và phát sóng WebSocket liên tục.
+    """
+    for match_id in match_ids:
+        db = SessionLocal()
+        try:
+            m = db.query(Match).filter(Match.id == match_id).first()
+            if not m or m.status == "done":
+                continue
+
+            user_w = db.query(User).filter(User.id == m.bot_a_id).first()
+            user_b = db.query(User).filter(User.id == m.bot_b_id).first()
+
+            bot_white_fn, bot_w_name = get_bot_for_user(user_w, db)
+            bot_black_fn, bot_b_name = get_bot_for_user(user_b, db)
+        finally:
+            db.close()
+
+        # Thực thi trận đấu có streaming qua WebSocket
+        try:
+            await run_live_match_async(
+                match_id=match_id,
+                bot_white_fn=bot_white_fn,
+                bot_black_fn=bot_black_fn,
+                bot_white_name=bot_w_name,
+                bot_black_name=bot_b_name,
+                move_delay_sec=move_delay_sec,
+                max_moves=200,
+            )
+        except Exception as e:
+            # Ghi nhận lỗi nếu có
+            db_err = SessionLocal()
+            try:
+                err_m = db_err.query(Match).filter(Match.id == match_id).first()
+                if err_m:
+                    err_m.status = "done"
+                    err_m.end_code = "T1"
+                    err_m.reason = f"Lỗi thực thi trận đấu: {str(e)}"
+                    db_err.commit()
+            finally:
+                db_err.close()
+
+        # Nghỉ nhẹ giữa các trận để hệ thống cập nhật WebSocket mượt mà
+        await asyncio.sleep(0.5)
+
+    # Khi tất cả các trận của bảng hoàn tất, broadcast thông báo kết thúc giải
+    await ws_manager.broadcast_leaderboard({
+        "type": "TOURNAMENT_COMPLETED",
+        "tier": tier,
+        "timestamp": datetime.utcnow().isoformat(),
+    })
+
+
 @router.post("/tournament/start")
 async def start_tournament(req: TournamentStartRequest, db: Session = Depends(get_db)):
     """
     Khởi chạy giải đấu vòng tròn (Round-Robin) cho bảng chỉ định:
-      - Thu thập tất cả thí sinh trong bảng
+      - Thu thập tất cả thí sinh trong bảng (loại trừ tài khoản Admin BTC)
       - Ghép cặp thi đấu 2 lượt đổi phe (Trắng - Đen, Đen - Trắng)
-      - Khởi tạo các trận đấu và chạy các ván theo hàng đợi
+      - Khởi tạo các trận đấu và tự động chạy toàn bộ theo hàng đợi
     """
     tier = req.tier.upper()
-    users = db.query(User).filter(User.tier == tier).all()
+    users = db.query(User).filter(User.tier == tier, User.is_admin == False).all()
 
     if len(users) < 2:
         raise HTTPException(
             status_code=400,
-            detail=f"Bảng {tier} cần ít nhất 2 thí sinh để tổ chức thi đấu vòng tròn (hiện có: {len(users)})",
+            detail=f"Bảng {tier} cần ít nhất 2 thí sinh để tổ chức thi đấu vòng tròn (hiện có: {len(users)} thí sinh)",
         )
+
+    # Xóa các trận đấu 'pending' cũ của bảng này nếu có
+    db.query(Match).filter(Match.tier == tier, Match.status == "pending").delete()
+    db.commit()
 
     created_matches = []
 
@@ -342,19 +440,13 @@ async def start_tournament(req: TournamentStartRequest, db: Session = Depends(ge
 
     db.commit()
 
-    # Khởi chạy ván đầu tiên ngay lập tức qua live_runner
+    # Khởi chạy toàn bộ hàng đợi trận đấu qua live_runner
     if created_matches:
-        first_match = created_matches[0]
-        user_w = db.query(User).filter(User.id == first_match.bot_a_id).first()
-        user_b = db.query(User).filter(User.id == first_match.bot_b_id).first()
-
+        match_ids = [m.id for m in created_matches]
         asyncio.create_task(
-            run_live_match_async(
-                match_id=first_match.id,
-                bot_white_fn=greedy_choose_move,
-                bot_black_fn=random_choose_move,
-                bot_white_name=user_w.name if user_w else "White",
-                bot_black_name=user_b.name if user_b else "Black",
+            run_tournament_queue_async(
+                tier=tier,
+                match_ids=match_ids,
                 move_delay_sec=req.move_delay_sec,
             )
         )
@@ -404,7 +496,7 @@ def get_tournament_status(db: Session = Depends(get_db)):
 
 @router.post("/matches/{match_id}/retry")
 def retry_match(match_id: str, db: Session = Depends(get_db)):
-    """Chạy lại ván đấu gặp lỗi hoặc hủy."""
+    """Chạy lại ván đấu gặp lỗi hoặc hủy với bot thật của thí sinh."""
     m = db.query(Match).filter(Match.id == match_id).first()
     if not m:
         raise HTTPException(status_code=404, detail="Không tìm thấy trận đấu")
@@ -420,14 +512,17 @@ def retry_match(match_id: str, db: Session = Depends(get_db)):
     user_w = db.query(User).filter(User.id == m.bot_a_id).first()
     user_b = db.query(User).filter(User.id == m.bot_b_id).first()
 
+    bot_w_fn, bot_w_name = get_bot_for_user(user_w, db)
+    bot_b_fn, bot_b_name = get_bot_for_user(user_b, db)
+
     asyncio.create_task(
         run_live_match_async(
             match_id=m.id,
-            bot_white_fn=greedy_choose_move,
-            bot_black_fn=random_choose_move,
-            bot_white_name=user_w.name if user_w else "White",
-            bot_black_name=user_b.name if user_b else "Black",
-            move_delay_sec=0.5,
+            bot_white_fn=bot_w_fn,
+            bot_black_fn=bot_b_fn,
+            bot_white_name=bot_w_name,
+            bot_black_name=bot_b_name,
+            move_delay_sec=0.4,
         )
     )
 
@@ -436,3 +531,4 @@ def retry_match(match_id: str, db: Session = Depends(get_db)):
         "match_id": m.id,
         "message": "Trận đấu đang được khởi chạy lại trong Sandbox!",
     }
+

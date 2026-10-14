@@ -12,6 +12,7 @@ from app.routers.auth import hash_password
 
 # 1. Seed Users
 users_data = [
+    # Bảng A (Khởi Động: 0-39 điểm)
     {
         "id": "user-student-a",
         "name": "Nguyễn Văn An (K66-CACLC)",
@@ -21,6 +22,24 @@ users_data = [
         "test_score": 35.0,
     },
     {
+        "id": "user-student-a2",
+        "name": "Đỗ Minh Khang (K66-KTPM)",
+        "email": "studentA2@uet.vnu.edu.vn",
+        "password": "pass123",
+        "tier": "A",
+        "test_score": 28.0,
+    },
+    {
+        "id": "user-student-a3",
+        "name": "Vũ Thị Mai (K66-CLC)",
+        "email": "studentA3@uet.vnu.edu.vn",
+        "password": "pass123",
+        "tier": "A",
+        "test_score": 38.0,
+    },
+
+    # Bảng B (Tiến Phát: 40-74 điểm)
+    {
         "id": "user-student-b",
         "name": "Trần Thị Bình (K66-CNTT)",
         "email": "studentB@uet.vnu.edu.vn",
@@ -28,6 +47,24 @@ users_data = [
         "tier": "B",
         "test_score": 58.0,
     },
+    {
+        "id": "user-student-b2",
+        "name": "Phạm Quốc Bảo (K66-HTTT)",
+        "email": "studentB2@uet.vnu.edu.vn",
+        "password": "pass123",
+        "tier": "B",
+        "test_score": 65.0,
+    },
+    {
+        "id": "user-student-b3",
+        "name": "Hoàng Đức Thắng (K66-KHMT)",
+        "email": "studentB3@uet.vnu.edu.vn",
+        "password": "pass123",
+        "tier": "B",
+        "test_score": 72.0,
+    },
+
+    # Bảng C (Thử Thách: 75-100 điểm)
     {
         "id": "user-student-c",
         "name": "Lê Hoàng Cường (K65-KTPM)",
@@ -37,6 +74,26 @@ users_data = [
         "test_score": 88.0,
         "is_admin": False,
     },
+    {
+        "id": "user-student-c2",
+        "name": "Ngô Quang Huy (K65-CNTT)",
+        "email": "studentC2@uet.vnu.edu.vn",
+        "password": "pass123",
+        "tier": "C",
+        "test_score": 92.0,
+        "is_admin": False,
+    },
+    {
+        "id": "user-student-c3",
+        "name": "Bùi Thanh Tùng (K65-ATTT)",
+        "email": "studentC3@uet.vnu.edu.vn",
+        "password": "pass123",
+        "tier": "C",
+        "test_score": 85.0,
+        "is_admin": False,
+    },
+
+    # Tài khoản Admin BTC
     {
         "id": "user-admin",
         "name": "Ban Tổ Chức Giải Đấu (Admin)",

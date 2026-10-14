@@ -14,7 +14,9 @@ from app.services.engine.rules import step, is_legal_move, EndCode
 from app.services.sandbox import execute_bot_move, BotExecutionResult
 from app.websocket.manager import ws_manager
 from app.database import SessionLocal
+from app.models.user import User
 from app.models.match import Match, Replay
+
 
 
 async def run_live_match_async(
@@ -60,7 +62,9 @@ async def run_live_match_async(
         "timestamp": datetime.utcnow().isoformat(),
     })
 
-    await asyncio.sleep(move_delay_sec)
+    has_spectators = match_id in ws_manager.match_rooms and len(ws_manager.match_rooms[match_id]) > 0
+    await asyncio.sleep(move_delay_sec if has_spectators else 0.05)
+
 
     while state.move_count < max_moves:
         current_player = state.current_player
@@ -145,7 +149,9 @@ async def run_live_match_async(
             break
 
         # Delay between turns for realistic live spectating
-        await asyncio.sleep(move_delay_sec)
+        has_spectators = match_id in ws_manager.match_rooms and len(ws_manager.match_rooms[match_id]) > 0
+        actual_delay = move_delay_sec if has_spectators else min(move_delay_sec, 0.02)
+        await asyncio.sleep(actual_delay)
 
     # If timeout or 200 moves reached
     if winner is None and end_code != "T1" and state.move_count >= max_moves:
