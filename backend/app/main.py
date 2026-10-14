@@ -89,10 +89,17 @@ def health_check():
 def get_rules():
     """Trả về luật chơi OTTv2 dưới dạng JSON công bố công khai."""
     import json, os
-    rules_path = os.path.join(os.path.dirname(__file__), "..", "..", "rules.json")
-    rules_path = os.path.abspath(rules_path)
-    if os.path.exists(rules_path):
-        with open(rules_path, encoding="utf-8") as f:
-            return json.load(f)
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "..", "..", "rules.json"),
+        os.path.join(os.path.dirname(__file__), "..", "rules.json"),
+        os.path.join(os.getcwd(), "rules.json"),
+        "/app/rules.json",
+    ]
+    for p in candidates:
+        ap = os.path.abspath(p)
+        if os.path.exists(ap):
+            with open(ap, encoding="utf-8") as f:
+                return json.load(f)
     return {"error": "rules.json not found"}
+
 
