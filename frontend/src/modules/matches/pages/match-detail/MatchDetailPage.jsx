@@ -155,25 +155,57 @@ export function MatchDetailPage() {
   const currentMove = currentStep > 0 ? replay?.moves?.[currentStep - 1] : null;
   const totalMoves = replay?.moves?.length || 0;
 
-  // Calculate remaining piece counts for White and Black
+  // Calculate remaining piece counts for White and Black safely (supports array, object and dict)
   const pieceCounts = useMemo(() => {
-    if (!currentBoardState.board) {
+    const raw = currentBoardState?.board || currentBoardState;
+    if (!raw) {
       return { white: { R: 2, S: 2, P: 2 }, black: { r: 2, s: 2, p: 2 } };
     }
+
+    if (currentBoardState?.white_pieces && currentBoardState?.black_pieces) {
+      return {
+        white: currentBoardState.white_pieces,
+        black: {
+          r: currentBoardState.black_pieces.R || 0,
+          s: currentBoardState.black_pieces.S || 0,
+          p: currentBoardState.black_pieces.P || 0,
+        },
+      };
+    }
+
     const counts = {
       white: { R: 0, S: 0, P: 0 },
       black: { r: 0, s: 0, p: 0 },
     };
-    for (const row of currentBoardState.board) {
-      for (const ch of row) {
-        if (ch === 'R') counts.white.R++;
-        else if (ch === 'S') counts.white.S++;
-        else if (ch === 'P') counts.white.P++;
-        else if (ch === 'r') counts.black.r++;
-        else if (ch === 's') counts.black.s++;
-        else if (ch === 'p') counts.black.p++;
-      }
+
+    if (Array.isArray(raw)) {
+      raw.forEach((row) => {
+        if (typeof row === 'string') {
+          for (const ch of row) {
+            if (ch === 'R') counts.white.R++;
+            else if (ch === 'S') counts.white.S++;
+            else if (ch === 'P') counts.white.P++;
+            else if (ch === 'r') counts.black.r++;
+            else if (ch === 's') counts.black.s++;
+            else if (ch === 'p') counts.black.p++;
+          }
+        }
+      });
+    } else if (typeof raw === 'object' && raw !== null) {
+      Object.values(raw).forEach((p) => {
+        if (!p) return;
+        if (p.player === 'W') {
+          if (p.type === 'R') counts.white.R++;
+          else if (p.type === 'S') counts.white.S++;
+          else if (p.type === 'P') counts.white.P++;
+        } else if (p.player === 'B') {
+          if (p.type === 'R') counts.black.r++;
+          else if (p.type === 'S') counts.black.s++;
+          else if (p.type === 'P') counts.black.p++;
+        }
+      });
     }
+
     return counts;
   }, [currentBoardState]);
 
