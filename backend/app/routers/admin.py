@@ -532,3 +532,18 @@ def retry_match(match_id: str, db: Session = Depends(get_db)):
         "message": "Trận đấu đang được khởi chạy lại trong Sandbox!",
     }
 
+
+@router.post("/seed-data")
+def trigger_seed_data(admin: User = Depends(require_admin)):
+    """Đồng bộ / Cập nhật lại toàn bộ dữ liệu mẫu (Users, Submissions, Matches) vào cơ sở dữ liệu hiện tại."""
+    try:
+        from seed_demo_data import seed_data
+        seed_data()
+        return {
+            "success": True,
+            "message": "Đã cập nhật dữ liệu mẫu (9 thí sinh A/B/C, submissions và matches) thành công!"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi khi cập nhật dữ liệu: {str(e)}")
+
+
