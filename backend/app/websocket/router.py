@@ -44,10 +44,21 @@ async def websocket_live_match(websocket: WebSocket, match_id: str):
                 "total_moves": match_obj.total_moves,
             }
 
-            if replay and replay.states:
+            if match_id in ws_manager.active_matches:
+                active_dict = ws_manager.active_matches[match_id]
+                init_payload["current_board"] = active_dict
+                init_payload["total_moves"] = active_dict.get("move_count", 0)
+                init_payload["status"] = "running"
+            elif replay and replay.states:
                 init_payload["states"] = replay.states
                 init_payload["moves"] = replay.moves
                 init_payload["current_board"] = replay.states[-1] if replay.states else {}
+            else:
+                from app.services.engine.board import create_initial_board
+                init_board = create_initial_board().to_dict()
+                init_payload["current_board"] = init_board
+                init_payload["states"] = [init_board]
+                init_payload["moves"] = []
 
             await websocket.send_text(json.dumps(init_payload, ensure_ascii=False))
         else:

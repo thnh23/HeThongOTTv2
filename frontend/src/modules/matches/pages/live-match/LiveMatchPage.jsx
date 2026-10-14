@@ -16,9 +16,25 @@ import {
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
 import { StatusBadge } from '@/shared/components/StatusBadge/StatusBadge.jsx';
 import { useToast } from '@/shared/context/ToastContext.jsx';
-import { getWebSocketUrl } from '@/shared/api-client/index.js';
+import { apiClient, getWebSocketUrl } from '@/shared/api-client/index.js';
 import './LiveMatchPage.css';
 
+const COLS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
+
+function getInitialBoardState() {
+  const board = {};
+  const w1 = ['R', 'S', 'P', 'R', 'S', 'P', 'R', 'S', 'P'];
+  const w2 = ['P', 'R', 'S', 'P', 'R', 'S', 'P', 'R', 'S'];
+  const b9 = ['P', 'S', 'R', 'P', 'S', 'R', 'P', 'S', 'R'];
+  const b8 = ['S', 'R', 'P', 'S', 'R', 'P', 'S', 'R', 'P'];
+  COLS.forEach((col, idx) => {
+    board[`${col}1`] = { player: 'W', type: w1[idx] };
+    board[`${col}2`] = { player: 'W', type: w2[idx] };
+    board[`${col}8`] = { player: 'B', type: b8[idx] };
+    board[`${col}9`] = { player: 'B', type: b9[idx] };
+  });
+  return board;
+}
 
 const END_CODE_EXPLANATIONS = {
   W1: 'Trắng Thắng do Đen mất toàn bộ quân Kéo (✂️)',
@@ -52,7 +68,7 @@ export function LiveMatchPage() {
     winner: null,
     end_code: null,
     total_moves: 0,
-    current_board: {},
+    current_board: getInitialBoardState(),
     moves: [],
     last_move: null,
     reason: '',
@@ -68,144 +84,217 @@ export function LiveMatchPage() {
     }
   }, [matchData.moves]);
 
-  // WebSocket Connection
+  // REST API Sync Fallback (Loads match metadata and final replay if done)
+  const fetchMatchFromRest = async () => {
+    try {
+      const matchRes = await apiClient.get(`/matches/${id}`);
+      if (matchRes) {
+        setMatchData((prev) => ({
+          ...prev,
+          tier: matchRes.tier || prev.tier,
+          status: matchRes.status || prev.status,
+          bot_white: matchRes.bot_a_name || prev.bot_white,
+          bot_black: matchRes.bot_b_name || prev.bot_black,
+          winner: matchRes.winner,
+          end_code: matchRes.end_code,
+          total_moves: matchRes.total_moves || prev.total_moves,
+        }));
+      }
+
+      if (matchRes?.status === 'done' || matchRes?.status === 'error') {
+        const replayRes = await apiClient.get(`/matches/${id}/replay`);
+        if (replayRes?.states && replayRes.states.length > 0) {
+          const finalState = replayRes.states[replayRes.states.length - 1];
+          setMatchData((prev) => ({
+            ...prev,
+            status: 'done',
+            moves: replayRes.moves || [],
+            current_board: finalState,
+            last_move: replayRes.moves && replayRes.moves.length > 0 ? replayRes.moves[replayRes.moves.length - 1] : null,
+            total_moves: replayRes.total_moves,
+          }));
+        }
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    fetchMatchFromRest();
+  }, [id]);
+
+  // WebSocket Connection with Auto-reconnect
   useEffect(() => {
     const wsUrl = getWebSocketUrl(`/ws/live/${id}`);
 
     let isUnmounted = false;
     let pingInterval = null;
-
+    let reconnectTimeout = null;
 
     const connect = () => {
+      if (isUnmounted) return;
       setConnectionStatus('connecting');
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
+      try {
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
 
-      ws.onopen = () => {
-        if (isUnmounted) return;
-        setConnectionStatus('connected');
-        showToast('Đã kết nối luồng trực tiếp ván đấu!', 'success');
+        ws.onopen = () => {
+          if (isUnmounted) return;
+          setConnectionStatus('connected');
+          showToast('Đã kết nối luồng trực tiếp ván đấu!', 'success');
 
-        // Heartbeat ping
-        pingInterval = setInterval(() => {
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'PING' }));
-          }
-        }, 15000);
-      };
+          // Heartbeat ping
+          pingInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'PING' }));
+            }
+          }, 15000);
+        };
 
-      ws.onmessage = (event) => {
-        if (isUnmounted) return;
-        try {
-          const msg = JSON.parse(event.data);
+        ws.onmessage = (event) => {
+          if (isUnmounted) return;
+          try {
+            const msg = JSON.parse(event.data);
 
-          if (msg.type === 'INIT_MATCH_STATE') {
-            setMatchData((prev) => ({
-              ...prev,
-              tier: msg.tier || prev.tier,
-              status: msg.status || prev.status,
-              bot_white: msg.bot_white || prev.bot_white,
-              bot_black: msg.bot_black || prev.bot_black,
-              winner: msg.winner,
-              end_code: msg.end_code,
-              total_moves: msg.total_moves || 0,
-              current_board: msg.current_board || {},
-              moves: msg.moves || [],
-              last_move: msg.moves && msg.moves.length > 0 ? msg.moves[msg.moves.length - 1] : null,
-            }));
-          } else if (msg.type === 'MATCH_START') {
-            setMatchData((prev) => ({
-              ...prev,
-              status: 'running',
-              bot_white: msg.bot_white || prev.bot_white,
-              bot_black: msg.bot_black || prev.bot_black,
-              current_board: msg.board || {},
-              moves: [],
-              last_move: null,
-            }));
-            showToast('Trận đấu đã chính thức khởi tranh!', 'info');
-          } else if (msg.type === 'MOVE') {
-            setMatchData((prev) => {
-              const newMove = {
-                turn: msg.turn,
-                player: msg.player,
-                from: msg.from,
-                to: msg.to,
-                captured: msg.captured,
-                duration_ms: msg.duration_ms,
-              };
-              return {
+            if (msg.type === 'INIT_MATCH_STATE') {
+              setMatchData((prev) => ({
                 ...prev,
-                total_moves: msg.turn,
+                tier: msg.tier || prev.tier,
+                status: msg.status || prev.status,
+                bot_white: msg.bot_white || prev.bot_white,
+                bot_black: msg.bot_black || prev.bot_black,
+                winner: msg.winner,
+                end_code: msg.end_code,
+                total_moves: msg.total_moves || 0,
+                current_board: msg.current_board && Object.keys(msg.current_board).length > 0 ? msg.current_board : prev.current_board,
+                moves: msg.moves || prev.moves,
+                last_move: msg.moves && msg.moves.length > 0 ? msg.moves[msg.moves.length - 1] : prev.last_move,
+              }));
+            } else if (msg.type === 'MATCH_START') {
+              setMatchData((prev) => ({
+                ...prev,
+                status: 'running',
+                bot_white: msg.bot_white || prev.bot_white,
+                bot_black: msg.bot_black || prev.bot_black,
                 current_board: msg.board || prev.current_board,
-                moves: [...prev.moves, newMove],
-                last_move: newMove,
-              };
-            });
-          } else if (msg.type === 'GAME_OVER') {
-            setMatchData((prev) => ({
-              ...prev,
-              status: 'done',
-              winner: msg.winner,
-              end_code: msg.end_code,
-              reason: msg.reason,
-              total_moves: msg.total_moves,
-            }));
-            const winText = msg.winner === 'W' ? 'Trắng Thắng' : msg.winner === 'B' ? 'Đen Thắng' : 'Hòa Cờ';
-            showToast(`Ván đấu kết thúc: ${winText} (${msg.end_code})`, 'success');
+                moves: [],
+                last_move: null,
+              }));
+              showToast('Trận đấu đã chính thức khởi tranh!', 'info');
+            } else if (msg.type === 'MOVE') {
+              setMatchData((prev) => {
+                const newMove = {
+                  turn: msg.turn,
+                  player: msg.player,
+                  from: msg.from,
+                  to: msg.to,
+                  captured: msg.captured,
+                  duration_ms: msg.duration_ms,
+                };
+                return {
+                  ...prev,
+                  total_moves: msg.turn,
+                  current_board: msg.board || prev.current_board,
+                  moves: [...prev.moves, newMove],
+                  last_move: newMove,
+                };
+              });
+            } else if (msg.type === 'GAME_OVER') {
+              setMatchData((prev) => ({
+                ...prev,
+                status: 'done',
+                winner: msg.winner,
+                end_code: msg.end_code,
+                reason: msg.reason,
+                total_moves: msg.total_moves,
+              }));
+              const winText = msg.winner === 'W' ? 'Trắng Thắng' : msg.winner === 'B' ? 'Đen Thắng' : 'Hòa Cờ';
+              showToast(`Ván đấu kết thúc: ${winText} (${msg.end_code})`, 'success');
+              // Re-sync final stats from REST API
+              fetchMatchFromRest();
+            }
+          } catch {
+            // ignore parse error
           }
-        } catch {
-          // ignore parse error
-        }
-      };
+        };
 
-      ws.onclose = () => {
-        if (isUnmounted) return;
-        setConnectionStatus('disconnected');
-        clearInterval(pingInterval);
-      };
+        ws.onclose = () => {
+          if (isUnmounted) return;
+          setConnectionStatus('disconnected');
+          clearInterval(pingInterval);
+          reconnectTimeout = setTimeout(connect, 3000);
+        };
 
-      ws.onerror = () => {
-        if (isUnmounted) return;
+        ws.onerror = () => {
+          if (isUnmounted) return;
+          setConnectionStatus('disconnected');
+          try { ws.close(); } catch {}
+        };
+      } catch {
         setConnectionStatus('disconnected');
-      };
+        reconnectTimeout = setTimeout(connect, 3000);
+      }
     };
 
     connect();
 
+    // Fallback polling every 4 seconds if WebSocket is not connected
+    const pollInterval = setInterval(() => {
+      if (wsRef.current?.readyState !== WebSocket.OPEN) {
+        fetchMatchFromRest();
+      }
+    }, 4000);
+
     return () => {
       isUnmounted = true;
       clearInterval(pingInterval);
+      clearInterval(pollInterval);
+      clearTimeout(reconnectTimeout);
       if (wsRef.current) {
-        wsRef.current.close();
+        try { wsRef.current.close(); } catch {}
       }
     };
-  }, [id, showToast]);
+  }, [id]);
 
   // Calculate live piece counts
   const pieceCounts = useMemo(() => {
-    const boardState = matchData.current_board?.board || matchData.current_board;
-    if (!boardState) {
-      return { white: { R: 2, S: 2, P: 2 }, black: { r: 2, s: 2, p: 2 } };
+    const raw = matchData.current_board?.board || matchData.current_board;
+    if (!raw || Object.keys(raw).length === 0) {
+      return { white: { R: 6, S: 6, P: 6 }, black: { r: 6, s: 6, p: 6 } };
     }
+
+    if (matchData.current_board?.white_pieces && matchData.current_board?.black_pieces) {
+      return {
+        white: matchData.current_board.white_pieces,
+        black: {
+          r: matchData.current_board.black_pieces.R || 0,
+          s: matchData.current_board.black_pieces.S || 0,
+          p: matchData.current_board.black_pieces.P || 0,
+        },
+      };
+    }
+
     const counts = {
       white: { R: 0, S: 0, P: 0 },
       black: { r: 0, s: 0, p: 0 },
     };
 
-    if (Array.isArray(boardState)) {
-      boardState.forEach((row) => {
-        for (const ch of row) {
-          if (ch === 'R') counts.white.R++;
-          else if (ch === 'S') counts.white.S++;
-          else if (ch === 'P') counts.white.P++;
-          else if (ch === 'r') counts.black.r++;
-          else if (ch === 's') counts.black.s++;
-          else if (ch === 'p') counts.black.p++;
+    if (Array.isArray(raw)) {
+      raw.forEach((row) => {
+        if (typeof row === 'string') {
+          for (const ch of row) {
+            if (ch === 'R') counts.white.R++;
+            else if (ch === 'S') counts.white.S++;
+            else if (ch === 'P') counts.white.P++;
+            else if (ch === 'r') counts.black.r++;
+            else if (ch === 's') counts.black.s++;
+            else if (ch === 'p') counts.black.p++;
+          }
         }
       });
-    } else if (typeof boardState === 'object') {
-      Object.values(boardState).forEach((p) => {
+    } else if (typeof raw === 'object' && raw !== null) {
+      Object.values(raw).forEach((p) => {
         if (!p) return;
         if (p.player === 'W') {
           if (p.type === 'R') counts.white.R++;
@@ -278,13 +367,13 @@ export function LiveMatchPage() {
             <div className="player-subtitle">Quân Trắng (Đi trước)</div>
             <div className="piece-pills">
               <span className={`piece-pill ${pieceCounts.white.R === 0 ? 'zero' : ''}`} title="Búa (R)">
-                👊 {pieceCounts.white.R}/2
+                👊 {pieceCounts.white.R}/6
               </span>
               <span className={`piece-pill ${pieceCounts.white.S === 0 ? 'zero' : ''}`} title="Kéo (S)">
-                ✂️ {pieceCounts.white.S}/2
+                ✂️ {pieceCounts.white.S}/6
               </span>
               <span className={`piece-pill ${pieceCounts.white.P === 0 ? 'zero' : ''}`} title="Bao (P)">
-                ✋ {pieceCounts.white.P}/2
+                ✋ {pieceCounts.white.P}/6
               </span>
             </div>
           </div>
@@ -330,13 +419,13 @@ export function LiveMatchPage() {
             <div className="player-subtitle">Quân Đen</div>
             <div className="piece-pills" style={{ justifyContent: 'flex-end' }}>
               <span className={`piece-pill ${pieceCounts.black.r === 0 ? 'zero' : ''}`} title="Búa (r)">
-                👊 {pieceCounts.black.r}/2
+                👊 {pieceCounts.black.r}/6
               </span>
               <span className={`piece-pill ${pieceCounts.black.s === 0 ? 'zero' : ''}`} title="Kéo (s)">
-                ✂️ {pieceCounts.black.s}/2
+                ✂️ {pieceCounts.black.s}/6
               </span>
               <span className={`piece-pill ${pieceCounts.black.p === 0 ? 'zero' : ''}`} title="Bao (p)">
-                ✋ {pieceCounts.black.p}/2
+                ✋ {pieceCounts.black.p}/6
               </span>
             </div>
           </div>

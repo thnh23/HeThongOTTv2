@@ -52,6 +52,9 @@ async def run_live_match_async(
     finally:
         db.close()
 
+    # Track active board state for instant spectator catchup
+    ws_manager.active_matches[match_id] = state.to_dict()
+
     # Broadcast Match Start
     await ws_manager.broadcast_to_match(match_id, {
         "type": "MATCH_START",
@@ -114,7 +117,9 @@ async def run_live_match_async(
             break
 
         state = new_state
-        states_history.append(state.to_dict())
+        state_dict = state.to_dict()
+        states_history.append(state_dict)
+        ws_manager.active_matches[match_id] = state_dict
 
         move_record = {
             "turn": turn_counter,
@@ -188,6 +193,9 @@ async def run_live_match_async(
             db.commit()
     finally:
         db.close()
+
+    # Clean up active board from memory
+    ws_manager.active_matches.pop(match_id, None)
 
     # 3. Broadcast GAME_OVER to match spectators
     await ws_manager.broadcast_to_match(match_id, {

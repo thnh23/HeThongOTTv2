@@ -12,6 +12,8 @@ class ConnectionManager:
     def __init__(self):
         # match_id -> set of active WebSockets
         self.match_rooms: Dict[str, Set[WebSocket]] = {}
+        # match_id -> latest board state dict (for instant spectator catchup)
+        self.active_matches: Dict[str, dict] = {}
         # Global leaderboard subscribers
         self.leaderboard_subscribers: Set[WebSocket] = set()
 
