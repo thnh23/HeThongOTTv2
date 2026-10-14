@@ -47,13 +47,14 @@ export function HomePage() {
 
         <h1 className="hero-title">
           Đấu Trường Trí Tuệ <br />
-          <span className="gradient-text">Oán Thù Tương Tàn v2 (OTTv2)</span>
+          <span className="gradient-text">Oẳn Tù Tì v2 (OTTv2)</span>
         </h1>
 
         <p className="hero-subtitle">
-          Lập trình bot cờ Búa - Kéo - Bao trên bàn 12×12, kiểm thử tự động trong Sandbox cô lập,
+          Lập trình bot cờ Búa - Kéo - Bao trên bàn 9×9, kiểm thử tự động trong Sandbox cô lập,
           thi đấu vòng tròn phân hạng và rèn luyện kỹ năng Prompt Engineering chuẩn công nghiệp.
         </p>
+
 
         <div className="hero-cta">
           <button
