@@ -7,11 +7,11 @@ from datetime import datetime
 from app.database import SessionLocal, create_all_tables
 from app.models.user import User
 from app.models.match import Match, Replay
+from app.models.submission import Submission
 from app.routers.auth import hash_password
 
 # 1. Seed Users
 users_data = [
-
     {
         "id": "user-student-a",
         "name": "Nguyễn Văn An (K66-CACLC)",
@@ -25,16 +25,16 @@ users_data = [
         "name": "Trần Thị Bình (K66-CNTT)",
         "email": "studentB@uet.vnu.edu.vn",
         "password": "pass123",
-        "tier": "A",
-        "test_score": 38.0,
+        "tier": "B",
+        "test_score": 58.0,
     },
     {
         "id": "user-student-c",
         "name": "Lê Hoàng Cường (K65-KTPM)",
         "email": "studentC@uet.vnu.edu.vn",
         "password": "pass123",
-        "tier": "A",
-        "test_score": 30.0,
+        "tier": "C",
+        "test_score": 88.0,
         "is_admin": False,
     },
     {
@@ -139,6 +139,96 @@ matches_data = [
     },
 ]
 
+submissions_data = [
+    {
+        "id": "07593876-492b-4cc1-bd4e-59bf81204563",
+        "user_id": "user-student-a",
+        "status": "valid",
+        "is_active": True,
+        "zip_path": "storage/submissions/07593876-492b-4cc1-bd4e-59bf81204563/package.zip",
+        "validation": {
+            "is_valid": True,
+            "details": {
+                "bot_py": True,
+                "choose_move_fn": True,
+                "prompts_md": True,
+                "chat_history": True,
+                "report_md": True,
+                "git_log": False,
+            },
+            "errors": [],
+            "warnings": [],
+            "detected_api_keys": [],
+        },
+        "test_run_result": {
+            "status": "win",
+            "winner": "W",
+            "end_code": "W2",
+            "total_moves": 28,
+            "duration_ms": 45,
+            "reason": "Bot thử nghiệm thành công (Thắng bằng mã W2)",
+        },
+    },
+    {
+        "id": "e62f4366-862e-40ca-836f-c474102e5cf8",
+        "user_id": "user-student-b",
+        "status": "valid",
+        "is_active": True,
+        "zip_path": "storage/submissions/e62f4366-862e-40ca-836f-c474102e5cf8/package.zip",
+        "validation": {
+            "is_valid": True,
+            "details": {
+                "bot_py": True,
+                "choose_move_fn": True,
+                "prompts_md": True,
+                "chat_history": True,
+                "report_md": True,
+                "git_log": False,
+            },
+            "errors": [],
+            "warnings": [],
+            "detected_api_keys": [],
+        },
+        "test_run_result": {
+            "status": "win",
+            "winner": "W",
+            "end_code": "W1",
+            "total_moves": 34,
+            "duration_ms": 112,
+            "reason": "Bot thử nghiệm thành công (Thắng bằng mã W1)",
+        },
+    },
+    {
+        "id": "eb3b5f25-8dce-4d6b-9459-afd5f1953106",
+        "user_id": "user-student-c",
+        "status": "valid",
+        "is_active": True,
+        "zip_path": "storage/submissions/eb3b5f25-8dce-4d6b-9459-afd5f1953106/package.zip",
+        "validation": {
+            "is_valid": True,
+            "details": {
+                "bot_py": True,
+                "choose_move_fn": True,
+                "prompts_md": True,
+                "chat_history": True,
+                "report_md": True,
+                "git_log": True,
+            },
+            "errors": [],
+            "warnings": [],
+            "detected_api_keys": [],
+        },
+        "test_run_result": {
+            "status": "win",
+            "winner": "W",
+            "end_code": "W2",
+            "total_moves": 22,
+            "duration_ms": 185,
+            "reason": "Bot thử nghiệm thành công (Thắng bằng mã W2)",
+        },
+    },
+]
+
 def seed_data():
     create_all_tables()
     db = SessionLocal()
@@ -158,6 +248,9 @@ def seed_data():
                 )
                 db.add(u)
             else:
+                existing.name = ud["name"]
+                existing.tier = ud["tier"]
+                existing.test_score = ud["test_score"]
                 existing.hashed_password = hash_password(ud["password"])
                 existing.is_admin = ud.get("is_admin", False)
 
@@ -189,9 +282,34 @@ def seed_data():
                 )
                 db.add(r)
                 db.commit()
+
+        # 3. Seed Meaningful Submissions (Tier A, B, C)
+        for sd in submissions_data:
+            existing_sub = db.query(Submission).filter(Submission.id == sd["id"]).first()
+            if not existing_sub:
+                sub = Submission(
+                    id=sd["id"],
+                    user_id=sd["user_id"],
+                    status=sd["status"],
+                    zip_path=sd["zip_path"],
+                    validation_json=json.dumps(sd["validation"]),
+                    test_run_json=json.dumps(sd["test_run_result"]),
+                    is_active=sd["is_active"],
+                    submitted_at=datetime.utcnow(),
+                )
+                db.add(sub)
+            else:
+                existing_sub.user_id = sd["user_id"]
+                existing_sub.status = sd["status"]
+                existing_sub.zip_path = sd["zip_path"]
+                existing_sub.validation_json = json.dumps(sd["validation"])
+                existing_sub.test_run_json = json.dumps(sd["test_run_result"])
+                existing_sub.is_active = sd["is_active"]
+        db.commit()
         print("Seeding completed successfully!")
     finally:
         db.close()
+
 
 
 if __name__ == "__main__":
