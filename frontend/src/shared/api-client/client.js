@@ -2,7 +2,12 @@ import { API_BASE_URL } from './config.js';
 import { ApiError } from './error.js';
 
 async function request(method, path, body = undefined, options = {}) {
-  const url = path.startsWith('http') ? path : `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  let cleanPath = path.startsWith('/') ? path : `/${path}`;
+  if (API_BASE_URL.endsWith('/api') && cleanPath.startsWith('/api/')) {
+    cleanPath = cleanPath.slice(4);
+  }
+  const url = path.startsWith('http') ? path : `${API_BASE_URL}${cleanPath}`;
+
   
   const headers = new Headers(options.headers || {});
   

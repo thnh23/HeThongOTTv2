@@ -1,4 +1,10 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+let rawBase = (import.meta.env.VITE_API_BASE_URL || '/api').trim().replace(/\/+$/, '');
+// Nếu là full URL http(s):// nhưng người dùng chưa gõ /api ở cuối, tự động thêm /api
+if (rawBase.startsWith('http') && !rawBase.endsWith('/api')) {
+  rawBase = `${rawBase}/api`;
+}
+export const API_BASE_URL = rawBase;
+
 
 /**
  * Tạo URL WebSocket tương thích với cả môi trường Local, Docker và Render Cloud.
