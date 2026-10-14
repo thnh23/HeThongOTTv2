@@ -12,29 +12,19 @@ import {
 } from 'lucide-react';
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
 import { StarterKitModal } from '@/shared/components/StarterKitModal/index.js';
+import { INITIAL_BOARD, getAdjacentSquares } from '@/shared/constants/gameState.js';
 import './HomePage.css';
-
-// Initial demo board representation (12x12 corner display)
-const DEMO_BOARD = {
-  a1: { player: 'W', type: 'R' }, b1: { player: 'W', type: 'S' }, c1: { player: 'W', type: 'P' },
-  d1: { player: 'W', type: 'R' }, e1: { player: 'W', type: 'S' }, f1: { player: 'W', type: 'P' },
-  a2: { player: 'W', type: 'P' }, b2: { player: 'W', type: 'R' }, c2: { player: 'W', type: 'S' },
-  a11: { player: 'B', type: 'S' }, b11: { player: 'B', type: 'R' }, c11: { player: 'B', type: 'P' },
-  a12: { player: 'B', type: 'P' }, b12: { player: 'B', type: 'S' }, c12: { player: 'B', type: 'R' },
-  d12: { player: 'B', type: 'S' }, e12: { player: 'B', type: 'R' }, f12: { player: 'B', type: 'P' },
-};
 
 export function HomePage() {
   const [selectedSq, setSelectedSq] = useState('b2');
-  const [highlighted, setHighlighted] = useState(['b3', 'a3', 'c3']);
+  const [highlighted, setHighlighted] = useState(getAdjacentSquares('b2'));
   const [isStarterKitOpen, setIsStarterKitOpen] = useState(false);
 
   const handleSquareClick = (sq, piece) => {
     setSelectedSq(sq);
-    if (piece) {
-      setHighlighted([]);
-    }
+    setHighlighted(getAdjacentSquares(sq));
   };
+
 
   return (
     <div className="home-page animate-fade-in">
@@ -78,7 +68,7 @@ export function HomePage() {
         {/* Stats Summary */}
         <div className="hero-stats">
           <div className="stat-card glass-card">
-            <span className="stat-value gradient-text">12 × 12</span>
+            <span className="stat-value gradient-text">9 × 9</span>
             <span className="stat-label">Bàn Cờ Chiến Thuật</span>
           </div>
           <div className="stat-card glass-card">
@@ -102,17 +92,21 @@ export function HomePage() {
           <span className="preview-tag">Bàn Cờ Thử Nghiệm Tương Tác</span>
           <h2>Trải nghiệm luật OTTv2 trực quan</h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-            Mỗi bên gồm các quân Búa 👊, Kéo ✂️, Bao ✋. Quân cờ di chuyển 1 ô theo 8 hướng.
+            Mỗi bên gồm các quân Búa 👊, Kéo ✂️, Bao ✋ (18 quân/bên). Quân cờ di chuyển 1 ô theo 8 hướng.
             Cùng loại chặn nhau; khác loại thì quy tắc Búa đập Kéo, Kéo cắt Bao, Bao bọc Búa.
           </p>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <CheckCircle2 size={18} color="var(--emerald-400)" />
-              <span><strong>Thắng Tuyệt Đối:</strong> Ăn hết sạch 1 loại quân của đối phương (W1, W2, W3)</span>
+              <span><strong>Mã W1:</strong> Ăn sạch hoàn toàn 1 loại quân của đối phương</span>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <CheckCircle2 size={18} color="var(--emerald-400)" />
-              <span><strong>Chống Cháy Giờ:</strong> Giới hạn 200 nước đi (T1) tránh ván đấu bế tắc</span>
+              <CheckCircle2 size={18} color="var(--cyan-400)" />
+              <span><strong>Mã W2:</strong> Đưa quân vào ô góc đích (Trắng vào <code>i9</code>, Đen vào <code>a1</code>)</span>
+            </li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <CheckCircle2 size={18} color="var(--amber-400)" />
+              <span><strong>Chống Cháy Giờ (D2):</strong> Giới hạn 200 nước đi hoặc lặp thế 3 lần</span>
             </li>
           </ul>
           <div style={{ marginTop: '1.25rem', display: 'flex', gap: '0.75rem' }}>
@@ -125,7 +119,7 @@ export function HomePage() {
 
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <BoardSVG
-            boardState={DEMO_BOARD}
+            boardState={INITIAL_BOARD}
             selectedSquare={selectedSq}
             highlightedSquares={highlighted}
             onSquareClick={handleSquareClick}

@@ -1,8 +1,25 @@
-import React from 'react';
-import { BookOpen, Award, ShieldAlert, Cpu, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, Award, ShieldAlert, Cpu, CheckCircle, Target, Compass, Sparkles } from 'lucide-react';
+import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
+import {
+  INITIAL_BOARD,
+  PIECE_SYMBOLS,
+  PIECE_NAMES,
+  getAdjacentSquares,
+} from '@/shared/constants/gameState.js';
 import './RulesPage.css';
 
 export function RulesPage() {
+  const [selectedSquare, setSelectedSquare] = useState('b2');
+  const [highlightedSquares, setHighlightedSquares] = useState(getAdjacentSquares('b2'));
+
+  const handleSquareClick = (sq, piece) => {
+    setSelectedSquare(sq);
+    setHighlightedSquares(getAdjacentSquares(sq));
+  };
+
+  const currentPiece = INITIAL_BOARD[selectedSquare];
+
   return (
     <div className="rules-page animate-fade-in">
       <div className="rules-header">
@@ -12,6 +29,105 @@ export function RulesPage() {
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
           Đặc tả chính thức về bàn cờ, cơ chế di chuyển, luật ăn quân và chuẩn giao thức bot.
         </p>
+      </div>
+
+      {/* Interactive Starting Board Layout */}
+      <div className="glass-card rules-interactive-board">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1rem' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--cyan-400)', fontSize: '1.25rem', margin: 0 }}>
+            <Sparkles size={22} />
+            Thế Trận Khởi Đầu Bàn Cờ 9×9 (Trực Quan)
+          </h3>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            💡 Nhấp vào ô bất kỳ để xem tầm di chuyển 8 hướng
+          </span>
+        </div>
+
+        <div className="board-preview-layout">
+          {/* Interactive SVG Board */}
+          <div className="board-preview-svg-wrapper">
+            <BoardSVG
+              boardState={INITIAL_BOARD}
+              selectedSquare={selectedSquare}
+              highlightedSquares={highlightedSquares}
+              onSquareClick={handleSquareClick}
+              size={480}
+            />
+          </div>
+
+          {/* Board Inspector & Layout Guide */}
+          <div className="board-preview-info">
+            {/* Selected Square Inspector */}
+            <div className="board-info-block" style={{ borderLeft: '4px solid var(--amber-400)' }}>
+              <h4 style={{ color: 'var(--amber-400)' }}>
+                <Target size={18} />
+                Chi Tiết Ô Được Chọn: <code>{selectedSquare}</code>
+              </h4>
+              {currentPiece ? (
+                <div>
+                  <p>
+                    <strong>Quân cờ:</strong> {PIECE_SYMBOLS[currentPiece.type]} {PIECE_NAMES[currentPiece.type]}
+                  </p>
+                  <p>
+                    <strong>Phe điều khiển:</strong>{' '}
+                    <span
+                      className="inspect-badge"
+                      style={{
+                        background: currentPiece.player === 'W' ? '#FFFFFF' : '#1E293B',
+                        color: currentPiece.player === 'W' ? '#0F172A' : '#38BDF8',
+                        border: currentPiece.player === 'B' ? '1px solid #38BDF8' : 'none',
+                      }}
+                    >
+                      {currentPiece.player === 'W' ? 'Phe Trắng (White)' : 'Phe Đen (Black)'}
+                    </span>
+                  </p>
+                  <p style={{ marginTop: '0.4rem', color: 'var(--emerald-400)', fontSize: '0.82rem' }}>
+                    ✦ Các ô viền xanh lá là các hướng có thể di chuyển 1 ô theo 8 hướng.
+                  </p>
+                </div>
+              ) : (
+                <p style={{ color: 'var(--text-muted)' }}>
+                  Ô trống (Khu vực trung tâm hàng 3 đến 7 ban đầu hoàn toàn trống để cơ động chiến thuật).
+                </p>
+              )}
+            </div>
+
+            {/* Black Team Starting Position */}
+            <div className="board-info-block">
+              <h4 style={{ color: '#38BDF8' }}>
+                🔴 Phe Đen (Black) — Hàng 8 &amp; 9 (18 Quân)
+              </h4>
+              <p>• <strong>Hàng 9:</strong> P – S – R – P – S – R – P – S – R (Bao, Kéo, Búa xen kẽ)</p>
+              <p>• <strong>Hàng 8:</strong> S – R – P – S – R – P – S – R – P (Kéo, Búa, Bao xen kẽ)</p>
+            </div>
+
+            {/* White Team Starting Position */}
+            <div className="board-info-block">
+              <h4 style={{ color: '#F8FAFC' }}>
+                ⚪ Phe Trắng (White) — Hàng 1 &amp; 2 (18 Quân)
+                <span style={{ fontSize: '0.75rem', color: 'var(--emerald-400)', marginLeft: 'auto', fontWeight: 'bold' }}>
+                  ● ĐI TRƯỚC
+                </span>
+              </h4>
+              <p>• <strong>Hàng 2:</strong> P – R – S – P – R – S – P – R – S (Bao, Búa, Kéo xen kẽ)</p>
+              <p>• <strong>Hàng 1:</strong> R – S – P – R – S – P – R – S – P (Búa, Kéo, Bao xen kẽ)</p>
+            </div>
+
+            {/* Win Goal Square Reminder */}
+            <div className="board-info-block" style={{ background: 'rgba(99, 102, 241, 0.08)', borderColor: 'rgba(99, 102, 241, 0.3)' }}>
+              <h4 style={{ color: 'var(--indigo-400)' }}>
+                <Compass size={18} />
+                Ô Góc Đích Chiến Thắng (Mã W2)
+              </h4>
+              <p>
+                👑 <strong>Trắng vào ô <code>i9</code></strong> (góc trên bên phải) ➔ Thắng ngay.
+              </p>
+              <p>
+                🎯 <strong>Đen vào ô <code>a1</code></strong> (góc dưới bên trái) ➔ Thắng ngay.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="rules-grid">
@@ -40,6 +156,7 @@ export function RulesPage() {
           </ul>
         </div>
       </div>
+
 
       {/* End Codes Table */}
       <div className="glass-card" style={{ marginBottom: '2.5rem' }}>
