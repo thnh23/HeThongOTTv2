@@ -1,0 +1,64 @@
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.status-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--amber-400);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.status-pending .status-dot {
+  background: var(--amber-400);
+}
+
+.status-running {
+  background: rgba(34, 211, 238, 0.15);
+  color: var(--cyan-400);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+}
+.status-running .status-dot {
+  background: var(--cyan-400);
+  box-shadow: 0 0 8px var(--cyan-400);
+  animation: pulseGlow 1.5s infinite;
+}
+
+.status-done, .status-valid, .status-win {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--emerald-400);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+.status-done .status-dot, .status-valid .status-dot, .status-win .status-dot {
+  background: var(--emerald-400);
+}
+
+.status-error, .status-invalid, .status-loss {
+  background: rgba(244, 63, 94, 0.15);
+  color: var(--rose-500);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+.status-error .status-dot, .status-invalid .status-dot, .status-loss .status-dot {
+  background: var(--rose-500);
+}
+
+.status-draw {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--text-secondary);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+.status-draw .status-dot {
+  background: var(--text-secondary);
+}

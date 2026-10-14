@@ -1,0 +1,56 @@
+{
+  "game": "OTTv2",
+  "version": "2.0",
+  "board": {
+    "rows": 9,
+    "cols": 9,
+    "col_labels": ["a","b","c","d","e","f","g","h","i"],
+    "row_labels": ["1","2","3","4","5","6","7","8","9"]
+  },
+  "pieces": {
+    "R": { "name": "Búa",  "beats": "S", "loses_to": "P" },
+    "S": { "name": "Kéo",  "beats": "P", "loses_to": "R" },
+    "P": { "name": "Bao",  "beats": "R", "loses_to": "S" }
+  },
+  "movement": {
+    "directions": 8,
+    "max_distance": 1,
+    "description": "Mỗi quân đi 1 ô theo 8 hướng (như quân Vua trong cờ Vua)"
+  },
+  "capture_rules": {
+    "same_type": "block",
+    "attacker_beats_defender": "capture",
+    "defender_beats_attacker": "block"
+  },
+  "initial_setup": {
+    "white": {
+      "row1": ["R","S","P","R","S","P","R","S","P"],
+      "row2": ["P","R","S","P","R","S","P","R","S"]
+    },
+    "black": {
+      "row9": ["P","S","R","P","S","R","P","S","R"],
+      "row8": ["S","R","P","S","R","P","S","R","P"]
+    }
+  },
+  "win_conditions": {
+    "W1": "Một bên mất sạch một loại quân",
+    "W2": {
+      "description": "Quân vào ô góc đích",
+      "white_goal": "i9",
+      "black_goal": "a1"
+    },
+    "D1": "Hết nước hợp lệ → xử thua",
+    "D2": "Lặp thế 3 lần hoặc quá 200 nước → hòa",
+    "T1": "Bot quá giờ / trả nước sai / crash → bot đó thua"
+  },
+  "time_limits": {
+    "tier_a": 2.0,
+    "tier_b": 1.0,
+    "tier_c": 0.5
+  },
+  "scoring": {
+    "win": 3,
+    "draw": 1,
+    "loss": 0
+  }
+}

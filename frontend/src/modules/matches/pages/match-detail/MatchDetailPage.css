@@ -1,0 +1,328 @@
+/* MatchDetailPage CSS — Responsive, Intuitive & High Contrast */
+.match-detail-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.match-detail-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Matchup Banner */
+.matchup-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.75rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-bright);
+}
+
+.player-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.team-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.white-avatar {
+  background: #FFFFFF;
+  color: #0F172A;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+}
+
+.black-avatar {
+  background: #0F172A;
+  color: var(--cyan-400);
+  border: 1.5px solid var(--cyan-400);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.35);
+}
+
+.player-title {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #fff;
+}
+
+.text-cyan {
+  color: var(--cyan-400);
+}
+
+.player-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Piece Counter Pills */
+.piece-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.piece-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  transition: opacity var(--transition-fast);
+}
+
+.piece-pill.zero {
+  opacity: 0.35;
+  text-decoration: line-through;
+  background: rgba(244, 63, 94, 0.1);
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+/* Center Outcome */
+.matchup-center-outcome {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.outcome-text {
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.text-white-win {
+  color: var(--amber-400);
+}
+
+.text-black-win {
+  color: var(--cyan-400);
+}
+
+.text-draw {
+  color: var(--text-secondary);
+}
+
+.outcome-subtext {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.end-reason-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-full);
+  background: rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  color: var(--cyan-400);
+  font-size: 0.775rem;
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Keyboard Hints Bar */
+.keyboard-hints-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding: 0.6rem 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.key-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.key-badges kbd {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-bright);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #fff;
+  margin-right: 0.25rem;
+}
+
+/* Replay Layout */
+.replay-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.replay-board-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.replay-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+.scrubber-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.step-counter-text {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.replay-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--border-bright);
+  outline: none;
+  cursor: pointer;
+}
+
+.replay-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--cyan-400);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+  cursor: pointer;
+}
+
+.playback-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.speed-select {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
+}
+
+.speed-select:focus-visible {
+  outline: 2px solid var(--cyan-400);
+}
+
+/* Moves Sidebar */
+.moves-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 620px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.moves-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.moves-list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.move-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.move-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.move-item.active {
+  background: rgba(34, 211, 238, 0.12);
+  border-left: 3px solid var(--cyan-400);
+}
+
+.captured-piece-tag {
+  font-size: 0.775rem;
+  color: var(--rose-500);
+  font-weight: 600;
+  background: rgba(244, 63, 94, 0.1);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+@media (max-width: 950px) {
+  .replay-layout {
+    grid-template-columns: 1fr;
+  }
+  .matchup-banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .player-black {
+    justify-content: flex-end;
+  }
+}

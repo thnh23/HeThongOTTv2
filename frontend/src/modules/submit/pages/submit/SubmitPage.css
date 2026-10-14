@@ -1,0 +1,294 @@
+/* SubmitPage CSS — Ergonomic, Modern & High Contrast */
+.submit-page {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.submit-header {
+  text-align: center;
+  margin-bottom: 2.25rem;
+}
+
+/* Guest layout */
+.guest-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 1.5rem;
+}
+
+.icon-badge-cyan {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-badge-indigo {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.guide-file-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.guide-file-list li {
+  font-size: 0.925rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding-left: 1.25rem;
+  position: relative;
+}
+
+.guide-file-list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--cyan-400);
+}
+
+.guide-file-list strong {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.guide-file-list code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  color: var(--cyan-400);
+}
+
+.auth-cta-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  padding: 2.5rem 2rem;
+}
+
+.security-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+/* Upload Dropzone */
+.upload-container-card {
+  padding: 1.75rem;
+}
+
+.upload-dropzone {
+  border: 2px dashed var(--border-bright);
+  border-radius: var(--radius-xl);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.015);
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.upload-dropzone:hover, .upload-dropzone.drag-active {
+  border-color: var(--cyan-400);
+  background: rgba(34, 211, 238, 0.04);
+  box-shadow: 0 0 25px rgba(34, 211, 238, 0.15);
+}
+
+.upload-dropzone:focus-visible {
+  outline: 2px solid var(--primary-400);
+  outline-offset: 4px;
+}
+
+.upload-icon-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-400);
+}
+
+.file-preview-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  background: rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  color: var(--cyan-400);
+  font-weight: 500;
+}
+
+.upload-error-banner {
+  margin-top: 1rem;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid var(--rose-500);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.upload-actions-bar {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Validation Card */
+.validation-card {
+  padding: 1.75rem;
+}
+
+.validation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.validation-checklist {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.85rem;
+  margin: 1.25rem 0;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.925rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+}
+
+.checklist-item.passed {
+  color: var(--emerald-400);
+  border-color: rgba(52, 211, 153, 0.2);
+}
+
+.checklist-item.failed {
+  color: var(--rose-500);
+  border-color: rgba(244, 63, 94, 0.25);
+}
+
+.error-callout {
+  margin-top: 1rem;
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid var(--rose-500);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+}
+
+.warning-callout {
+  margin-top: 1rem;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid var(--amber-400);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+}
+
+/* Test Run Box */
+.test-run-box {
+  background: rgba(14, 20, 36, 0.85);
+  border: 1px solid var(--border-bright);
+  border-left: 4px solid var(--cyan-400);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.test-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 0.85rem 0;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
+}
+
+.test-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.test-reason-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 0.5rem;
+}
+
+.empty-history-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 800px) {
+  .guest-grid {
+    grid-template-columns: 1fr;
+  }
+  .validation-checklist {
+    grid-template-columns: 1fr;
+  }
+  .test-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,116 @@
+.error-boundary-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: radial-gradient(circle at 50% 20%, rgba(225, 29, 72, 0.12) 0%, transparent 60%), #0a0d14;
+}
+
+.error-boundary-card {
+  max-width: 540px;
+  width: 100%;
+  background: rgba(18, 24, 38, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(225, 29, 72, 0.3);
+  border-radius: 1.25rem;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 25px rgba(225, 29, 72, 0.15);
+}
+
+.error-boundary-icon-wrapper {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 1.5rem auto;
+  border-radius: 50%;
+  background: rgba(225, 29, 72, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(225, 29, 72, 0.3);
+  color: #fb7185;
+}
+
+.error-boundary-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+.error-boundary-desc {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.error-boundary-details {
+  text-align: left;
+  background: rgba(10, 13, 20, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.75rem;
+  font-size: 0.85rem;
+  color: #f43f5e;
+}
+
+.error-boundary-details summary {
+  cursor: pointer;
+  color: #cbd5e1;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.error-boundary-details pre {
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+  font-family: ui-monospace, monospace;
+}
+
+.error-boundary-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn-error-reload,
+.btn-error-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-error-reload {
+  background: linear-gradient(135deg, #e11d48, #be123c);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
+}
+
+.btn-error-reload:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.btn-error-home {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.btn-error-home:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
