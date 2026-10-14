@@ -47,27 +47,8 @@ users_data = [
         "is_admin": True,
     },
 ]
-
-for ud in users_data:
-    existing = db.query(User).filter(User.email == ud["email"]).first()
-    if not existing:
-        u = User(
-            id=ud["id"],
-            name=ud["name"],
-            email=ud["email"],
-            hashed_password=hash_password(ud["password"]),
-            tier=ud["tier"],
-            test_score=ud["test_score"],
-            is_admin=ud.get("is_admin", False),
-        )
-        db.add(u)
-    else:
-        existing.hashed_password = hash_password(ud["password"])
-        existing.is_admin = ud.get("is_admin", False)
-
-db.commit()
-
 # 2. Seed Sample Matches & Replays
+
 SAMPLE_BOARD_INITIAL = [
     "RS.PRS.PRS.P",
     ".P..R...S.P.",

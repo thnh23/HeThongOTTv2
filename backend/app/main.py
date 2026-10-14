@@ -84,11 +84,18 @@ app.include_router(admin.router)
 app.include_router(websocket_router)
 
 
-# ── Health check ────────────────────────────────
+# ── Health check & Root ─────────────────────────
+@app.get("/", tags=["system"])
+@app.head("/", tags=["system"])
+def root():
+    return {"status": "ok", "message": "OTTv2 Tournament API", "game": "OTTv2", "docs": "/docs"}
+
+
 @app.get("/health", tags=["system"])
 @app.get("/api/health", tags=["system"])
 def health_check():
     return {"status": "ok", "version": "1.0.0", "game": "OTTv2"}
+
 
 
 @app.get("/rules.json", tags=["system"])
