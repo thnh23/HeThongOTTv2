@@ -49,6 +49,11 @@ class UserResponse(BaseModel):
     test_score: Optional[float]
     is_admin: bool
     registered_at: datetime
+    score_bot: Optional[float] = 0.0
+    score_ai_profile: Optional[float] = 0.0
+    score_interview: Optional[float] = 0.0
+    score_report: Optional[float] = 0.0
+    final_score: Optional[float] = 0.0
 
     class Config:
         orm_mode = True

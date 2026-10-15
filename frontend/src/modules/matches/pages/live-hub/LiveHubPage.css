@@ -1,0 +1,155 @@
+/* LiveHubPage.css */
+.live-hub-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+.live-hub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.25rem;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.live-hub-pulse-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--rose-500) 0%, #e11d48 100%);
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.4);
+}
+
+.live-hub-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.live-section-wrap {
+  margin-bottom: 3rem;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.live-matches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.25rem;
+}
+
+.live-match-card-active {
+  padding: 1.5rem;
+  border-radius: var(--radius-xl);
+  border-color: rgba(244, 63, 94, 0.3);
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.05) 0%, rgba(15, 23, 42, 0.75) 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.live-card-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.live-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(244, 63, 94, 0.15);
+  color: var(--rose-400);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.live-card-players {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.live-player-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  max-width: 140px;
+}
+
+.player-label-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.live-vs-text {
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.live-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.meta-point {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.empty-live-card {
+  text-align: center;
+  padding: 3.5rem 1.5rem;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.recent-matches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.recent-match-card {
+  padding: 1.15rem;
+  border-radius: var(--radius-lg);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.recent-opponents-text {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.925rem;
+}
+
+.vs-muted {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}

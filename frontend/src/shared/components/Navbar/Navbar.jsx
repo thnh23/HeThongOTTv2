@@ -136,7 +136,12 @@ export function Navbar() {
 
             {isAuthenticated ? (
               <div className="user-profile-group">
-                <div className="user-badge" title={`Đang đăng nhập: ${user?.student_id || user?.email}`}>
+                <Link
+                  id="nav-profile-link"
+                  to="/profile"
+                  className="user-badge user-badge-link"
+                  title={`Xem Trang Cá Nhân: ${user?.name} (${user?.email})`}
+                >
                   <UserIcon size={14} color="var(--primary-400)" />
                   <span className="user-name">{user?.name}</span>
                   {user?.tier && (
@@ -144,7 +149,7 @@ export function Navbar() {
                       Bảng {user.tier}
                     </span>
                   )}
-                </div>
+                </Link>
                 <button
                   id="btn-logout"
                   className="btn btn-outline btn-sm btn-logout"
@@ -199,6 +204,12 @@ export function Navbar() {
                 <Upload size={18} />
                 <span>Cổng Nộp Bài (Submission Portal)</span>
               </NavLink>
+              {isAuthenticated && (
+                <NavLink to="/profile" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>
+                  <UserIcon size={18} color="var(--primary-400)" />
+                  <span>Trang Cá Nhân ({user?.name})</span>
+                </NavLink>
+              )}
               {user?.is_admin && (
                 <NavLink to="/admin" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`} style={{ color: 'var(--amber-400)' }}>
                   <ShieldCheck size={18} color="var(--amber-400)" />

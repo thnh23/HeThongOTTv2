@@ -17,8 +17,14 @@ import {
   Target,
   Zap,
   RotateCcw,
+  Calendar,
+  Award,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
+import { Countdown } from '@/shared/components/Countdown/Countdown.jsx';
 import { StarterKitModal } from '@/shared/components/StarterKitModal/index.js';
 import {
   INITIAL_BOARD,
@@ -86,6 +92,7 @@ export function HomePage() {
   const [lastMove, setLastMove] = useState(TACTICAL_PRESETS[0].lastMove);
   const [statusMessage, setStatusMessage] = useState(TACTICAL_PRESETS[0].desc);
   const [isStarterKitOpen, setIsStarterKitOpen] = useState(false);
+  const [openFaqId, setOpenFaqId] = useState(0);
 
   // Calculate real legal moves and combat targets using OTTv2 official rules
   const moveDetails = useMemo(() => {
@@ -222,10 +229,18 @@ export function HomePage() {
             <Trophy size={18} />
             <span>Bảng Xếp Hạng</span>
           </Link>
-          <Link to="/matches" className="btn btn-outline">
+          <Link to="/live" className="btn btn-outline">
             <Radio size={16} color="var(--rose-500)" className="animate-pulse" />
             <span>Xem Trực Tiếp</span>
           </Link>
+        </div>
+
+        {/* Countdown to Submission Deadline */}
+        <div style={{ maxWidth: '680px', margin: '2rem auto 0', width: '100%' }}>
+          <Countdown
+            targetDate="2026-11-20T23:59:59"
+            title="Đồng Hồ Đếm Ngược: Hạn Chót Nộp Bot Vòng Bảng"
+          />
         </div>
 
         {/* Stats Summary */}
@@ -482,6 +497,190 @@ export function HomePage() {
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* 12-Week Tournament Timeline */}
+      <section className="timeline-section">
+        <div className="section-header">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <Calendar size={18} color="var(--primary-400)" />
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Lộ Trình Học Phần
+            </span>
+          </div>
+          <h2 className="section-title">Timeline 12 Tuần Triển Khai</h2>
+          <p className="section-subtitle">Theo dõi sát sao từng cột mốc phát triển bot và đánh giá đồ án môn học</p>
+        </div>
+
+        <div className="timeline-track-grid">
+          <div className="timeline-step-card glass-card">
+            <div className="timeline-step-header">
+              <span className="timeline-step-num">Tuần 1 – 4</span>
+              <div className="timeline-step-icon">
+                <FileCode size={18} color="var(--cyan-400)" />
+              </div>
+            </div>
+            <h3 className="timeline-step-title">Khởi Động & Luật Cờ</h3>
+            <p className="timeline-step-desc">
+              Khảo sát tài liệu luật OTTv2 9×9, cài đặt môi trường Python & Git. Nghiên cứu RandomBot từ Starter Kit và bắt đầu ghi nhật ký PROMPTS.md.
+            </p>
+          </div>
+
+          <div className="timeline-step-card glass-card">
+            <div className="timeline-step-header">
+              <span className="timeline-step-num">Tuần 5 – 8</span>
+              <div className="timeline-step-icon">
+                <Target size={18} color="var(--violet-400)" />
+              </div>
+            </div>
+            <h3 className="timeline-step-title">Thuật Toán & Heuristic</h3>
+            <p className="timeline-step-desc">
+              Phát triển chiến thuật ăn quân và đánh giá thế cờ (Heuristic, Minimax). Nộp bot chạy thử trên Sandbox tự động để sửa lỗi timeout và vi phạm luật.
+            </p>
+          </div>
+
+          <div className="timeline-step-card glass-card">
+            <div className="timeline-step-header">
+              <span className="timeline-step-num">Tuần 9 – 10</span>
+              <div className="timeline-step-icon">
+                <Flame size={18} color="var(--rose-400)" />
+              </div>
+            </div>
+            <h3 className="timeline-step-title">Đóng Cổng & Thi Đấu</h3>
+            <p className="timeline-step-desc">
+              Hạn chót chốt phiên bản bot chính thức (20/11). Hệ thống tự động bốc thăm Round-Robin đôi, tính điểm ELO và phát trực tiếp các trận đấu đỉnh cao.
+            </p>
+          </div>
+
+          <div className="timeline-step-card glass-card">
+            <div className="timeline-step-header">
+              <span className="timeline-step-num">Tuần 11 – 12</span>
+              <div className="timeline-step-icon">
+                <Award size={18} color="var(--amber-400)" />
+              </div>
+            </div>
+            <h3 className="timeline-step-title">Vấn Đáp & Trao Giải</h3>
+            <p className="timeline-step-desc">
+              Phỏng vấn bảo vệ mã nguồn, thẩm định hồ sơ AI Profile và báo cáo kỹ thuật. Công bố bảng xếp hạng chung cuộc và trao giải thưởng danh dự.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Tournament Prizes Section */}
+      <section className="prizes-section">
+        <div className="section-header">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <Award size={18} color="var(--amber-400)" />
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--amber-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Vinh Danh & Phần Thưởng
+            </span>
+          </div>
+          <h2 className="section-title">Cơ Cấu Giải Thưởng</h2>
+          <p className="section-subtitle">Ghi nhận xứng đáng nỗ lực và tài năng lập trình chiến thuật của các đội thi</p>
+        </div>
+
+        <div className="prizes-grid">
+          <div className="prize-card gold glass-card">
+            <div className="prize-badge-icon">🥇</div>
+            <span className="prize-tier-tag">Top 1 Mỗi Bảng</span>
+            <h3 className="prize-title">Giải Nhất (Gold)</h3>
+            <p className="prize-reward">
+              Kỷ niệm chương mạ vàng, Giấy chứng nhận OTTv2 Champion và điểm A+ tuyệt đối học phần.
+            </p>
+          </div>
+
+          <div className="prize-card silver glass-card">
+            <div className="prize-badge-icon">🥈</div>
+            <span className="prize-tier-tag">Top 2 Mỗi Bảng</span>
+            <h3 className="prize-title">Giải Nhì (Silver)</h3>
+            <p className="prize-reward">
+              Kỷ niệm chương mạ bạc, Giấy chứng nhận Á quân và điểm tổng kết 9.5 học phần.
+            </p>
+          </div>
+
+          <div className="prize-card bronze glass-card">
+            <div className="prize-badge-icon">🥉</div>
+            <span className="prize-tier-tag">Top 3 Mỗi Bảng</span>
+            <h3 className="prize-title">Giải Ba (Bronze)</h3>
+            <p className="prize-reward">
+              Kỷ niệm chương đồng danh dự, Giấy chứng nhận và quà lưu niệm công nghệ độc quyền.
+            </p>
+          </div>
+
+          <div className="prize-card special glass-card">
+            <div className="prize-badge-icon">⭐</div>
+            <span className="prize-tier-tag">Giải Đặc Biệt T08</span>
+            <h3 className="prize-title">Best AI Profile</h3>
+            <p className="prize-reward">
+              Vinh danh thí sinh có hồ sơ nhật ký Prompt Engineering (PROMPTS.md) xuất sắc và bài bản nhất.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Accordion Section */}
+      <section className="faq-section">
+        <div className="section-header">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <HelpCircle size={18} color="var(--primary-400)" />
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Giải Đáp Thắc Mắc
+            </span>
+          </div>
+          <h2 className="section-title">Câu Hỏi Thường Gặp (FAQ)</h2>
+          <p className="section-subtitle">Những điều thí sinh cần nắm vững trước khi tham gia giải đấu OTTv2</p>
+        </div>
+
+        <div className="faq-list">
+          {[
+            {
+              id: 0,
+              q: 'Tôi có bắt buộc phải sử dụng thuật toán Minimax hay Deep Learning không?',
+              a: 'Không bắt buộc. Bảng A và B chỉ yêu cầu bot hoạt động ổn định, tuân thủ nghiêm ngặt luật cờ hợp lệ và có thể mở rộng từ chiến lược Heuristic hoặc Greedy đơn giản. Bảng C mới khuyến khích sinh viên tự cài đặt Minimax, Alpha-Beta Pruning hoặc tối ưu bitboard.',
+            },
+            {
+              id: 1,
+              q: 'Quy chuẩn nộp bài T08 và kiểm tra bảo mật T09 bao gồm những gì?',
+              a: 'Theo tiêu chuẩn T08, file .zip nộp bài bắt buộc phải có bot.py (chứa hàm get_move), tài liệu PROMPTS.md ghi chép quá trình sử dụng AI, và thư mục .git chứa tối thiểu 3 commits. Hệ thống T09 sẽ quét cô lập tự động: cấm gọi socket/file nguy hiểm, cấm truy cập Internet và loại bỏ mọi API key bị rò rỉ.',
+            },
+            {
+              id: 2,
+              q: 'Hệ thống tính điểm xếp hạng thi đấu và điểm học phần như thế nào?',
+              a: 'Điểm giải đấu tính theo cơ chế: Thắng +3 điểm, Hòa +1 điểm, Thua 0 điểm. Điểm tổng kết cuối cùng của học phần được tính theo công thức trọng số chuẩn theo từng Bảng: Điểm Bot thi đấu (30-50%), Điểm hồ sơ AI Profile (15-25%), Phỏng vấn vấn đáp (20-30%) và Báo cáo đồ án (15%).',
+            },
+            {
+              id: 3,
+              q: 'Làm thế nào để theo dõi trực tiếp các trận đấu diễn ra?',
+              a: 'Bạn có thể truy cập trang /live hoặc /matches trên thanh điều hướng. Tại đây bạn có thể xem các trận đấu đang phát sóng trực tiếp từng nước đi theo thời gian thực qua giao thức WebSocket hoặc mở lại lịch sử các ván cờ đã hoàn tất để phân tích diễn biến.',
+            },
+            {
+              id: 4,
+              q: 'Làm thế nào để tải bộ Starter Kit để bắt đầu viết bot?',
+              a: 'Bạn chỉ cần nhấp vào nút "Tải Starter Kit (.ZIP)" ngay trên Hero trang chủ hoặc tại bảng thông tin Bảng A. Gói ZIP bao gồm file luật ottv2_rules.py, RandomBot mẫu, file hướng dẫn PROMPTS.md mẫu và script kiểm tra cục bộ.',
+            },
+          ].map((faq) => {
+            const isOpen = openFaqId === faq.id;
+            return (
+              <div key={faq.id} className={`faq-item ${isOpen ? 'open' : ''}`}>
+                <button
+                  type="button"
+                  className="faq-question-btn"
+                  onClick={() => setOpenFaqId(isOpen ? null : faq.id)}
+                  aria-expanded={isOpen}
+                >
+                  <span>{faq.q}</span>
+                  {isOpen ? <ChevronUp size={18} color="var(--primary-400)" /> : <ChevronDown size={18} />}
+                </button>
+                {isOpen && (
+                  <div className="faq-answer-content">
+                    <p style={{ margin: 0 }}>{faq.a}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
 

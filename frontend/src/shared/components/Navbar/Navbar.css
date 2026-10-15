@@ -168,6 +168,19 @@
   font-size: 0.85rem;
 }
 
+.user-badge-link {
+  text-decoration: none;
+  color: inherit;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.user-badge-link:hover {
+  border-color: var(--primary-400);
+  background: rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+}
+
 .user-name {
   font-weight: 600;
   max-width: 120px;

@@ -39,5 +39,22 @@ class User(Base):
         DateTime, default=datetime.utcnow
     )
 
+    @property
+    def final_score(self) -> float:
+        """Tính điểm tổng kết theo trọng số từng bảng."""
+        tier = self.tier or "A"
+        weights = {
+            "A": {"bot": 0.30, "ai": 0.25, "interview": 0.30, "report": 0.15},
+            "B": {"bot": 0.40, "ai": 0.20, "interview": 0.25, "report": 0.15},
+            "C": {"bot": 0.50, "ai": 0.15, "interview": 0.20, "report": 0.15},
+        }.get(tier, {"bot": 0.30, "ai": 0.25, "interview": 0.30, "report": 0.15})
+        total = (
+            (self.score_bot or 0.0) * weights["bot"] +
+            (self.score_ai_profile or 0.0) * weights["ai"] +
+            (self.score_interview or 0.0) * weights["interview"] +
+            (self.score_report or 0.0) * weights["report"]
+        )
+        return round(total, 2)
+
     def __repr__(self):
         return f"<User {self.email} tier={self.tier}>"

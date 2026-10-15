@@ -5,10 +5,11 @@ import { Routes, Route } from 'react-router-dom';
 import { HomePage } from '@/modules/home';
 import { RulesPage } from '@/modules/rules';
 import { LeaderboardPage } from '@/modules/leaderboard';
-import { MatchesListPage, MatchDetailPage, LiveMatchPage } from '@/modules/matches';
+import { MatchesListPage, MatchDetailPage, LiveMatchPage, LiveHubPage } from '@/modules/matches';
 import { SubmitPage } from '@/modules/submit';
 import { LoginPage, RegisterPage } from '@/modules/auth';
 import { AdminDashboardPage } from '@/modules/admin';
+import { ProfilePage } from '@/modules/profile';
 import { NotFoundPage } from '@/shared/pages/NotFoundPage.jsx';
 
 export function AppRouter() {
@@ -20,6 +21,8 @@ export function AppRouter() {
       <Route path="/matches" element={<MatchesListPage />} />
       <Route path="/matches/:id" element={<MatchDetailPage />} />
       <Route path="/matches/:id/live" element={<LiveMatchPage />} />
+      <Route path="/live" element={<LiveHubPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
       <Route path="/submit" element={<SubmitPage />} />
       <Route path="/admin" element={<AdminDashboardPage />} />
       <Route path="/login" element={<LoginPage />} />
