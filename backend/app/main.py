@@ -19,15 +19,20 @@ logger = logging.getLogger("ottv2.api")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Tạo bảng DB khi khởi động nếu chưa có, và tự động nạp dữ liệu mẫu nếu DB mới tạo."""
+    """Tạo bảng DB khi khởi động nếu chưa có, và tự động nạp/cập nhật bài nộp mẫu nếu thiếu."""
     create_all_tables()
     try:
         from app.database import SessionLocal
         from app.models.user import User
+        from app.models.submission import Submission
         from seed_demo_data import seed_data
         with SessionLocal() as db:
-            if db.query(User).count() == 0:
-                logger.info("Database rỗng — Tự động tạo tài khoản Admin và dữ liệu thi đấu mẫu...")
+            active_subs_count = db.query(Submission).filter(Submission.is_active == True).count()
+            if db.query(User).count() == 0 or active_subs_count < 9:
+                logger.info(
+                    "Database thiếu bài nộp chuẩn (hiện có %d active) — Tự động cập nhật seed_data()...",
+                    active_subs_count,
+                )
                 seed_data()
     except Exception as e:
         logger.warning("Không thể tự động nạp dữ liệu mẫu: %s", e)

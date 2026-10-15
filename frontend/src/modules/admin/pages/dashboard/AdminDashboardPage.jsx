@@ -38,6 +38,24 @@ export function AdminDashboardPage() {
   // Modal review state
   const [selectedUserForReview, setSelectedUserForReview] = useState(null);
   const [isStartingTournament, setIsStartingTournament] = useState(null); // 'A', 'B', 'C'
+  const [isSyncingData, setIsSyncingData] = useState(false);
+
+  const handleSyncSeedData = async () => {
+    if (!window.confirm('Bạn có muốn đồng bộ lại toàn bộ dữ liệu bài nộp mẫu cho 9 thí sinh (Bảng A, B, C) vào cơ sở dữ liệu hiện tại?')) {
+      return;
+    }
+    setIsSyncingData(true);
+    try {
+      showToast('Đang đồng bộ dữ liệu bài nộp mẫu lên cơ sở dữ liệu...', 'info');
+      const res = await apiClient.post('/admin/seed-data');
+      showToast(res.message || 'Đồng bộ bài nộp mẫu thành công!', 'success');
+      fetchDashboardData();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi đồng bộ dữ liệu bài nộp', 'error');
+    } finally {
+      setIsSyncingData(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
@@ -341,14 +359,28 @@ export function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="search-input-box" style={{ maxWidth: '320px' }}>
-            <Search size={16} className="search-icon" />
-            <input
-              type="text"
-              placeholder="Tìm theo tên hoặc email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={handleSyncSeedData}
+              disabled={isSyncingData}
+              title="Đồng bộ lại toàn bộ dữ liệu bài nộp mẫu cho 9 thí sinh lên CSDL (Production/Render)"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+            >
+              <RefreshCw size={14} className={isSyncingData ? 'animate-spin' : ''} />
+              <span>{isSyncingData ? 'Đang đồng bộ...' : 'Đồng Bộ Bài Nộp Mẫu'}</span>
+            </button>
+
+            <div className="search-input-box" style={{ maxWidth: '300px' }}>
+              <Search size={16} className="search-icon" />
+              <input
+                type="text"
+                placeholder="Tìm theo tên hoặc email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
         </div>
 
