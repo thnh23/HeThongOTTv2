@@ -49,7 +49,7 @@ class TestTournamentMatchmaking:
         db = SessionLocal()
         tier = "B"
         # Xóa submission của B để giả lập tình huống chỉ có 1 bạn nộp
-        db.query(Submission).filter(Submission.user_id == "user-student-b2").delete()
+        db.query(Submission).filter(Submission.user_id.in_(["user-student-b2", "user-student-b3"])).delete()
         db.commit()
         db.close()
 

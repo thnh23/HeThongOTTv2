@@ -365,6 +365,152 @@ submissions_data = [
             "reason": "Bot thử nghiệm thành công (Thắng bằng mã W1)",
         },
     },
+    {
+        "id": "a3a3a3a3-492b-4cc1-bd4e-59bf81204563",
+        "user_id": "user-student-a3",
+        "status": "valid",
+        "is_active": True,
+        "zip_path": "storage/submissions/a3a3a3a3-492b-4cc1-bd4e-59bf81204563/package.zip",
+        "validation": {
+            "is_valid": True,
+            "details": {
+                "bot_py": True,
+                "choose_move_fn": True,
+                "prompts_md": True,
+                "chat_history": True,
+                "report_md": True,
+                "git_log": True,
+            },
+            "errors": [],
+            "warnings": [],
+            "detected_api_keys": [],
+        },
+        "test_run_result": {
+            "status": "win",
+            "winner": "W",
+            "end_code": "W2",
+            "total_moves": 24,
+            "duration_ms": 78,
+            "reason": "Bot thử nghiệm thành công (Thắng bằng mã W2)",
+        },
+    },
+    {
+        "id": "b3b3b3b3-862e-40ca-836f-c474102e5cf8",
+        "user_id": "user-student-b3",
+        "status": "valid",
+        "is_active": True,
+        "zip_path": "storage/submissions/b3b3b3b3-862e-40ca-836f-c474102e5cf8/package.zip",
+        "validation": {
+            "is_valid": True,
+            "details": {
+                "bot_py": True,
+                "choose_move_fn": True,
+                "prompts_md": True,
+                "chat_history": True,
+                "report_md": True,
+                "git_log": False,
+            },
+            "errors": [],
+            "warnings": [],
+            "detected_api_keys": [],
+        },
+        "test_run_result": {
+            "status": "win",
+            "winner": "W",
+            "end_code": "W1",
+            "total_moves": 30,
+            "duration_ms": 92,
+            "reason": "Bot thử nghiệm thành công (Thắng bằng mã W1)",
+        },
+    },
+    {
+        "id": "c3c3c3c3-8dce-4d6b-9459-afd5f1953106",
+        "user_id": "user-student-c3",
+        "status": "valid",
+        "is_active": True,
+        "zip_path": "storage/submissions/c3c3c3c3-8dce-4d6b-9459-afd5f1953106/package.zip",
+        "validation": {
+            "is_valid": True,
+            "details": {
+                "bot_py": True,
+                "choose_move_fn": True,
+                "prompts_md": True,
+                "chat_history": True,
+                "report_md": True,
+                "git_log": True,
+            },
+            "errors": [],
+            "warnings": [],
+            "detected_api_keys": [],
+        },
+        "test_run_result": {
+            "status": "win",
+            "winner": "W",
+            "end_code": "W2",
+            "total_moves": 20,
+            "duration_ms": 86,
+            "reason": "Bot thử nghiệm thành công (Thắng bằng mã W2)",
+        },
+    },
+    # Lịch sử nộp bài cũ (không active)
+    {
+        "id": "sub-old-a1-initial",
+        "user_id": "user-student-a",
+        "status": "invalid",
+        "is_active": False,
+        "zip_path": "storage/submissions/07593876-492b-4cc1-bd4e-59bf81204563/package.zip",
+        "validation": {
+            "is_valid": False,
+            "details": {
+                "bot_py": True,
+                "choose_move_fn": False,
+                "prompts_md": True,
+                "chat_history": False,
+                "report_md": False,
+                "git_log": False,
+            },
+            "errors": ["Thiếu hàm choose_move(state) trong bot.py"],
+            "warnings": ["Chưa có báo cáo chiến thuật REPORT.md"],
+            "detected_api_keys": [],
+        },
+        "test_run_result": {
+            "status": "crash",
+            "winner": None,
+            "end_code": "T1",
+            "total_moves": 0,
+            "duration_ms": 10,
+            "reason": "Lỗi khởi tạo: bot.py không định nghĩa choose_move",
+        },
+    },
+    {
+        "id": "sub-old-b1-initial",
+        "user_id": "user-student-b",
+        "status": "valid",
+        "is_active": False,
+        "zip_path": "storage/submissions/e62f4366-862e-40ca-836f-c474102e5cf8/package.zip",
+        "validation": {
+            "is_valid": True,
+            "details": {
+                "bot_py": True,
+                "choose_move_fn": True,
+                "prompts_md": True,
+                "chat_history": True,
+                "report_md": True,
+                "git_log": False,
+            },
+            "errors": [],
+            "warnings": [],
+            "detected_api_keys": [],
+        },
+        "test_run_result": {
+            "status": "loss",
+            "winner": "B",
+            "end_code": "W1",
+            "total_moves": 40,
+            "duration_ms": 120,
+            "reason": "Thua bot đối thủ mẫu sau 40 nước",
+        },
+    },
 ]
 
 def seed_data():
@@ -422,7 +568,19 @@ def seed_data():
                 db.commit()
 
         # 3. Seed Meaningful Submissions (Tier A, B, C)
+        import os
+        import shutil
+        backend_dir = os.path.dirname(os.path.abspath(__file__))
+        src_zip = os.path.join(backend_dir, "storage/submissions/07593876-492b-4cc1-bd4e-59bf81204563/package.zip")
+
         for sd in submissions_data:
+            # Ensure physical zip package exists on disk
+            dest_zip = os.path.join(backend_dir, sd["zip_path"])
+            dest_dir = os.path.dirname(dest_zip)
+            os.makedirs(dest_dir, exist_ok=True)
+            if not os.path.exists(dest_zip) and os.path.exists(src_zip):
+                shutil.copy2(src_zip, dest_zip)
+
             existing_sub = db.query(Submission).filter(Submission.id == sd["id"]).first()
             if not existing_sub:
                 sub = Submission(
