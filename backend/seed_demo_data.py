@@ -2,8 +2,36 @@
 Seed Demo Data for OTTv2 Tournament
 """
 
+import sys
+import os
+import subprocess
 import json
 from datetime import datetime
+
+# Ensure backend root is in sys.path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, BASE_DIR)
+
+# Ensure UTF-8 output on Windows console
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+# Auto-detect and switch to virtual environment if current interpreter lacks dependencies
+venv_win = os.path.join(BASE_DIR, ".venv", "Scripts", "python.exe")
+venv_unix = os.path.join(BASE_DIR, ".venv", "bin", "python")
+venv_python = venv_win if os.path.exists(venv_win) else (venv_unix if os.path.exists(venv_unix) else None)
+
+if venv_python and os.path.normcase(sys.executable) != os.path.normcase(venv_python):
+    try:
+        import sqlalchemy
+    except ModuleNotFoundError:
+        res = subprocess.run([venv_python] + sys.argv, cwd=BASE_DIR)
+        sys.exit(res.returncode)
+
 from app.database import SessionLocal, create_all_tables
 from app.models.user import User
 from app.models.match import Match, Replay

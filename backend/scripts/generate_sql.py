@@ -1,9 +1,23 @@
 import json
 import os
 import sys
+import subprocess
 
 # Ensure backend root is in sys.path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
+
+# Auto-detect and switch to virtual environment if current interpreter lacks dependencies
+venv_win = os.path.join(BASE_DIR, ".venv", "Scripts", "python.exe")
+venv_unix = os.path.join(BASE_DIR, ".venv", "bin", "python")
+venv_python = venv_win if os.path.exists(venv_win) else (venv_unix if os.path.exists(venv_unix) else None)
+
+if venv_python and os.path.normcase(sys.executable) != os.path.normcase(venv_python):
+    try:
+        import sqlalchemy
+    except ModuleNotFoundError:
+        res = subprocess.run([venv_python] + sys.argv, cwd=BASE_DIR)
+        sys.exit(res.returncode)
 
 import seed_demo_data as s
 
