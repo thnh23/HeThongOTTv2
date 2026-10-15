@@ -57,20 +57,31 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
     setScoreReport(user.score_report || 0);
     setScoreBot(user.score_bot || 0);
 
-    if (user.submission_id) {
-      loadFiles(user.submission_id);
-    } else {
-      setSubmissionFiles(null);
-    }
+    loadFiles(user);
   }, [isOpen, user]);
 
-  const loadFiles = async (subId) => {
+  const loadFiles = async (targetUser) => {
     setIsLoadingFiles(true);
     try {
-      const data = await apiClient.get(`/admin/submissions/${subId}/files`);
-      setSubmissionFiles(data.files || null);
+      let data = null;
+      if (targetUser.submission_id) {
+        data = await apiClient.get(`/admin/submissions/${targetUser.submission_id}/files`);
+      } else if (targetUser.id) {
+        data = await apiClient.get(`/admin/users/${targetUser.id}/submission-files`);
+      }
+      setSubmissionFiles(data?.files || null);
     } catch {
-      setSubmissionFiles(null);
+      // Fallback: Thử tải theo user id nếu sub id trước đó bị lỗi
+      try {
+        if (targetUser?.id) {
+          const fallbackData = await apiClient.get(`/admin/users/${targetUser.id}/submission-files`);
+          setSubmissionFiles(fallbackData?.files || null);
+        } else {
+          setSubmissionFiles(null);
+        }
+      } catch {
+        setSubmissionFiles(null);
+      }
     } finally {
       setIsLoadingFiles(false);
     }

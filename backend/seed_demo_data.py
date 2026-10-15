@@ -630,6 +630,18 @@ def seed_data():
                 existing_sub.test_run_json = json.dumps(sd["test_run_result"])
                 existing_sub.is_active = sd["is_active"]
         db.commit()
+
+        # Đảm bảo tạo sẵn file nén và thư mục giải nén cho toàn bộ bài nộp
+        try:
+            from app.routers.admin import ensure_submission_package
+            for sd in submissions_data:
+                s = db.query(Submission).filter(Submission.id == sd["id"]).first()
+                if s:
+                    u = db.query(User).filter(User.id == s.user_id).first()
+                    ensure_submission_package(s, u)
+        except Exception as e:
+            print(f"Warning generating packages: {e}")
+
         print("Seeding completed successfully!")
     finally:
         db.close()

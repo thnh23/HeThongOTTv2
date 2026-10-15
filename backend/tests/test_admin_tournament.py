@@ -43,6 +43,16 @@ def admin_headers():
     return {"Authorization": f"Bearer {token}"}
 
 
+@pytest.fixture(autouse=True)
+def restore_database_after_tests():
+    yield
+    try:
+        from seed_demo_data import seed_data
+        seed_data()
+    except Exception:
+        pass
+
+
 class TestTournamentMatchmaking:
     def test_start_tournament_rejects_when_insufficient_submissions(self, client, admin_headers):
         """Kiểm tra: Nếu bảng có < 2 thí sinh nộp bài hợp lệ thì trả về lỗi 400."""
