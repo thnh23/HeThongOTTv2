@@ -107,33 +107,27 @@ users_data = [
 # 2. Seed Sample Matches & Replays
 
 SAMPLE_BOARD_INITIAL = [
-    "RS.PRS.PRS.P",
-    ".P..R...S.P.",
-    "............",
-    "............",
-    "............",
-    "............",
-    "............",
-    "............",
-    "............",
-    "............",
-    ".p..r...s.p.",
-    "rs.prs.prs.p",
+    "psrpsrpsr",
+    "srpsrpsrp",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    "PRSPRSPSR",
+    "RSPRSPSRP",
 ]
 
 SAMPLE_BOARD_MID = [
-    "R..PRS.PRS.P",
-    ".P..R...S.P.",
-    ".S..........",
-    "............",
-    "............",
-    "............",
-    "............",
-    "............",
-    "............",
-    ".s..........",
-    ".p..r....p..",
-    "rs.prs.prs.p",
+    "psrpsrpsr",
+    "srpsrpsrp",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    "....R....",
+    "PRSP.SPSR",
+    "RSPRSPSRP",
 ]
 
 matches_data = [
@@ -152,8 +146,8 @@ matches_data = [
             {"board": SAMPLE_BOARD_MID, "move_number": 1},
         ],
         "moves": [
-            {"player": "W", "from": "b1", "to": "b3", "captured": None},
-            {"player": "B", "from": "b11", "to": "b10", "captured": "S"},
+            {"player": "W", "from": "e2", "to": "e3", "captured": None},
+            {"player": "B", "from": "e8", "to": "e7", "captured": None},
         ],
     },
     {
@@ -171,8 +165,8 @@ matches_data = [
             {"board": SAMPLE_BOARD_MID, "move_number": 1},
         ],
         "moves": [
-            {"player": "W", "from": "a1", "to": "a2", "captured": None},
-            {"player": "B", "from": "a12", "to": "a11", "captured": None},
+            {"player": "W", "from": "b2", "to": "b3", "captured": None},
+            {"player": "B", "from": "b8", "to": "b7", "captured": None},
         ],
     },
     {
@@ -190,8 +184,8 @@ matches_data = [
             {"board": SAMPLE_BOARD_MID, "move_number": 1},
         ],
         "moves": [
-            {"player": "W", "from": "c1", "to": "c2", "captured": None},
-            {"player": "B", "from": "c12", "to": "c11", "captured": None},
+            {"player": "W", "from": "f2", "to": "f3", "captured": None},
+            {"player": "B", "from": "f8", "to": "f7", "captured": None},
         ],
     },
 ]
