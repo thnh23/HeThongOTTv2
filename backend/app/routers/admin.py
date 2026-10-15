@@ -442,7 +442,7 @@ def extract_files_from_package(abs_zip: str) -> dict:
 def view_user_submission_files(user_id: str, db: Session = Depends(get_db)):
     """
     Lấy và trích xuất file bài nộp của thí sinh theo user_id.
-    Nếu chưa có bài nộp trong DB, tự động khởi tạo bài nộp và gói file mẫu.
+    Nếu thí sinh chưa nộp bài, trả về lỗi 404 để hệ thống hiển thị đúng trạng thái chưa nộp.
     """
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -454,24 +454,7 @@ def view_user_submission_files(user_id: str, db: Session = Depends(get_db)):
         .first()
     )
     if not sub:
-        # Tự động tạo bài nộp mẫu nếu thiếu
-        sub_id = f"sub-{user.id}"
-        sub = Submission(
-            id=sub_id,
-            user_id=user.id,
-            status="valid",
-            zip_path=f"storage/submissions/{sub_id}/package.zip",
-            validation_json=json.dumps({
-                "is_valid": True,
-                "details": {"bot_py": True, "prompts_md": True, "report_md": True, "chat_history": True},
-            }),
-            test_run_json=json.dumps({"status": "win", "winner": "W", "end_code": "W2"}),
-            is_active=True,
-            submitted_at=datetime.utcnow(),
-        )
-        db.add(sub)
-        db.commit()
-        db.refresh(sub)
+        raise HTTPException(status_code=404, detail="Thí sinh chưa nộp bài")
 
     abs_zip = ensure_submission_package(sub, user)
     files_content = extract_files_from_package(abs_zip)
