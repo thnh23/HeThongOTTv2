@@ -9,36 +9,46 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Trophy,
   AlertCircle,
   RefreshCw,
   Keyboard,
   Info,
   Download,
-  Radio,
+  Copy,
+  Check,
+  Volume2,
+  VolumeX,
+  Skull,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useToast } from '@/shared/context/ToastContext.jsx';
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
 import { StatusBadge } from '@/shared/components/StatusBadge/StatusBadge.jsx';
+import { soundFx } from '@/shared/services/soundFx.js';
 import './MatchDetailPage.css';
 
 const END_CODE_EXPLANATIONS = {
-  W1: 'Trắng Thắng do Đen mất toàn bộ quân Kéo (✂️)',
-  W2: 'Trắng Thắng do Đen mất toàn bộ quân Búa (👊)',
-  W3: 'Trắng Thắng do Đen mất toàn bộ quân Bao (✋)',
+  W1: 'Trắng Thắng do Đen mất toàn bộ 1 loại quân (Kéo ✂️ / Búa 👊 / Bao ✋)',
+  W2: 'Trắng Thắng do đưa quân vào ô đích i9 👑',
   W4: 'Trắng Thắng do Đen không còn nước đi hợp lệ',
   W5: 'Trắng Thắng do Đen quá thời gian (Timeout)',
-  W6: 'Trắng Thắng do Đen vi phạm quy tắc / lỗi mã nguồn',
-  B1: 'Đen Thắng do Trắng mất toàn bộ quân Kéo (✂️)',
-  B2: 'Đen Thắng do Trắng mất toàn bộ quân Búa (👊)',
-  B3: 'Đen Thắng do Trắng mất toàn bộ quân Bao (✋)',
+  W6: 'Trắng Thắng do Đen vi phạm quy tắc / ném ngoại lệ',
+  B1: 'Đen Thắng do Trắng mất toàn bộ 1 loại quân (Kéo ✂️ / Búa 👊 / Bao ✋)',
+  B2: 'Đen Thắng do đưa quân vào ô đích a1 🎯',
   B4: 'Đen Thắng do Trắng không còn nước đi hợp lệ',
   B5: 'Đen Thắng do Trắng quá thời gian (Timeout)',
-  B6: 'Đen Thắng do Trắng vi phạm quy tắc / lỗi mã nguồn',
+  B6: 'Đen Thắng do Trắng vi phạm quy tắc / ném ngoại lệ',
   T1: 'Hòa cờ do đạt tối đa 200 nước đi (T1)',
   T2: 'Hòa cờ do lặp lại trạng thái 3 lần (3-fold repetition)',
   T3: 'Hòa cờ do cả hai bên không còn khả năng ăn quân đối phương',
+  D1: 'Bên hết nước đi bị xử thua',
+  D2: 'Hòa cờ do lặp thế hoặc quá 200 nước',
+};
+
+const PIECE_EMOJIS = {
+  R: '👊',
+  S: '✂️',
+  P: '✋',
 };
 
 export function MatchDetailPage() {
@@ -48,11 +58,19 @@ export function MatchDetailPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
+  const [soundEnabled, setSoundEnabled] = useState(soundFx.enabled);
+  const [copiedMoves, setCopiedMoves] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const timerRef = useRef(null);
   const activeMoveItemRef = useRef(null);
+
+  const toggleSound = () => {
+    const next = soundFx.toggleSound();
+    setSoundEnabled(next);
+    showToast(next ? 'Đã bật âm thanh hiệu ứng!' : 'Đã tắt âm thanh!', 'info');
+  };
 
   const handleExportReplay = () => {
     if (!replay) return;
@@ -72,6 +90,17 @@ export function MatchDetailPage() {
     }
   };
 
+  const handleCopyMoveList = () => {
+    if (!replay?.moves || replay.moves.length === 0) return;
+    const text = replay.moves
+      .map((m, idx) => `${idx + 1}. [${m.player}] ${m.from} -> ${m.to}${m.captured ? ` (x ${m.captured})` : ''}`)
+      .join('\n');
+    navigator.clipboard.writeText(text);
+    setCopiedMoves(true);
+    showToast('Đã sao chép danh sách nước đi!', 'success');
+    setTimeout(() => setCopiedMoves(false), 2000);
+  };
+
   useEffect(() => {
     async function loadReplay() {
       setIsLoading(true);
@@ -89,6 +118,22 @@ export function MatchDetailPage() {
     loadReplay();
   }, [id]);
 
+  // Step audio trigger
+  const goToStep = (targetStep, withSound = true) => {
+    setCurrentStep((prev) => {
+      const next = Math.max(0, Math.min(replay?.states?.length ? replay.states.length - 1 : 0, targetStep));
+      if (withSound && next !== prev && next > 0 && replay?.moves?.[next - 1]) {
+        const move = replay.moves[next - 1];
+        if (move.captured) {
+          soundFx.playCapture();
+        } else {
+          soundFx.playMove();
+        }
+      }
+      return next;
+    });
+  };
+
   // Auto-play animation loop
   useEffect(() => {
     if (!isPlaying || !replay) return;
@@ -98,9 +143,19 @@ export function MatchDetailPage() {
       setCurrentStep((prev) => {
         if (prev >= replay.states.length - 1) {
           setIsPlaying(false);
+          soundFx.playVictory();
           return prev;
         }
-        return prev + 1;
+        const next = prev + 1;
+        if (replay?.moves?.[next - 1]) {
+          const move = replay.moves[next - 1];
+          if (move.captured) {
+            soundFx.playCapture();
+          } else {
+            soundFx.playMove();
+          }
+        }
+        return next;
       });
     }, intervalMs);
 
@@ -120,7 +175,6 @@ export function MatchDetailPage() {
   // Keyboard navigation shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't intercept if user is typing in an input
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
 
       const total = replay?.moves?.length || 0;
@@ -131,35 +185,35 @@ export function MatchDetailPage() {
       } else if (e.code === 'ArrowLeft') {
         e.preventDefault();
         setIsPlaying(false);
-        setCurrentStep((p) => Math.max(0, p - 1));
+        goToStep(currentStep - 1);
       } else if (e.code === 'ArrowRight') {
         e.preventDefault();
         setIsPlaying(false);
-        setCurrentStep((p) => Math.min(total, p + 1));
+        goToStep(currentStep + 1);
       } else if (e.code === 'Home') {
         e.preventDefault();
         setIsPlaying(false);
-        setCurrentStep(0);
+        goToStep(0, false);
       } else if (e.code === 'End') {
         e.preventDefault();
         setIsPlaying(false);
-        setCurrentStep(total);
+        goToStep(total, false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [replay]);
+  }, [replay, currentStep]);
 
   const currentBoardState = replay?.states?.[currentStep] || {};
   const currentMove = currentStep > 0 ? replay?.moves?.[currentStep - 1] : null;
   const totalMoves = replay?.moves?.length || 0;
 
-  // Calculate remaining piece counts for White and Black safely (supports array, object and dict)
+  // Calculate remaining piece counts for White and Black
   const pieceCounts = useMemo(() => {
     const raw = currentBoardState?.board || currentBoardState;
     if (!raw) {
-      return { white: { R: 2, S: 2, P: 2 }, black: { r: 2, s: 2, p: 2 } };
+      return { white: { R: 6, S: 6, P: 6 }, black: { r: 6, s: 6, p: 6 } };
     }
 
     if (currentBoardState?.white_pieces && currentBoardState?.black_pieces) {
@@ -209,6 +263,30 @@ export function MatchDetailPage() {
     return counts;
   }, [currentBoardState]);
 
+  // Calculate captured pieces graveyard up to currentStep
+  const capturedGraveyard = useMemo(() => {
+    const whiteLost = [];
+    const blackLost = [];
+    if (!replay?.moves) return { whiteLost, blackLost };
+
+    for (let i = 0; i < currentStep && i < replay.moves.length; i++) {
+      const m = replay.moves[i];
+      if (m.captured) {
+        if (m.player === 'W') {
+          blackLost.push(m.captured);
+        } else {
+          whiteLost.push(m.captured);
+        }
+      }
+    }
+    return { whiteLost, blackLost };
+  }, [replay, currentStep]);
+
+  const totalWhitePieces = pieceCounts.white.R + pieceCounts.white.S + pieceCounts.white.P;
+  const totalBlackPieces = pieceCounts.black.r + pieceCounts.black.s + pieceCounts.black.p;
+  const totalOnBoard = totalWhitePieces + totalBlackPieces || 1;
+  const whitePercent = Math.round((totalWhitePieces / totalOnBoard) * 100);
+
   if (isLoading) {
     return (
       <div className="glass-card" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
@@ -245,15 +323,37 @@ export function MatchDetailPage() {
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          {/* Sound Toggle */}
+          <button
+            className={`btn btn-outline btn-xs ${soundEnabled ? 'active' : ''}`}
+            onClick={toggleSound}
+            title={soundEnabled ? 'Tắt âm thanh hiệu ứng' : 'Bật âm thanh hiệu ứng'}
+            aria-label="Chuyển đổi âm thanh"
+          >
+            {soundEnabled ? <Volume2 size={15} color="var(--cyan-400)" /> : <VolumeX size={15} color="var(--text-muted)" />}
+          </button>
+
+          {/* Copy Moves */}
+          <button
+            className="btn btn-outline btn-sm"
+            onClick={handleCopyMoveList}
+            title="Sao chép toàn bộ nước đi trận đấu"
+          >
+            {copiedMoves ? <Check size={14} color="var(--emerald-400)" /> : <Copy size={14} />}
+            <span>Sao chép nước</span>
+          </button>
+
+          {/* Export Replay */}
           <button
             id="btn-export-replay-json"
             className="btn btn-outline btn-sm"
             onClick={handleExportReplay}
             title="Tải xuống toàn bộ file Replay định dạng JSON"
           >
-            <Download size={15} />
+            <Download size={14} />
             <span>Xuất JSON</span>
           </button>
+
           <span className={`tier-pill tier-${replay.tier}`}>Bảng {replay.tier}</span>
           <StatusBadge status={replay.end_code} />
         </div>
@@ -266,17 +366,17 @@ export function MatchDetailPage() {
           <div className="team-avatar white-avatar">W</div>
           <div>
             <div className="player-title">{replay.bot_a_name || 'Bot White'}</div>
-            <div className="player-subtitle">Quân Trắng (Đi trước)</div>
+            <div className="player-subtitle">Quân Trắng (Đi trước) • {totalWhitePieces}/18 quân</div>
             {/* White Remaining Pieces */}
             <div className="piece-pills">
               <span className={`piece-pill ${pieceCounts.white.R === 0 ? 'zero' : ''}`} title="Búa (R)">
-                👊 {pieceCounts.white.R}/2
+                👊 {pieceCounts.white.R}/6
               </span>
               <span className={`piece-pill ${pieceCounts.white.S === 0 ? 'zero' : ''}`} title="Kéo (S)">
-                ✂️ {pieceCounts.white.S}/2
+                ✂️ {pieceCounts.white.S}/6
               </span>
               <span className={`piece-pill ${pieceCounts.white.P === 0 ? 'zero' : ''}`} title="Bao (P)">
-                ✋ {pieceCounts.white.P}/2
+                ✋ {pieceCounts.white.P}/6
               </span>
             </div>
           </div>
@@ -307,28 +407,80 @@ export function MatchDetailPage() {
           <div className="team-avatar black-avatar">B</div>
           <div style={{ textAlign: 'right' }}>
             <div className="player-title text-cyan">{replay.bot_b_name || 'Bot Black'}</div>
-            <div className="player-subtitle">Quân Đen</div>
+            <div className="player-subtitle">Quân Đen • {totalBlackPieces}/18 quân</div>
             {/* Black Remaining Pieces */}
             <div className="piece-pills" style={{ justifyContent: 'flex-end' }}>
               <span className={`piece-pill ${pieceCounts.black.r === 0 ? 'zero' : ''}`} title="Búa (r)">
-                👊 {pieceCounts.black.r}/2
+                👊 {pieceCounts.black.r}/6
               </span>
               <span className={`piece-pill ${pieceCounts.black.s === 0 ? 'zero' : ''}`} title="Kéo (s)">
-                ✂️ {pieceCounts.black.s}/2
+                ✂️ {pieceCounts.black.s}/6
               </span>
               <span className={`piece-pill ${pieceCounts.black.p === 0 ? 'zero' : ''}`} title="Bao (p)">
-                ✋ {pieceCounts.black.p}/2
+                ✋ {pieceCounts.black.p}/6
               </span>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Material Balance Ratio Bar */}
+      <div className="material-balance-container" style={{ margin: '1rem 0 1.25rem' }}>
+        <div className="material-balance-labels">
+          <span style={{ color: '#fff', fontWeight: 600 }}>Trắng: {totalWhitePieces} quân</span>
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tương Quan Quân Số (Nước #{currentStep})</span>
+          <span style={{ color: 'var(--cyan-400)', fontWeight: 600 }}>Đen: {totalBlackPieces} quân</span>
+        </div>
+        <div className="material-balance-track">
+          <div
+            className="material-balance-fill-white"
+            style={{ width: `${whitePercent}%` }}
+          />
+          <div
+            className="material-balance-fill-black"
+            style={{ width: `${100 - whitePercent}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Captured Pieces Graveyard */}
+      {(capturedGraveyard.whiteLost.length > 0 || capturedGraveyard.blackLost.length > 0) && (
+        <div className="glass-card graveyard-card" style={{ marginBottom: '1.25rem', padding: '0.75rem 1.25rem' }}>
+          <div className="graveyard-section">
+            <span className="graveyard-title">
+              <Skull size={14} color="var(--rose-500)" />
+              <span>Quân Trắng bị ăn ({capturedGraveyard.whiteLost.length}):</span>
+            </span>
+            <div className="graveyard-pieces">
+              {capturedGraveyard.whiteLost.map((p, idx) => (
+                <span key={idx} className="graveyard-pill" title={`Trắng mất ${p}`}>
+                  {PIECE_EMOJIS[p] || p}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="graveyard-section" style={{ justifyContent: 'flex-end' }}>
+            <span className="graveyard-title">
+              <Skull size={14} color="var(--rose-500)" />
+              <span>Quân Đen bị ăn ({capturedGraveyard.blackLost.length}):</span>
+            </span>
+            <div className="graveyard-pieces">
+              {capturedGraveyard.blackLost.map((p, idx) => (
+                <span key={idx} className="graveyard-pill" title={`Đen mất ${p}`}>
+                  {PIECE_EMOJIS[p] || p}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Keyboard Shortcuts Prompt */}
       <div className="keyboard-hints-bar">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
           <Keyboard size={15} color="var(--cyan-400)" />
-          <span><strong>Phím tắt điều khiển:</strong></span>
+          <span><strong>Phím tắt:</strong></span>
         </div>
         <div className="key-badges">
           <span><kbd>Space</kbd> Phát / Dừng</span>
@@ -364,7 +516,7 @@ export function MatchDetailPage() {
                 value={currentStep}
                 onChange={(e) => {
                   setIsPlaying(false);
-                  setCurrentStep(parseInt(e.target.value, 10));
+                  goToStep(parseInt(e.target.value, 10));
                 }}
                 className="replay-slider"
                 aria-label="Thanh trượt nước đi Replay"
@@ -377,7 +529,7 @@ export function MatchDetailPage() {
                 <button
                   id="btn-replay-start"
                   className="btn btn-outline btn-sm"
-                  onClick={() => { setIsPlaying(false); setCurrentStep(0); }}
+                  onClick={() => { setIsPlaying(false); goToStep(0, false); }}
                   title="Về đầu ván (Home)"
                   aria-label="Về đầu ván"
                 >
@@ -386,7 +538,7 @@ export function MatchDetailPage() {
                 <button
                   id="btn-replay-prev"
                   className="btn btn-outline btn-sm"
-                  onClick={() => { setIsPlaying(false); setCurrentStep((p) => Math.max(0, p - 1)); }}
+                  onClick={() => { setIsPlaying(false); goToStep(currentStep - 1); }}
                   title="Nước trước (←)"
                   aria-label="Nước trước"
                 >
@@ -405,7 +557,7 @@ export function MatchDetailPage() {
                 <button
                   id="btn-replay-next"
                   className="btn btn-outline btn-sm"
-                  onClick={() => { setIsPlaying(false); setCurrentStep((p) => Math.min(totalMoves, p + 1)); }}
+                  onClick={() => { setIsPlaying(false); goToStep(currentStep + 1); }}
                   title="Nước sau (→)"
                   aria-label="Nước sau"
                 >
@@ -414,7 +566,7 @@ export function MatchDetailPage() {
                 <button
                   id="btn-replay-end"
                   className="btn btn-outline btn-sm"
-                  onClick={() => { setIsPlaying(false); setCurrentStep(totalMoves); }}
+                  onClick={() => { setIsPlaying(false); goToStep(totalMoves, false); }}
                   title="Đến cuối ván (End)"
                   aria-label="Đến cuối ván"
                 >
@@ -422,22 +574,18 @@ export function MatchDetailPage() {
                 </button>
               </div>
 
-              {/* Speed selector */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <label htmlFor="select-replay-speed" style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  Tốc độ:
-                </label>
-                <select
-                  id="select-replay-speed"
-                  className="speed-select"
-                  value={speed}
-                  onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                >
-                  <option value="0.5">0.5x</option>
-                  <option value="1">1.0x</option>
-                  <option value="2">2.0x</option>
-                  <option value="4">4.0x</option>
-                </select>
+              {/* Speed selector pills */}
+              <div className="speed-pills-wrap">
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tốc độ:</span>
+                {[0.5, 1, 2, 4].map((s) => (
+                  <button
+                    key={s}
+                    className={`speed-pill-btn ${speed === s ? 'active' : ''}`}
+                    onClick={() => setSpeed(s)}
+                  >
+                    {s}x
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -454,13 +602,13 @@ export function MatchDetailPage() {
             <li
               ref={currentStep === 0 ? activeMoveItemRef : null}
               className={`move-item ${currentStep === 0 ? 'active' : ''}`}
-              onClick={() => { setIsPlaying(false); setCurrentStep(0); }}
+              onClick={() => { setIsPlaying(false); goToStep(0, false); }}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   setIsPlaying(false);
-                  setCurrentStep(0);
+                  goToStep(0, false);
                 }
               }}
             >
@@ -476,13 +624,13 @@ export function MatchDetailPage() {
                   key={`move-${stepIndex}`}
                   ref={isSelected ? activeMoveItemRef : null}
                   className={`move-item ${isSelected ? 'active' : ''}`}
-                  onClick={() => { setIsPlaying(false); setCurrentStep(stepIndex); }}
+                  onClick={() => { setIsPlaying(false); goToStep(stepIndex); }}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       setIsPlaying(false);
-                      setCurrentStep(stepIndex);
+                      goToStep(stepIndex);
                     }
                   }}
                 >

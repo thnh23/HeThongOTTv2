@@ -389,17 +389,41 @@ async def run_tournament_queue_async(tier: str, match_ids: List[str], move_delay
 async def start_tournament(req: TournamentStartRequest, db: Session = Depends(get_db)):
     """
     Khởi chạy giải đấu vòng tròn (Round-Robin) cho bảng chỉ định:
-      - Thu thập tất cả thí sinh trong bảng (loại trừ tài khoản Admin BTC)
+      - Chỉ chọn các thí sinh ĐÃ NỘP BÀI HỢP LỆ (Submission.is_active == True và status == 'valid')
+      - Thí sinh chưa nộp bài hoặc bài không hợp lệ sẽ KHÔNG được ghép trận
       - Ghép cặp thi đấu 2 lượt đổi phe (Trắng - Đen, Đen - Trắng)
       - Khởi tạo các trận đấu và tự động chạy toàn bộ theo hàng đợi
     """
     tier = req.tier.upper()
-    users = db.query(User).filter(User.tier == tier, User.is_admin == False).all()
+
+    # Thu thập tất cả thí sinh trong bảng
+    total_in_tier = db.query(User).filter(User.tier == tier, User.is_admin == False).count()
+
+    # Thu thập ID của tất cả thí sinh ĐÃ NỘP BÀI HỢP LỆ trong bảng này
+    valid_subs = (
+        db.query(Submission.user_id)
+        .filter(Submission.is_active == True, Submission.status == "valid")
+        .all()
+    )
+    valid_user_ids = {s.user_id for s in valid_subs}
+
+    users = (
+        db.query(User)
+        .filter(
+            User.tier == tier,
+            User.is_admin == False,
+            User.id.in_(valid_user_ids),
+        )
+        .all()
+    )
 
     if len(users) < 2:
         raise HTTPException(
             status_code=400,
-            detail=f"Bảng {tier} cần ít nhất 2 thí sinh để tổ chức thi đấu vòng tròn (hiện có: {len(users)} thí sinh)",
+            detail=(
+                f"Bảng {tier} hiện chỉ có {len(users)}/{total_in_tier} thí sinh đã nộp bài hợp lệ. "
+                f"Cần tối thiểu 2 thí sinh đã nộp bài hợp lệ để tổ chức thi đấu vòng tròn!"
+            ),
         )
 
     # Xóa các trận đấu 'pending' cũ của bảng này nếu có
@@ -408,7 +432,7 @@ async def start_tournament(req: TournamentStartRequest, db: Session = Depends(ge
 
     created_matches = []
 
-    # Tạo cặp vòng tròn: Mỗi cặp A và B đấu 2 ván đổi phe
+    # Tạo cặp vòng tròn: Mỗi cặp A và B đấu 2 ván đổi phe (chỉ trong số thí sinh đã nộp bài hợp lệ)
     for i in range(len(users)):
         for j in range(i + 1, len(users)):
             user_a = users[i]
@@ -456,6 +480,7 @@ async def start_tournament(req: TournamentStartRequest, db: Session = Depends(ge
         "type": "TOURNAMENT_STARTED",
         "tier": tier,
         "total_matches": len(created_matches),
+        "total_players": len(users),
         "timestamp": datetime.utcnow().isoformat(),
     })
 
@@ -463,9 +488,10 @@ async def start_tournament(req: TournamentStartRequest, db: Session = Depends(ge
         "success": True,
         "tier": tier,
         "total_players": len(users),
+        "total_candidates": total_in_tier,
         "total_matches_created": len(created_matches),
         "active_match_id": created_matches[0].id if created_matches else None,
-        "message": f"Đã khởi tạo thành công {len(created_matches)} trận đấu vòng tròn cho Bảng {tier}!",
+        "message": f"Đã khởi tạo thành công {len(created_matches)} trận đấu vòng tròn cho {len(users)} thí sinh đã nộp bài tại Bảng {tier}!",
     }
 
 
@@ -475,6 +501,13 @@ def get_tournament_status(db: Session = Depends(get_db)):
     tiers = ["A", "B", "C"]
     status_report = {}
 
+    valid_subs = (
+        db.query(Submission.user_id)
+        .filter(Submission.is_active == True, Submission.status == "valid")
+        .all()
+    )
+    valid_user_ids = {s.user_id for s in valid_subs}
+
     for t in tiers:
         total = db.query(Match).filter(Match.tier == t).count()
         done = db.query(Match).filter(Match.tier == t, Match.status == "done").count()
@@ -483,12 +516,18 @@ def get_tournament_status(db: Session = Depends(get_db)):
 
         progress_pct = round((done / total * 100), 1) if total > 0 else 0.0
 
+        tier_users = db.query(User).filter(User.tier == t, User.is_admin == False).all()
+        total_players = len(tier_users)
+        submitted_players = sum(1 for u in tier_users if u.id in valid_user_ids)
+
         status_report[t] = {
             "total_matches": total,
             "done_matches": done,
             "running_matches": running,
             "pending_matches": pending,
             "progress_percent": progress_pct,
+            "total_players": total_players,
+            "submitted_players": submitted_players,
         }
 
     return status_report

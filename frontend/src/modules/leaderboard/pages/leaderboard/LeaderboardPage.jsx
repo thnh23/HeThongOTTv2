@@ -8,16 +8,21 @@ import {
   Crown,
   HelpCircle,
   TrendingUp,
+  User,
+  ArrowUpDown,
 } from 'lucide-react';
 import { apiClient, getWebSocketUrl } from '@/shared/api-client/index.js';
+import { useAuth } from '@/shared/context/AuthContext.jsx';
 import { useToast } from '@/shared/context/ToastContext.jsx';
 
 import './LeaderboardPage.css';
 
 export function LeaderboardPage() {
+  const { user } = useAuth();
   const [activeTier, setActiveTier] = useState('A');
   const [standings, setStandings] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('rank'); // 'rank', 'wins', 'win_rate'
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { showToast } = useToast();
@@ -49,9 +54,7 @@ export function LeaderboardPage() {
   // WebSocket Live Standings listener
   useEffect(() => {
     const wsUrl = getWebSocketUrl('/ws/leaderboard');
-
     let ws = null;
-
     let pingInterval = null;
 
     try {
@@ -86,16 +89,28 @@ export function LeaderboardPage() {
     };
   }, [activeTier, showToast]);
 
-  // Filter standings based on search query
+  // Filter & sort standings based on search query & sort setting
   const filteredStandings = useMemo(() => {
-    if (!searchQuery.trim()) return standings;
-    const q = searchQuery.toLowerCase();
-    return standings.filter(
-      (s) =>
-        s.name?.toLowerCase().includes(q) ||
-        s.user_id?.toLowerCase().includes(q)
-    );
-  }, [standings, searchQuery]);
+    let list = [...standings];
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (s) =>
+          s.name?.toLowerCase().includes(q) ||
+          s.user_id?.toLowerCase().includes(q)
+      );
+    }
+
+    if (sortBy === 'wins') {
+      list.sort((a, b) => b.wins - a.wins);
+    } else if (sortBy === 'win_rate') {
+      list.sort((a, b) => b.win_rate - a.win_rate);
+    } else {
+      list.sort((a, b) => a.rank - b.rank);
+    }
+
+    return list;
+  }, [standings, searchQuery, sortBy]);
 
   // Podium top 3
   const top1 = standings.find((s) => s.rank === 1);
@@ -134,7 +149,7 @@ export function LeaderboardPage() {
 
           {isWsConnected && (
             <span className="live-standings-pill" title="Đang kết nối WebSocket trực tiếp">
-              <span className="live-dot-green animate-ping"></span> Live
+              <span className="live-dot-green animate-ping"></span> Live Sync
             </span>
           )}
 
@@ -224,14 +239,14 @@ export function LeaderboardPage() {
             </div>
           )}
 
-          {/* Search Box */}
+          {/* Search Box & Sort Toolbar */}
           <div className="leaderboard-search-wrap">
-            <div className="search-input-box">
+            <div className="search-input-box" style={{ flex: 1, minWidth: '240px' }}>
               <Search size={18} className="search-icon" />
               <input
                 id="search-leaderboard-input"
                 type="text"
-                placeholder="Tìm kiếm theo tên thí sinh, bot hoặc mã sinh viên..."
+                placeholder="Tìm kiếm theo tên thí sinh hoặc bot..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label="Tìm kiếm thí sinh trong bảng xếp hạng"
@@ -246,6 +261,30 @@ export function LeaderboardPage() {
                 </button>
               )}
             </div>
+
+            {/* Quick Sort Buttons */}
+            <div className="sort-pills-group">
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Xếp theo:</span>
+              <button
+                className={`sort-pill ${sortBy === 'rank' ? 'active' : ''}`}
+                onClick={() => setSortBy('rank')}
+              >
+                Hạng
+              </button>
+              <button
+                className={`sort-pill ${sortBy === 'wins' ? 'active' : ''}`}
+                onClick={() => setSortBy('wins')}
+              >
+                Số Trận Thắng
+              </button>
+              <button
+                className={`sort-pill ${sortBy === 'win_rate' ? 'active' : ''}`}
+                onClick={() => setSortBy('win_rate')}
+              >
+                Tỉ Lệ Thắng
+              </button>
+            </div>
+
             <div className="standings-count">
               Hiển thị <strong>{filteredStandings.length}</strong> / {standings.length} thí sinh
             </div>
@@ -269,40 +308,58 @@ export function LeaderboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStandings.map((entry) => (
-                    <tr key={entry.user_id} className={entry.rank <= 3 ? `top-row rank-row-${entry.rank}` : ''}>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className={`rank-badge ${entry.rank <= 3 ? `rank-${entry.rank}` : 'rank-other'}`}>
-                          {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : entry.rank}
-                        </span>
-                      </td>
-                      <td>
-                        <strong style={{ fontSize: '0.975rem', color: '#fff' }}>{entry.name}</strong>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className={`tier-pill tier-${entry.tier}`}>
-                          Bảng {entry.tier}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'center', fontWeight: 600 }}>{entry.matches_played}</td>
-                      <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--emerald-400)' }}>{entry.wins}</td>
-                      <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{entry.draws}</td>
-                      <td style={{ textAlign: 'center', color: 'var(--rose-500)' }}>{entry.losses}</td>
-                      <td style={{ textAlign: 'right' }}>
-                        <span className="points-pill">{entry.points}</span>
-                      </td>
-                      <td>
-                        <div className="win-rate-bar-container">
-                          <div className="win-rate-bar">
-                            <div className="win-rate-fill" style={{ width: `${entry.win_rate}%` }}></div>
-                          </div>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 600, width: '42px', textAlign: 'right' }}>
-                            {entry.win_rate}%
+                  {filteredStandings.map((entry) => {
+                    const isCurrentUser = user && (entry.user_id === user.id || entry.user_id === user.student_id);
+                    return (
+                      <tr
+                        key={entry.user_id}
+                        className={`${entry.rank <= 3 ? `top-row rank-row-${entry.rank}` : ''} ${isCurrentUser ? 'my-user-row' : ''}`}
+                      >
+                        <td style={{ textAlign: 'center' }}>
+                          <span className={`rank-badge ${entry.rank <= 3 ? `rank-${entry.rank}` : 'rank-other'}`}>
+                            {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : entry.rank}
                           </span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                            <strong style={{ fontSize: '0.975rem', color: isCurrentUser ? 'var(--cyan-300)' : '#fff' }}>
+                              {entry.name}
+                            </strong>
+                            {isCurrentUser && (
+                              <span className="current-user-badge">
+                                <User size={12} /> Bạn
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <span className={`tier-pill tier-${entry.tier}`}>
+                            Bảng {entry.tier}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'center', fontWeight: 600 }}>{entry.matches_played}</td>
+                        <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--emerald-400)' }}>{entry.wins}</td>
+                        <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{entry.draws}</td>
+                        <td style={{ textAlign: 'center', color: 'var(--rose-500)' }}>{entry.losses}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <span className="points-pill">{entry.points}</span>
+                        </td>
+                        <td>
+                          <div className="win-rate-bar-container">
+                            <div className="win-rate-bar">
+                              <div
+                                className={`win-rate-fill ${entry.win_rate >= 60 ? 'high-win-rate' : entry.win_rate >= 40 ? 'mid-win-rate' : 'low-win-rate'}`}
+                                style={{ width: `${entry.win_rate}%` }}
+                              />
+                            </div>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 600, width: '42px', textAlign: 'right' }}>
+                              {entry.win_rate}%
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -12,9 +12,12 @@ import {
   Menu,
   X,
   ShieldCheck,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StarterKitModal } from '../StarterKitModal/index.js';
+import { soundFx } from '@/shared/services/soundFx.js';
 import './Navbar.css';
 
 export function Navbar() {
@@ -23,6 +26,12 @@ export function Navbar() {
   const location = useLocation();
   const [isStarterKitOpen, setIsStarterKitOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(soundFx.enabled);
+
+  const toggleAudio = () => {
+    const next = soundFx.toggleSound();
+    setSoundEnabled(next);
+  };
 
   // Close mobile drawer on route change
   useEffect(() => {
@@ -101,6 +110,20 @@ export function Navbar() {
 
           {/* Desktop Actions */}
           <div className="navbar-actions">
+            <button
+              id="btn-sound-toggle"
+              className={`btn-sound-toggle ${soundEnabled ? 'active' : ''}`}
+              onClick={toggleAudio}
+              title={soundEnabled ? 'Âm thanh: Đang BẬT (Bấm để tắt)' : 'Âm thanh: Đang TẮT (Bấm để bật)'}
+              aria-label={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
+            >
+              {soundEnabled ? (
+                <Volume2 size={16} color="var(--cyan-400)" />
+              ) : (
+                <VolumeX size={16} color="var(--text-muted)" />
+              )}
+            </button>
+
             <button
               id="btn-starter-kit"
               className="btn btn-starter-kit"
@@ -185,17 +208,32 @@ export function Navbar() {
             </nav>
 
             <div className="mobile-drawer-footer">
-              <button
-                className="btn btn-starter-kit"
-                style={{ width: '100%', justifyContent: 'center' }}
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setIsStarterKitOpen(true);
-                }}
-              >
-                <Sparkles size={16} color="var(--cyan-400)" />
-                <span>Bộ Khởi Động (Starter Kit .ZIP)</span>
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <button
+                  className="btn btn-starter-kit"
+                  style={{ flex: 1, justifyContent: 'center' }}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setIsStarterKitOpen(true);
+                  }}
+                >
+                  <Sparkles size={16} color="var(--cyan-400)" />
+                  <span>Starter Kit (.ZIP)</span>
+                </button>
+                <button
+                  className={`btn-sound-toggle ${soundEnabled ? 'active' : ''}`}
+                  onClick={toggleAudio}
+                  title={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
+                  aria-label="Chuyển đổi âm thanh"
+                  style={{ width: '44px', height: '44px' }}
+                >
+                  {soundEnabled ? (
+                    <Volume2 size={18} color="var(--cyan-400)" />
+                  ) : (
+                    <VolumeX size={18} color="var(--text-muted)" />
+                  )}
+                </button>
+              </div>
 
               {isAuthenticated ? (
                 <button

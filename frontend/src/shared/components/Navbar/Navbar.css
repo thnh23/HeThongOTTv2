@@ -97,6 +97,33 @@
   gap: 0.75rem;
 }
 
+/* Sound Toggle Button */
+.btn-sound-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn-sound-toggle:hover {
+  background: rgba(34, 211, 238, 0.12);
+  border-color: var(--cyan-400);
+  color: var(--cyan-400);
+}
+
+.btn-sound-toggle.active {
+  background: rgba(34, 211, 238, 0.15);
+  border-color: rgba(34, 211, 238, 0.45);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.2);
+}
+
 /* Starter Kit Button */
 .btn-starter-kit {
   display: flex;

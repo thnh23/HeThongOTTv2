@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Copy, Check, X, FileCode, FileText, FolderArchive, Sparkles } from 'lucide-react';
+import { Download, Copy, Check, X, FileCode, FileText, FolderArchive, Sparkles, Terminal } from 'lucide-react';
 import JSZip from 'jszip';
 import { useToast } from '@/shared/context/ToastContext.jsx';
 import './StarterKitModal.css';
@@ -7,60 +7,59 @@ import './StarterKitModal.css';
 const BOT_TEMPLATE = `"""
 OTTv2 Starter Bot Template
 Đấu Trường Trí Tuệ Nhân Tạo — Khoa CNTT - UET 2026
+Bàn cờ 9x9: Kéo (S) ăn Bao (P), Bao (P) ăn Búa (R), Búa (R) ăn Kéo (S)
 """
 
 import random
 from typing import Tuple
-from app.services.engine.board import BoardState, square_to_str
-from app.services.engine.rules import get_legal_moves
 
-def choose_move(state: BoardState) -> Tuple[str, str]:
+COLS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+ROWS = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+def choose_move(state) -> Tuple[str, str]:
     """
     Quyết định nước đi tiếp theo của Bot.
     
     Args:
-        state: Trạng thái bàn cờ BoardState hiện tại
-        
+        state: Trạng thái bàn cờ BoardState hiện tại:
+          - state.board: dict[(col, row) -> Piece] hoặc 2D list
+          - state.current_player: 'W' hoặc 'B'
+          - state.move_count: số nước đã đi
+          
     Returns:
-        tuple[str, str]: ("e5", "f6") - tọa độ ô đi và ô đến
+        tuple[str, str]: ("b2", "b3") - Tọa độ ô xuất phát và ô đích (chữ thường)
     """
-    legal_moves = get_legal_moves(state)
-    if not legal_moves:
-        return ("", "")
+    # Lấy danh sách các nước đi hợp lệ
+    # Bạn có thể tự sinh nước đi hoặc dùng rules engine có sẵn
+    # Dưới đây là logic mẫu: Ưu tiên ăn quân đối phương nếu nằm trong tầm ngắm
+    legal_moves = []
     
-    # Chiến thuật cơ bản: Ưu tiên ăn quân đối phương nếu có thể
-    # Bàn cờ 12x12: Kéo (S) ăn Bao (P), Bao (P) ăn Búa (R), Búa (R) ăn Kéo (S)
-    capturing_moves = []
-    for (fc, fr), (tc, tr) in legal_moves:
-        target_piece = state.board[tr][tc]
-        if target_piece != '.':
-            capturing_moves.append(((fc, fr), (tc, tr)))
-            
-    if capturing_moves:
-        (fc, fr), (tc, tr) = random.choice(capturing_moves)
-    else:
-        (fc, fr), (tc, tr) = random.choice(legal_moves)
-        
-    return (square_to_str(fc, fr), square_to_str(tc, tr))
+    # Duyệt tìm các quân cờ của phe mình
+    # và tìm nước đi 1 ô theo 8 hướng
+    # Gợi ý: Hãy xây dựng hàm minimax với alpha-beta pruning cho Bảng C!
+    
+    # Nước đi mặc định mẫu
+    return ("b2", "b3")
 `;
 
 const PROMPTS_TEMPLATE = `# Nhật Ký Prompt Engineering (T08)
 **Sinh viên / Nhóm:** [Điền họ và tên - MSSV]
 **Bảng đấu:** [Bảng A / B / C]
-**Mô hình AI sử dụng:** Claude 3.5 Sonnet / GPT-4o / Gemini 1.5 Pro
+**Mô hình AI sử dụng:** Claude 3.5 Sonnet / GPT-4o / Gemini 2.5 Pro
 
 ---
 
 ## 1. Mục Tiêu Chiến Thuật
-- Xây dựng hàm lượng giá heuristic cân bằng giữa phòng thủ và săn quân.
-- Tối ưu thuật toán minimax kết hợp cắt tỉa Alpha-Beta trong giới hạn thời gian (5s/nước, 120s tổng trận).
+- Xây dựng hàm lượng giá heuristic cân bằng giữa phòng thủ và săn quân trên bàn cờ 9x9.
+- Kiểm soát các ô trung tâm và bảo vệ ô góc đích (i9 đối với Trắng, a1 đối với Đen).
+- Tối ưu thuật toán Minimax kết hợp cắt tỉa Alpha-Beta trong giới hạn thời gian (2.0s / 1.0s / 0.5s theo từng bảng).
 
 ## 2. Lịch Sử Các Phiên Prompting
 
-### Phiên 1: Khởi tạo luật và bộ sinh nước đi
-- **Prompt:** "Tôi đang tham gia giải đấu cờ OTTv2 (Oẳn Tù Tì 12x12). Hãy viết hàm Python kiểm tra nước đi hợp lệ cho quân Kéo, Búa, Bao..."
+### Phiên 1: Khởi tạo luật và bộ sinh nước đi 9x9
+- **Prompt:** "Tôi đang tham gia giải đấu cờ OTTv2 (Oẳn Tù Tì 9x9 bàn cờ). Hãy viết hàm Python kiểm tra nước đi hợp lệ cho quân Kéo, Búa, Bao..."
 - **Phản hồi từ AI:** [Tóm tắt câu trả lời]
-- **Điều chỉnh của sinh viên:** Sửa lại logic tọa độ theo chuẩn 0-indexed và xử lý trường hợp ô cấm.
+- **Điều chỉnh của sinh viên:** Sửa lại logic tọa độ theo chuẩn 0-indexed và xử lý trường hợp cùng loại chỉ chặn đường chứ không ăn nhau.
 
 ### Phiên 2: Xây dựng hàm lượng giá bàn cờ
 - **Prompt:** "Thiết kế hàm evaluate_state(state, my_color) đánh giá ưu thế dựa trên số lượng quân, vị trí kiểm soát trung tâm..."
@@ -78,23 +77,24 @@ const REPORT_TEMPLATE = `# Báo Cáo Chiến Thuật Bot Cờ OTTv2
 - **Thuật toán chính:** [Minimax Alpha-Beta / Heuristic Rule-Based / Monte Carlo Tree Search]
 - **Độ sâu tìm kiếm:** [Depth 3 - 4]
 - **Chiến lược quản lý thời gian:**
-  - Khai cuộc (Nước 1 - 20): 1.5s/nước
-  - Trung cuộc (Nước 21 - 80): 3.5s/nước
-  - Tàn cuộc: 1.0s/nước
+  - Khai cuộc (Nước 1 - 20): 0.5s/nước
+  - Trung cuộc (Nước 21 - 80): 1.5s/nước
+  - Tàn cuộc: 0.5s/nước
 
 ## 2. Hàm Lượng Giá (Heuristic Function)
-$$Score = W_1 \\times PieceCount + W_2 \\times Mobility + W_3 \\times PositionalAdvantage$$
+$$Score = W_1 \\times PieceCount + W_2 \\times Mobility + W_3 \\times GoalDistance$$
 
 ## 3. Kết Quả Thử Nghiệm
-- Thử nghiệm 20 trận với GreedyBot: Thắng 16, Hòa 2, Thua 2.
+- Thử nghiệm 20 trận với GreedyBot trong Sandbox: Thắng 16, Hòa 2, Thua 2.
 - Tỉ lệ thắng trung bình: 80%.
 `;
 
-const CHAT_SAMPLE = `User: Hãy hướng dẫn cách viết bot cờ OTTv2 bằng Python.
+const CHAT_SAMPLE = `User: Hãy hướng dẫn cách viết bot cờ OTTv2 (9x9) bằng Python.
 Assistant: Dưới đây là cấu trúc cơ bản của một bot chơi cờ OTTv2:
-1. Nhận trạng thái bàn cờ 12x12.
-2. Liệt kê các nước đi hợp lệ.
-3. Sử dụng minimax hoặc heuristic để chọn nước tối ưu.
+1. Nhận trạng thái bàn cờ 9x9 (Hàng 1-9, Cột a-i).
+2. Liệt kê các nước đi hợp lệ theo 8 hướng.
+3. Áp dụng quy tắc Oẳn Tù Tì: Búa đập Kéo, Kéo cắt Bao, Bao bọc Búa.
+4. Sử dụng minimax hoặc heuristic để chọn nước tối ưu.
 `;
 
 export function StarterKitModal({ isOpen, onClose }) {
@@ -140,7 +140,7 @@ export function StarterKitModal({ isOpen, onClose }) {
       const chatFolder = zip.folder('chat_history');
       chatFolder.file('session_1_chatgpt.txt', CHAT_SAMPLE);
 
-      zip.file('README.md', `# Gói Mẫu OTTv2 Starter Kit
+      zip.file('README.md', `# Gói Mẫu OTTv2 Starter Kit (Bàn Cờ 9×9)
 Đã bao gồm đầy đủ cấu trúc hợp lệ theo tiêu chuẩn T08:
 - bot.py (Hàm choose_move)
 - PROMPTS.md (Nhật ký Prompt Engineering)
@@ -177,7 +177,7 @@ Bạn có thể chỉnh sửa code và nén lại thành .zip để nộp trực
             </div>
             <div>
               <h2 id="modal-title" className="modal-title">Bộ Khởi Động Bot (Starter Kit)</h2>
-              <p className="modal-subtitle">Gói mẫu chuẩn T08 cho sinh viên UET — Tải về và thi đấu ngay</p>
+              <p className="modal-subtitle">Gói mẫu chuẩn T08 cho sinh viên UET bàn cờ 9×9 — Tải về và thi đấu ngay</p>
             </div>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Đóng cửa sổ">
@@ -241,6 +241,7 @@ Bạn có thể chỉnh sửa code và nén lại thành .zip để nộp trực
         <div className="modal-footer">
           <div className="checklist-hints">
             <span className="hint-pill">✓ Chuẩn PEP-8</span>
+            <span className="hint-pill">✓ Bàn cờ 9×9 OTTv2</span>
             <span className="hint-pill">✓ Quét an ninh API key (T09)</span>
             <span className="hint-pill">✓ Tương thích Sandbox</span>
           </div>

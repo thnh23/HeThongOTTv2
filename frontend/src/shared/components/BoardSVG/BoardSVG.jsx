@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import './BoardSVG.css';
 
 const COLS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
@@ -10,6 +10,12 @@ const PIECE_SYMBOLS = {
   P: '✋', // Paper / Bao
 };
 
+const PIECE_NAMES = {
+  R: 'Búa',
+  S: 'Kéo',
+  P: 'Bao',
+};
+
 export function BoardSVG({
   boardState = {},
   selectedSquare = null,
@@ -18,6 +24,8 @@ export function BoardSVG({
   onSquareClick = () => {},
   size = 540,
 }) {
+  const [hoveredSquare, setHoveredSquare] = useState(null);
+
   const cellSize = 52;
   const padding = 34;
   const totalSize = cellSize * 9 + padding * 2;
@@ -26,17 +34,14 @@ export function BoardSVG({
   const normalizedBoard = useMemo(() => {
     const raw = boardState?.board || boardState || {};
 
-    // Case 1: Already an object map like {"a1": {player: 'W', type: 'R'}}
     if (typeof raw === 'object' && !Array.isArray(raw)) {
       return raw;
     }
 
-    // Case 2: Array of 12 strings or 9 strings (e.g. ["RS.PRS...", ...])
     if (Array.isArray(raw)) {
       const map = {};
       const numRows = raw.length;
       raw.forEach((rowStr, rIdx) => {
-        // row index 0 is top row
         const rowNum = String(numRows - rIdx);
         for (let cIdx = 0; cIdx < rowStr.length && cIdx < 9; cIdx++) {
           const ch = rowStr[cIdx];
@@ -70,48 +75,64 @@ export function BoardSVG({
   const lastMoveFromCenter = lastMove?.from ? getSquareCenter(lastMove.from) : null;
   const lastMoveToCenter = lastMove?.to ? getSquareCenter(lastMove.to) : null;
 
+  const activeCol = hoveredSquare ? hoveredSquare[0] : selectedSquare ? selectedSquare[0] : null;
+  const activeRow = hoveredSquare ? hoveredSquare[1] : selectedSquare ? selectedSquare[1] : null;
+
   return (
     <div className="board-container">
       <svg
         className="board-svg"
         viewBox={`0 0 ${totalSize} ${totalSize}`}
-        width={size}
-        height={size}
+        style={{ maxWidth: '100%', height: 'auto', width: size }}
         role="img"
-        aria-label="Bàn cờ chiến thuật OTTv2"
+        aria-label="Bàn cờ chiến thuật OTTv2 9x9"
       >
         <defs>
           {/* Piece Gradients */}
           <linearGradient id="gradWhitePiece" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="100%" stopColor="#E2E8F0" />
+            <stop offset="60%" stopColor="#F1F5F9" />
+            <stop offset="100%" stopColor="#CBD5E1" />
           </linearGradient>
+
           <linearGradient id="gradBlackPiece" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#1E293B" />
-            <stop offset="100%" stopColor="#0B1120" />
+            <stop offset="70%" stopColor="#0F172A" />
+            <stop offset="100%" stopColor="#020617" />
           </linearGradient>
+
+          {/* Goal Gradients */}
+          <radialGradient id="gradGoldGoal" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(245, 158, 11, 0.4)" />
+            <stop offset="100%" stopColor="rgba(245, 158, 11, 0.05)" />
+          </radialGradient>
+
+          <radialGradient id="gradCyanGoal" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(34, 211, 238, 0.4)" />
+            <stop offset="100%" stopColor="rgba(34, 211, 238, 0.05)" />
+          </radialGradient>
 
           {/* Arrowhead marker for move trajectory */}
           <marker
             id="moveArrowhead"
-            markerWidth="8"
-            markerHeight="8"
-            refX="6"
-            refY="4"
+            markerWidth="10"
+            markerHeight="10"
+            refX="7"
+            refY="5"
             orient="auto"
           >
-            <polygon points="0 1, 8 4, 0 7" fill="#22D3EE" />
+            <polygon points="0 1, 9 5, 0 9" fill="#22D3EE" />
           </marker>
         </defs>
 
-        {/* Board Background Outer */}
+        {/* Board Background Outer Plate */}
         <rect
           x={padding - 6}
           y={padding - 6}
           width={cellSize * 9 + 12}
           height={cellSize * 9 + 12}
-          rx="12"
-          fill="#0B0F19"
+          rx="14"
+          fill="#0A0F1D"
           stroke="rgba(255, 255, 255, 0.14)"
           strokeWidth="2"
         />
@@ -131,17 +152,22 @@ export function BoardSVG({
             const isHighlighted = highlightedSquares.includes(sqName);
             const isLastFrom = lastMove?.from === sqName;
             const isLastTo = lastMove?.to === sqName;
+            const isHovered = hoveredSquare === sqName;
 
-            let fillColor = isDark ? '#111728' : '#161F36';
+            let fillColor = isDark ? '#0F162A' : '#141E38';
 
-            if (isLastFrom) {
-              fillColor = 'rgba(99, 102, 241, 0.28)';
-            } else if (isLastTo) {
-              fillColor = 'rgba(34, 211, 238, 0.25)';
-            } else if (isHighlighted) {
-              fillColor = 'rgba(52, 211, 153, 0.28)';
+            if (isLastTo) {
+              fillColor = 'rgba(34, 211, 238, 0.28)';
+            } else if (isLastFrom) {
+              fillColor = 'rgba(99, 102, 241, 0.30)';
             } else if (isSelected) {
-              fillColor = 'rgba(245, 158, 11, 0.35)';
+              fillColor = 'rgba(245, 158, 11, 0.38)';
+            } else if (isHighlighted) {
+              fillColor = 'rgba(52, 211, 153, 0.30)';
+            } else if (isWhiteGoal) {
+              fillColor = 'url(#gradGoldGoal)';
+            } else if (isBlackGoal) {
+              fillColor = 'url(#gradCyanGoal)';
             }
 
             const piece = normalizedBoard[sqName];
@@ -151,6 +177,8 @@ export function BoardSVG({
                 key={sqName}
                 className="cell-square"
                 onClick={() => onSquareClick(sqName, piece)}
+                onMouseEnter={() => setHoveredSquare(sqName)}
+                onMouseLeave={() => setHoveredSquare(null)}
               >
                 {/* Cell Base Rect */}
                 <rect
@@ -172,7 +200,9 @@ export function BoardSVG({
                       ? '#FBBF24'
                       : isBlackGoal
                       ? '#38BDF8'
-                      : 'rgba(255, 255, 255, 0.05)'
+                      : isHovered
+                      ? 'rgba(255, 255, 255, 0.22)'
+                      : 'rgba(255, 255, 255, 0.06)'
                   }
                   strokeWidth={
                     isSelected || isHighlighted || isLastTo || isLastFrom || isWhiteGoal || isBlackGoal
@@ -183,38 +213,45 @@ export function BoardSVG({
 
                 {/* Goal Markers */}
                 {isWhiteGoal && (
-                  <text
-                    x={x + cellSize - 4}
-                    y={y + 11}
-                    fontSize="9"
-                    fill="#FBBF24"
-                    fontWeight="700"
-                    textAnchor="end"
-                  >
-                    👑 Đích W
-                  </text>
+                  <g pointerEvents="none">
+                    <circle cx={x + cellSize / 2} cy={y + cellSize / 2} r="18" fill="rgba(245, 158, 11, 0.15)" />
+                    <text
+                      x={x + cellSize - 4}
+                      y={y + 11}
+                      fontSize="9"
+                      fill="#FBBF24"
+                      fontWeight="800"
+                      textAnchor="end"
+                    >
+                      👑 ĐÍCH W
+                    </text>
+                  </g>
                 )}
                 {isBlackGoal && (
-                  <text
-                    x={x + 4}
-                    y={y + cellSize - 4}
-                    fontSize="9"
-                    fill="#38BDF8"
-                    fontWeight="700"
-                    textAnchor="start"
-                  >
-                    🎯 Đích B
-                  </text>
+                  <g pointerEvents="none">
+                    <circle cx={x + cellSize / 2} cy={y + cellSize / 2} r="18" fill="rgba(56, 189, 248, 0.15)" />
+                    <text
+                      x={x + 4}
+                      y={y + cellSize - 4}
+                      fontSize="9"
+                      fill="#38BDF8"
+                      fontWeight="800"
+                      textAnchor="start"
+                    >
+                      🎯 ĐÍCH B
+                    </text>
+                  </g>
                 )}
 
-                {/* Highlight dot indicator */}
+                {/* Highlight dot indicator for legal empty square */}
                 {isHighlighted && !piece && (
                   <circle
                     cx={x + cellSize / 2}
                     cy={y + cellSize / 2}
-                    r="5"
+                    r="6"
                     fill="#34D399"
-                    opacity="0.85"
+                    opacity="0.9"
+                    className="highlight-target-dot"
                   />
                 )}
 
@@ -224,22 +261,58 @@ export function BoardSVG({
                     className="board-piece-group"
                     transform={`translate(${x + cellSize / 2}, ${y + cellSize / 2})`}
                   >
+                    {/* Shadow & Base Circle */}
                     <circle
-                      r="18"
+                      r="19"
                       className="piece-circle"
                       fill={piece.player === 'W' ? 'url(#gradWhitePiece)' : 'url(#gradBlackPiece)'}
-                      stroke={piece.player === 'W' ? '#94A3B8' : '#22D3EE'}
+                      stroke={
+                        piece.player === 'W'
+                          ? '#94A3B8'
+                          : '#22D3EE'
+                      }
                       strokeWidth={piece.player === 'W' ? '1.5' : '2'}
-                      filter="drop-shadow(0px 3px 6px rgba(0,0,0,0.55))"
+                      filter="drop-shadow(0px 3px 6px rgba(0,0,0,0.65))"
                     />
+
+                    {/* Inner Accent Ring for Black pieces */}
+                    {piece.player === 'B' && (
+                      <circle
+                        r="16"
+                        fill="none"
+                        stroke="rgba(34, 211, 238, 0.25)"
+                        strokeWidth="1"
+                      />
+                    )}
+
+                    {/* Emoji Glyph */}
                     <text
                       textAnchor="middle"
                       dominantBaseline="central"
                       fontSize="17"
                       className="piece-emoji"
+                      y="-1"
                     >
                       {PIECE_SYMBOLS[piece.type] || piece.type}
                     </text>
+
+                    {/* Miniature Accessible Letter Badge (R/S/P) in bottom corner */}
+                    <g transform="translate(8, 8)">
+                      <circle
+                        r="5.5"
+                        fill={piece.player === 'W' ? '#0F172A' : '#22D3EE'}
+                      />
+                      <text
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fontSize="7"
+                        fontWeight="800"
+                        fontFamily="var(--font-mono)"
+                        fill={piece.player === 'W' ? '#FFFFFF' : '#0F172A'}
+                      >
+                        {piece.type}
+                      </text>
+                    </g>
                   </g>
                 )}
               </g>
@@ -254,12 +327,12 @@ export function BoardSVG({
             <circle
               cx={lastMoveFromCenter.x}
               cy={lastMoveFromCenter.y}
-              r="14"
+              r="15"
               fill="none"
               stroke="#818CF8"
-              strokeWidth="1.5"
+              strokeWidth="2"
               strokeDasharray="3 3"
-              opacity="0.7"
+              opacity="0.8"
             />
             {/* Directional Trajectory Line */}
             <line
@@ -268,20 +341,20 @@ export function BoardSVG({
               x2={lastMoveToCenter.x}
               y2={lastMoveToCenter.y}
               stroke="#22D3EE"
-              strokeWidth="2.5"
+              strokeWidth="2.8"
               strokeDasharray="4 3"
               strokeLinecap="round"
               markerEnd="url(#moveArrowhead)"
-              opacity="0.9"
+              opacity="0.95"
             />
-            {/* Target Pulse */}
+            {/* Target Pulse Ring */}
             <circle
               cx={lastMoveToCenter.x}
               cy={lastMoveToCenter.y}
-              r="20"
+              r="21"
               fill="none"
               stroke="#22D3EE"
-              strokeWidth="2"
+              strokeWidth="2.2"
               className="pulse-ring"
             />
           </g>
@@ -290,6 +363,7 @@ export function BoardSVG({
         {/* Column Labels (a-i) */}
         {COLS.map((col, idx) => {
           const x = padding + idx * cellSize + cellSize / 2;
+          const isActive = activeCol === col;
           return (
             <React.Fragment key={`lbl-col-${col}`}>
               <text
@@ -297,8 +371,9 @@ export function BoardSVG({
                 y={padding - 12}
                 textAnchor="middle"
                 fontSize="12"
-                fill="var(--text-muted)"
-                fontWeight="600"
+                fill={isActive ? 'var(--cyan-400)' : 'var(--text-muted)'}
+                fontWeight={isActive ? '800' : '600'}
+                fontFamily="var(--font-mono)"
               >
                 {col}
               </text>
@@ -307,8 +382,9 @@ export function BoardSVG({
                 y={padding + cellSize * 9 + 18}
                 textAnchor="middle"
                 fontSize="12"
-                fill="var(--text-muted)"
-                fontWeight="600"
+                fill={isActive ? 'var(--cyan-400)' : 'var(--text-muted)'}
+                fontWeight={isActive ? '800' : '600'}
+                fontFamily="var(--font-mono)"
               >
                 {col}
               </text>
@@ -319,6 +395,7 @@ export function BoardSVG({
         {/* Row Labels (1-9) */}
         {ROWS.map((row, idx) => {
           const y = padding + (8 - idx) * cellSize + cellSize / 2 + 4;
+          const isActive = activeRow === row;
           return (
             <React.Fragment key={`lbl-row-${row}`}>
               <text
@@ -326,8 +403,9 @@ export function BoardSVG({
                 y={y}
                 textAnchor="middle"
                 fontSize="12"
-                fill="var(--text-muted)"
-                fontWeight="600"
+                fill={isActive ? 'var(--cyan-400)' : 'var(--text-muted)'}
+                fontWeight={isActive ? '800' : '600'}
+                fontFamily="var(--font-mono)"
               >
                 {row}
               </text>
@@ -336,8 +414,9 @@ export function BoardSVG({
                 y={y}
                 textAnchor="middle"
                 fontSize="12"
-                fill="var(--text-muted)"
-                fontWeight="600"
+                fill={isActive ? 'var(--cyan-400)' : 'var(--text-muted)'}
+                fontWeight={isActive ? '800' : '600'}
+                fontFamily="var(--font-mono)"
               >
                 {row}
               </text>
@@ -346,12 +425,12 @@ export function BoardSVG({
         })}
       </svg>
 
-      {/* Legend */}
+      {/* Board Legend Bar */}
       <div className="board-legend">
         <div className="legend-group">
           <div className="legend-item">
             <span className="legend-piece legend-white">W</span>
-            <span>Trắng (White)</span>
+            <span>Trắng (White - Đi trước)</span>
           </div>
           <div className="legend-item">
             <span className="legend-piece legend-black">B</span>
@@ -359,11 +438,11 @@ export function BoardSVG({
           </div>
         </div>
         <div className="legend-group rules-mini-legend">
-          <span>👊 Búa ăn ✂️ Kéo</span>
+          <span>👊 Búa (R) ăn ✂️ Kéo</span>
           <span>•</span>
-          <span>✂️ Kéo ăn ✋ Bao</span>
+          <span>✂️ Kéo (S) ăn ✋ Bao</span>
           <span>•</span>
-          <span>✋ Bao ăn 👊 Búa</span>
+          <span>✋ Bao (P) ăn 👊 Búa</span>
         </div>
       </div>
     </div>

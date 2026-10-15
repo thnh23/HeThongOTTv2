@@ -211,6 +211,15 @@ export function AdminDashboardPage() {
               progress_percent: 0,
             };
 
+            const tierUsers = usersList.filter((u) => u.tier === tier && !u.is_admin);
+            const submittedCount = tStatus.submitted_players !== undefined
+              ? tStatus.submitted_players
+              : tierUsers.filter((u) => u.has_submission).length;
+            const totalCount = tStatus.total_players !== undefined
+              ? tStatus.total_players
+              : tierUsers.length;
+            const canStart = submittedCount >= 2;
+
             const isStarting = isStartingTournament === tier;
 
             return (
@@ -240,11 +249,49 @@ export function AdminDashboardPage() {
                   )}
                 </div>
 
+                {/* Submission eligibility indicator */}
+                <div
+                  style={{
+                    marginTop: '0.75rem',
+                    padding: '0.45rem 0.65rem',
+                    borderRadius: '6px',
+                    fontSize: '0.8rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    backgroundColor: canStart ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                    border: `1px solid ${canStart ? 'rgba(16, 185, 129, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
+                  }}
+                  title={canStart ? `${submittedCount} thí sinh đã nộp bài hợp lệ và sẵn sàng thi đấu` : 'Cần tối thiểu 2 thí sinh có bài nộp hợp lệ để ghép trận vòng tròn'}
+                >
+                  <span style={{ color: canStart ? 'var(--emerald-400)' : 'var(--amber-400)', fontWeight: 600 }}>
+                    {canStart ? '✓ Đủ điều kiện ghép' : '⚠ Chưa đủ bài nộp'}
+                  </span>
+                  <strong style={{ color: '#fff', fontFamily: 'var(--font-mono)' }}>
+                    {submittedCount}/{totalCount} đã nộp
+                  </strong>
+                </div>
+
                 <button
                   id={`btn-start-tournament-${tier.toLowerCase()}`}
                   className="btn btn-primary btn-sm"
-                  style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}
-                  onClick={() => handleStartTournament(tier)}
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    marginTop: '0.75rem',
+                    opacity: canStart ? 1 : 0.65,
+                    cursor: canStart ? 'pointer' : 'not-allowed',
+                  }}
+                  onClick={() => {
+                    if (!canStart) {
+                      showToast(
+                        `Bảng ${tier} mới có ${submittedCount}/${totalCount} thí sinh nộp bài. Cần tối thiểu 2 thí sinh có bài nộp hợp lệ để ghép trận!`,
+                        'warning'
+                      );
+                      return;
+                    }
+                    handleStartTournament(tier);
+                  }}
                   disabled={isStarting}
                 >
                   {isStarting ? (
@@ -255,7 +302,13 @@ export function AdminDashboardPage() {
                   ) : (
                     <>
                       <Play size={15} />
-                      <span>{tStatus.total_matches > 0 ? 'Tạo Lượt Đấu Mới' : 'Khởi Chạy Bảng ' + tier}</span>
+                      <span>
+                        {!canStart
+                          ? `Cần tối thiểu 2 bài nộp (${submittedCount}/2)`
+                          : tStatus.total_matches > 0
+                          ? `Tạo Lượt Mới (${submittedCount} bot)`
+                          : `Ghép Trận Bảng ${tier} (${submittedCount} bot)`}
+                      </span>
                     </>
                   )}
                 </button>
@@ -348,11 +401,19 @@ export function AdminDashboardPage() {
 
                     <td style={{ textAlign: 'center' }}>
                       {u.has_submission ? (
-                        <span style={{ color: 'var(--emerald-400)', fontSize: '0.85rem', fontWeight: 600 }}>
+                        <span
+                          style={{ color: 'var(--emerald-400)', fontSize: '0.85rem', fontWeight: 600 }}
+                          title="Bài nộp hợp lệ - Sẵn sàng tham gia ghép trận"
+                        >
                           ✓ Đã nộp
                         </span>
                       ) : (
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Chưa nộp</span>
+                        <span
+                          style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}
+                          title="Chưa nộp bài - Hệ thống không ghép trận thí sinh này"
+                        >
+                          Chưa nộp
+                        </span>
                       )}
                     </td>
 

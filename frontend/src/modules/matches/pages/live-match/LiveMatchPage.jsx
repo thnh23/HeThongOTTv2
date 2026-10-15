@@ -12,11 +12,21 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldAlert,
+  Volume2,
+  VolumeX,
+  Maximize2,
+  Minimize2,
+  Copy,
+  Check,
+  Filter,
+  Pause,
+  Play,
 } from 'lucide-react';
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
 import { StatusBadge } from '@/shared/components/StatusBadge/StatusBadge.jsx';
 import { useToast } from '@/shared/context/ToastContext.jsx';
 import { apiClient, getWebSocketUrl } from '@/shared/api-client/index.js';
+import { soundFx } from '@/shared/services/soundFx.js';
 import './LiveMatchPage.css';
 
 const COLS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
@@ -37,21 +47,19 @@ function getInitialBoardState() {
 }
 
 const END_CODE_EXPLANATIONS = {
-  W1: 'Trắng Thắng do Đen mất toàn bộ quân Kéo (✂️)',
-  W2: 'Trắng Thắng do Đen mất toàn bộ quân Búa (👊)',
-  W3: 'Trắng Thắng do Đen mất toàn bộ quân Bao (✋)',
-  W4: 'Trắng Thắng do Đen không còn nước đi hợp lệ',
+  W1: 'Trắng Thắng do Đen mất toàn bộ 1 loại quân (Kéo ✂️ / Búa 👊 / Bao ✋)',
+  W2: 'Trắng Thắng do đưa quân vào ô đích i9 👑',
+  W4: 'Trắng Thắng do Đen không còn nước đi hợp lệ (Stalemate)',
   W5: 'Trắng Thắng do Đen quá thời gian (Timeout)',
-  W6: 'Trắng Thắng do Đen vi phạm quy tắc / lỗi mã nguồn',
-  B1: 'Đen Thắng do Trắng mất toàn bộ quân Kéo (✂️)',
-  B2: 'Đen Thắng do Trắng mất toàn bộ quân Búa (👊)',
-  B3: 'Đen Thắng do Trắng mất toàn bộ quân Bao (✋)',
-  B4: 'Đen Thắng do Trắng không còn nước đi hợp lệ',
+  W6: 'Trắng Thắng do Đen vi phạm quy tắc / ném ngoại lệ',
+  B1: 'Đen Thắng do Trắng mất toàn bộ 1 loại quân (Kéo ✂️ / Búa 👊 / Bao ✋)',
+  B2: 'Đen Thắng do đưa quân vào ô đích a1 🎯',
+  B4: 'Đen Thắng do Trắng không còn nước đi hợp lệ (Stalemate)',
   B5: 'Đen Thắng do Trắng quá thời gian (Timeout)',
-  B6: 'Đen Thắng do Trắng vi phạm quy tắc / lỗi mã nguồn',
-  T1: 'Hòa cờ do đạt tối đa 200 nước đi (T1)',
-  T2: 'Hòa cờ do lặp lại trạng thái 3 lần (3-fold repetition)',
-  T3: 'Hòa cờ do cả hai bên không còn khả năng ăn quân đối phương',
+  B6: 'Đen Thắng do Trắng vi phạm quy tắc / ném ngoại lệ',
+  D1: 'Bên hết nước đi bị xử thua',
+  D2: 'Hòa cờ do vượt quá 200 nước hoặc lặp thế 3 lần',
+  T1: 'Bot bị quá giờ (timeout) hoặc lỗi cú pháp',
 };
 
 export function LiveMatchPage() {
@@ -74,15 +82,38 @@ export function LiveMatchPage() {
     reason: '',
   });
 
+  const [soundEnabled, setSoundEnabled] = useState(soundFx.enabled);
+  const [isCinemaMode, setIsCinemaMode] = useState(false);
+  const [filterCapturesOnly, setFilterCapturesOnly] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
+  const [copiedMoves, setCopiedMoves] = useState(false);
+
   const wsRef = useRef(null);
   const moveFeedEndRef = useRef(null);
 
-  // Auto-scroll live feed
+  // Auto-scroll live feed when enabled
   useEffect(() => {
-    if (moveFeedEndRef.current) {
+    if (autoScroll && moveFeedEndRef.current) {
       moveFeedEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [matchData.moves]);
+  }, [matchData.moves, autoScroll]);
+
+  const toggleSound = () => {
+    const next = soundFx.toggleSound();
+    setSoundEnabled(next);
+    showToast(next ? 'Đã bật âm thanh hiệu ứng!' : 'Đã tắt âm thanh!', 'info');
+  };
+
+  const copyMoveHistory = () => {
+    if (!matchData.moves || matchData.moves.length === 0) return;
+    const text = matchData.moves
+      .map((m) => `#${m.turn} [${m.player}] ${m.from} -> ${m.to}${m.captured ? ` (ăn ${m.captured})` : ''}`)
+      .join('\n');
+    navigator.clipboard.writeText(text);
+    setCopiedMoves(true);
+    showToast('Đã sao chép lịch sử nước đi vào clipboard!', 'success');
+    setTimeout(() => setCopiedMoves(false), 2000);
+  };
 
   // REST API Sync Fallback (Loads match metadata and final replay if done)
   const fetchMatchFromRest = async () => {
@@ -183,6 +214,12 @@ export function LiveMatchPage() {
               }));
               showToast('Trận đấu đã chính thức khởi tranh!', 'info');
             } else if (msg.type === 'MOVE') {
+              if (msg.captured) {
+                soundFx.playCapture();
+              } else {
+                soundFx.playMove();
+              }
+
               setMatchData((prev) => {
                 const newMove = {
                   turn: msg.turn,
@@ -201,6 +238,7 @@ export function LiveMatchPage() {
                 };
               });
             } else if (msg.type === 'GAME_OVER') {
+              soundFx.playVictory();
               setMatchData((prev) => ({
                 ...prev,
                 status: 'done',
@@ -211,7 +249,6 @@ export function LiveMatchPage() {
               }));
               const winText = msg.winner === 'W' ? 'Trắng Thắng' : msg.winner === 'B' ? 'Đen Thắng' : 'Hòa Cờ';
               showToast(`Ván đấu kết thúc: ${winText} (${msg.end_code})`, 'success');
-              // Re-sync final stats from REST API
               fetchMatchFromRest();
             }
           } catch {
@@ -310,12 +347,22 @@ export function LiveMatchPage() {
     return counts;
   }, [matchData.current_board]);
 
+  const totalWhitePieces = pieceCounts.white.R + pieceCounts.white.S + pieceCounts.white.P;
+  const totalBlackPieces = pieceCounts.black.r + pieceCounts.black.s + pieceCounts.black.p;
+  const totalOnBoard = totalWhitePieces + totalBlackPieces || 1;
+  const whitePercent = Math.round((totalWhitePieces / totalOnBoard) * 100);
+
+  const displayedMoves = useMemo(() => {
+    if (!filterCapturesOnly) return matchData.moves;
+    return matchData.moves.filter((m) => !!m.captured);
+  }, [matchData.moves, filterCapturesOnly]);
+
   const endExplanation = matchData.end_code
     ? END_CODE_EXPLANATIONS[matchData.end_code] || `Mã kết thúc: ${matchData.end_code}`
     : '';
 
   return (
-    <div className="live-match-page animate-fade-in">
+    <div className={`live-match-page animate-fade-in ${isCinemaMode ? 'cinema-mode-active' : ''}`}>
       {/* Top Navbar */}
       <div className="live-nav-bar">
         <Link to="/matches" className="btn btn-outline btn-sm">
@@ -323,7 +370,29 @@ export function LiveMatchPage() {
           <span>Danh sách trận</span>
         </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          {/* Sound Toggle */}
+          <button
+            className={`btn btn-outline btn-xs btn-sound-live ${soundEnabled ? 'active' : ''}`}
+            onClick={toggleSound}
+            title={soundEnabled ? 'Tắt âm thanh hiệu ứng' : 'Bật âm thanh hiệu ứng'}
+            aria-label="Chuyển đổi âm thanh"
+          >
+            {soundEnabled ? <Volume2 size={15} color="var(--cyan-400)" /> : <VolumeX size={15} color="var(--text-muted)" />}
+            <span className="live-opt-label">{soundEnabled ? 'Âm thanh: Bật' : 'Âm thanh: Tắt'}</span>
+          </button>
+
+          {/* Cinema Mode Toggle */}
+          <button
+            className="btn btn-outline btn-xs"
+            onClick={() => setIsCinemaMode((prev) => !prev)}
+            title={isCinemaMode ? 'Thoát chế độ rạp chiếu' : 'Chế độ rạp chiếu (Toàn màn hình)'}
+            aria-label="Chế độ rạp chiếu"
+          >
+            {isCinemaMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            <span className="live-opt-label">{isCinemaMode ? 'Thu nhỏ' : 'Rạp chiếu'}</span>
+          </button>
+
           {/* Live indicator badge */}
           {matchData.status === 'running' ? (
             <div className="live-pulse-badge">
@@ -341,17 +410,17 @@ export function LiveMatchPage() {
           {/* WebSocket Connection status indicator */}
           <div className="ws-status-badge" title={connectionStatus}>
             {connectionStatus === 'connected' ? (
-              <Wifi size={15} color="var(--emerald-400)" />
+              <Wifi size={14} color="var(--emerald-400)" />
             ) : (
-              <WifiOff size={15} color="var(--rose-500)" />
+              <WifiOff size={14} color="var(--rose-500)" />
             )}
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              {connectionStatus === 'connected' ? 'WebSocket OK' : 'Đang kết nối...'}
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              {connectionStatus === 'connected' ? 'WS OK' : 'Đang kết nối...'}
             </span>
           </div>
 
           <Link to={`/matches/${id}`} className="btn btn-outline btn-xs">
-            <span>Mở Replay Chi Tiết</span>
+            <span>Mở Replay</span>
             <ExternalLink size={13} />
           </Link>
         </div>
@@ -364,7 +433,7 @@ export function LiveMatchPage() {
           <div className="team-avatar white-avatar">W</div>
           <div>
             <div className="player-title">{matchData.bot_white}</div>
-            <div className="player-subtitle">Quân Trắng (Đi trước)</div>
+            <div className="player-subtitle">Quân Trắng (Đi trước) • {totalWhitePieces}/18 quân</div>
             <div className="piece-pills">
               <span className={`piece-pill ${pieceCounts.white.R === 0 ? 'zero' : ''}`} title="Búa (R)">
                 👊 {pieceCounts.white.R}/6
@@ -381,12 +450,14 @@ export function LiveMatchPage() {
 
         {/* Center Live Status */}
         <div className="live-center-status">
+          <div className="esports-vs-tag">VS</div>
           {matchData.status === 'running' ? (
             <>
               <div className="live-turn-title">
-                Đang thi đấu • Nước {matchData.total_moves}
+                Đang thi đấu • Nước #{matchData.total_moves}
               </div>
               <div className="active-turn-hint">
+                <span className="live-thinking-dot animate-pulse"></span>
                 Lượt:{' '}
                 <strong>
                   {matchData.last_move?.player === 'W' ? 'Đen đang tính...' : 'Trắng đang tính...'}
@@ -416,7 +487,7 @@ export function LiveMatchPage() {
           <div className="team-avatar black-avatar">B</div>
           <div style={{ textAlign: 'right' }}>
             <div className="player-title text-cyan">{matchData.bot_black}</div>
-            <div className="player-subtitle">Quân Đen</div>
+            <div className="player-subtitle">Quân Đen • {totalBlackPieces}/18 quân</div>
             <div className="piece-pills" style={{ justifyContent: 'flex-end' }}>
               <span className={`piece-pill ${pieceCounts.black.r === 0 ? 'zero' : ''}`} title="Búa (r)">
                 👊 {pieceCounts.black.r}/6
@@ -432,6 +503,27 @@ export function LiveMatchPage() {
         </div>
       </div>
 
+      {/* Material Advantage Progress Bar */}
+      <div className="material-balance-container">
+        <div className="material-balance-labels">
+          <span style={{ color: '#FFFFFF', fontWeight: 600 }}>Trắng: {totalWhitePieces} quân</span>
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tương Quan Lực Lượng</span>
+          <span style={{ color: 'var(--cyan-400)', fontWeight: 600 }}>Đen: {totalBlackPieces} quân</span>
+        </div>
+        <div className="material-balance-track">
+          <div
+            className="material-balance-fill-white"
+            style={{ width: `${whitePercent}%` }}
+            title={`Trắng chiếm ${whitePercent}% quân số`}
+          />
+          <div
+            className="material-balance-fill-black"
+            style={{ width: `${100 - whitePercent}%` }}
+            title={`Đen chiếm ${100 - whitePercent}% quân số`}
+          />
+        </div>
+      </div>
+
       {/* Main Live Board & Move Feed Layout */}
       <div className="live-layout">
         {/* Left Col: Live Board */}
@@ -439,14 +531,14 @@ export function LiveMatchPage() {
           <BoardSVG
             boardState={matchData.current_board}
             lastMove={matchData.last_move}
-            size={520}
+            size={isCinemaMode ? 620 : 520}
           />
 
           {matchData.status === 'done' && (
             <div className="glass-card live-game-over-box animate-fade-in">
-              <Trophy size={24} color="var(--amber-400)" />
-              <div>
-                <strong>Trận đấu đã khép lại ({matchData.total_moves} nước)</strong>
+              <Trophy size={26} color="var(--amber-400)" />
+              <div style={{ flex: 1 }}>
+                <strong style={{ fontSize: '1.05rem', color: '#fff' }}>Trận đấu đã khép lại ({matchData.total_moves} nước)</strong>
                 <p style={{ margin: '0.2rem 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                   {matchData.reason || endExplanation}
                 </p>
@@ -464,11 +556,41 @@ export function LiveMatchPage() {
           <div className="feed-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Clock size={16} color="var(--cyan-400)" />
-              <span>Dòng Nước Đi Trực Tiếp ({matchData.moves.length})</span>
+              <span>Nước Đi ({displayedMoves.length})</span>
             </div>
-            {matchData.status === 'running' && (
-              <span className="live-feed-badge">Live Stream</span>
-            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              {/* Filter Captures */}
+              <button
+                className={`btn btn-outline btn-xs ${filterCapturesOnly ? 'active' : ''}`}
+                onClick={() => setFilterCapturesOnly((prev) => !prev)}
+                title={filterCapturesOnly ? 'Hiển thị tất cả nước' : 'Chỉ hiển thị nước ăn quân'}
+                aria-label="Lọc nước ăn quân"
+              >
+                <Filter size={12} />
+                <span>{filterCapturesOnly ? 'Đang lọc' : 'Ăn quân'}</span>
+              </button>
+
+              {/* Auto scroll lock */}
+              <button
+                className={`btn btn-outline btn-xs ${!autoScroll ? 'active' : ''}`}
+                onClick={() => setAutoScroll((prev) => !prev)}
+                title={autoScroll ? 'Đang tự cuộn xuống (Bấm để dừng)' : 'Đã dừng tự cuộn (Bấm để tiếp tục)'}
+                aria-label="Tự động cuộn"
+              >
+                {autoScroll ? <Pause size={12} /> : <Play size={12} />}
+              </button>
+
+              {/* Copy moves */}
+              <button
+                className="btn btn-outline btn-xs"
+                onClick={copyMoveHistory}
+                title="Sao chép toàn bộ nước đi"
+                aria-label="Sao chép nước đi"
+              >
+                {copiedMoves ? <Check size={12} color="var(--emerald-400)" /> : <Copy size={12} />}
+              </button>
+            </div>
           </div>
 
           <div className="feed-list" role="log" aria-live="polite">
@@ -477,7 +599,7 @@ export function LiveMatchPage() {
               <span>Trận đấu khởi tạo tại Sandbox</span>
             </div>
 
-            {matchData.moves.map((m, idx) => (
+            {displayedMoves.map((m, idx) => (
               <div key={idx} className="feed-item feed-move animate-fade-in">
                 <span className="feed-turn">#{m.turn}</span>
                 <div className="feed-move-info">

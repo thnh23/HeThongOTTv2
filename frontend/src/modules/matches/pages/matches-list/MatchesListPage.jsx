@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Swords,
@@ -9,6 +9,8 @@ import {
   AlertCircle,
   Radio,
   Sparkles,
+  Search,
+  Trophy,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useToast } from '@/shared/context/ToastContext.jsx';
@@ -19,6 +21,7 @@ export function MatchesListPage() {
   const [matches, setMatches] = useState([]);
   const [tierFilter, setTierFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSimulating, setIsSimulating] = useState(false);
   const [error, setError] = useState(null);
@@ -51,6 +54,25 @@ export function MatchesListPage() {
   useEffect(() => {
     fetchMatches();
   }, [tierFilter, statusFilter]);
+
+  // Filter matches by search query
+  const filteredMatches = useMemo(() => {
+    if (!searchQuery.trim()) return matches;
+    const q = searchQuery.toLowerCase();
+    return matches.filter(
+      (m) =>
+        m.bot_a_name?.toLowerCase().includes(q) ||
+        m.bot_b_name?.toLowerCase().includes(q) ||
+        m.id?.toLowerCase().includes(q)
+    );
+  }, [matches, searchQuery]);
+
+  // Statistics calculation
+  const stats = useMemo(() => {
+    const running = matches.filter((m) => m.status === 'running').length;
+    const done = matches.filter((m) => m.status === 'done').length;
+    return { total: matches.length, running, done };
+  }, [matches]);
 
   // Launch a new live simulated match
   const handleLaunchLiveMatch = async () => {
@@ -108,20 +130,46 @@ export function MatchesListPage() {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="filter-bar">
-        <select
-          id="select-filter-tier"
-          className="select-filter"
-          value={tierFilter}
-          onChange={(e) => setTierFilter(e.target.value)}
-        >
-          <option value="">Tất cả Bảng</option>
-          <option value="A">Bảng A</option>
-          <option value="B">Bảng B</option>
-          <option value="C">Bảng C</option>
-        </select>
+      {/* Stats Summary Bar */}
+      <div className="matches-stats-bar">
+        <div className="matches-stat-pill">
+          <span>Tổng số:</span>
+          <strong>{stats.total} trận</strong>
+        </div>
+        {stats.running > 0 && (
+          <div className="matches-stat-pill running">
+            <span className="live-dot animate-ping" />
+            <span>Đang trực tiếp:</span>
+            <strong>{stats.running} trận</strong>
+          </div>
+        )}
+        <div className="matches-stat-pill">
+          <span>Đã hoàn thành:</span>
+          <strong>{stats.done} trận</strong>
+        </div>
+      </div>
 
+      {/* Filter Bar with Tabs and Search */}
+      <div className="filter-bar">
+        {/* Tier Tabs */}
+        <div className="tier-filter-tabs">
+          {[
+            { id: '', label: 'Tất cả Bảng' },
+            { id: 'A', label: 'Bảng A' },
+            { id: 'B', label: 'Bảng B' },
+            { id: 'C', label: 'Bảng C' },
+          ].map((t) => (
+            <button
+              key={t.id}
+              className={`filter-tab-btn ${tierFilter === t.id ? 'active' : ''}`}
+              onClick={() => setTierFilter(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Status Filter */}
         <select
           id="select-filter-status"
           className="select-filter"
@@ -134,11 +182,26 @@ export function MatchesListPage() {
           <option value="pending">Chờ đấu</option>
         </select>
 
+        {/* Search */}
+        <div className="search-input-box" style={{ flex: 1, minWidth: '200px' }}>
+          <Search size={16} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Tìm theo tên bot..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="search-clear-btn" onClick={() => setSearchQuery('')}>✕</button>
+          )}
+        </div>
+
         <button
           id="btn-refresh-matches"
           className="btn btn-outline btn-sm"
           onClick={() => fetchMatches(true)}
           disabled={isLoading}
+          title="Làm mới danh sách"
         >
           <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
           <span>Làm mới</span>
@@ -155,7 +218,7 @@ export function MatchesListPage() {
           <RefreshCw className="animate-spin" size={28} style={{ color: 'var(--cyan-400)', margin: '0 auto 1rem' }} />
           <p style={{ color: 'var(--text-secondary)' }}>Đang tải danh sách trận đấu...</p>
         </div>
-      ) : matches.length === 0 ? (
+      ) : filteredMatches.length === 0 ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: '3.5rem' }}>
           <Swords size={48} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem', opacity: 0.5 }} />
           <h3>Không có trận đấu nào phù hợp</h3>
@@ -169,7 +232,7 @@ export function MatchesListPage() {
         </div>
       ) : (
         <div className="matches-grid">
-          {matches.map((m) => (
+          {filteredMatches.map((m) => (
             <div key={m.id} className="glass-card match-card">
               <div className="match-opponents">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -181,16 +244,18 @@ export function MatchesListPage() {
                   )}
                 </div>
 
-                <div className="bot-tag bot-white-tag">
+                <div className={`bot-tag bot-white-tag ${m.winner === 'W' ? 'bot-winner' : ''}`}>
                   <span className="mini-tag mini-tag-white">W</span>
                   <span className="bot-name">{m.bot_a_name || 'Bot White'}</span>
+                  {m.winner === 'W' && <span className="winner-crown">🏆</span>}
                 </div>
 
                 <span className="vs-badge">VS</span>
 
-                <div className="bot-tag bot-black-tag">
+                <div className={`bot-tag bot-black-tag ${m.winner === 'B' ? 'bot-winner' : ''}`}>
                   <span className="mini-tag mini-tag-black">B</span>
                   <span className="bot-name">{m.bot_b_name || 'Bot Black'}</span>
+                  {m.winner === 'B' && <span className="winner-crown">🏆</span>}
                 </div>
               </div>
 
@@ -212,7 +277,7 @@ export function MatchesListPage() {
                     <span>Xem Trực Tiếp</span>
                   </Link>
                 ) : (
-                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  <div style={{ display: 'flex', gap: '0.45rem' }}>
                     <Link
                       id={`btn-view-match-${m.id}`}
                       to={`/matches/${m.id}`}

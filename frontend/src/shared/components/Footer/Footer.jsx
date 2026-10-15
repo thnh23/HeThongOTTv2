@@ -37,7 +37,7 @@ export function Footer() {
 
       <div className="footer-bottom">
         <span>© 2026 OTTv2 Tournament Platform — Đại học Công Nghệ (VNU-UET).</span>
-        <span>Version 1.0.0 • Sprint 3 Ready</span>
+        <span>Version 2.0.0 • AI Tournament & Live Spectator System</span>
       </div>
     </footer>
   );

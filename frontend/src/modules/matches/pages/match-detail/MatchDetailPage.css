@@ -245,19 +245,77 @@
   gap: 0.75rem;
 }
 
-.speed-select {
+.speed-pills-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.speed-pill-btn {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  border-radius: var(--radius-sm);
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  font-size: 0.85rem;
-  padding: 0.3rem 0.6rem;
-  border-radius: var(--radius-sm);
-  outline: none;
+  transition: all var(--transition-fast);
   cursor: pointer;
 }
 
-.speed-select:focus-visible {
-  outline: 2px solid var(--cyan-400);
+.speed-pill-btn:hover {
+  border-color: var(--cyan-400);
+  color: #fff;
+}
+
+.speed-pill-btn.active {
+  background: rgba(34, 211, 238, 0.2);
+  border-color: var(--cyan-400);
+  color: var(--cyan-400);
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.25);
+}
+
+/* Graveyard */
+.graveyard-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: rgba(14, 20, 36, 0.75);
+}
+
+.graveyard-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.graveyard-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.graveyard-pieces {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.graveyard-pill {
+  font-size: 0.95rem;
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  border-radius: 4px;
+  padding: 0.1rem 0.3rem;
+  line-height: 1;
 }
 
 /* Moves Sidebar */
