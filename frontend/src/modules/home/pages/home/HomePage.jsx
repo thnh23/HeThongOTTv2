@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Swords,
@@ -16,10 +16,17 @@ import {
   Flame,
   Target,
   Zap,
+  RotateCcw,
 } from 'lucide-react';
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
 import { StarterKitModal } from '@/shared/components/StarterKitModal/index.js';
-import { INITIAL_BOARD, getAdjacentSquares } from '@/shared/constants/gameState.js';
+import {
+  INITIAL_BOARD,
+  getSquareMoveDetails,
+  PIECE_NAMES,
+  WHITE_GOAL,
+  BLACK_GOAL,
+} from '@/shared/constants/gameState.js';
 import { soundFx } from '@/shared/services/soundFx.js';
 import './HomePage.css';
 
@@ -30,9 +37,8 @@ const TACTICAL_PRESETS = [
     icon: '⚔️',
     board: INITIAL_BOARD,
     selectedSq: 'b2',
-    highlighted: getAdjacentSquares('b2'),
     lastMove: null,
-    desc: 'Thế cờ 9×9 khởi đầu tiêu chuẩn: 18 quân Trắng (hàng 1-2, đi trước) và 18 quân Đen (hàng 8-9).',
+    desc: 'Thế cờ 9×9 khởi đầu tiêu chuẩn: 18 quân Trắng (hàng 1-2, đi trước) và 18 quân Đen (hàng 8-9). Quân Búa Trắng tại b2 có 3 nước tiến hợp lệ vào hàng 3.',
   },
   {
     id: 'rock_scissors',
@@ -44,9 +50,8 @@ const TACTICAL_PRESETS = [
       e6: { player: 'B', type: 'S' },
     },
     selectedSq: 'e5',
-    highlighted: ['e6', 'd6', 'f6', 'd5', 'f5', 'd4', 'e4', 'f4'],
     lastMove: { from: 'e4', to: 'e5', player: 'W' },
-    desc: 'Búa Trắng ở ô e5 tấn công và ăn sạch Kéo Đen ở ô e6 theo quy tắc Búa đập Kéo!',
+    desc: 'Búa Trắng ở ô e5 tấn công Kéo Đen ở ô e6 (ô viền đỏ) theo quy tắc Búa đập Kéo! Hãy nhấp vào ô e6 để thực hiện nước ăn quân.',
   },
   {
     id: 'white_goal',
@@ -57,9 +62,8 @@ const TACTICAL_PRESETS = [
       h8: { player: 'W', type: 'P' },
     },
     selectedSq: 'h8',
-    highlighted: ['i9', 'h9', 'g9', 'g8', 'g7', 'h7', 'i7', 'i8'],
     lastMove: { from: 'g7', to: 'h8', player: 'W' },
-    desc: 'Quân Trắng ở h8 chỉ cần 1 bước tiến chéo vào ô góc i9 là giành chiến thắng ngay lập tức (Mã W2)!',
+    desc: 'Quân Bao Trắng ở h8 chỉ cần 1 bước tiến chéo vào ô góc i9 (ô viền đỏ W2) ăn Búa Đen là giành chiến thắng ngay lập tức (Mã W2)!',
   },
   {
     id: 'black_goal',
@@ -67,31 +71,107 @@ const TACTICAL_PRESETS = [
     icon: '🎯',
     board: {
       ...INITIAL_BOARD,
-      b2: { player: 'B', type: 'S' },
+      b2: { player: 'B', type: 'P' },
     },
     selectedSq: 'b2',
-    highlighted: ['a1', 'b1', 'c1', 'a2', 'c2', 'a3', 'b3', 'c3'],
     lastMove: { from: 'c3', to: 'b2', player: 'B' },
-    desc: 'Quân Đen ở b2 áp sát và chỉ cần 1 nước chéo vào ô góc a1 là kết liễu trận đấu (Mã B2)!',
+    desc: 'Quân Bao Đen ở b2 áp sát và ăn Búa Trắng tại ô góc a1 (ô viền đỏ B2) là kết liễu trận đấu (Mã B2)!',
   },
 ];
 
 export function HomePage() {
-  const [activePreset, setActivePreset] = useState(TACTICAL_PRESETS[0]);
-  const [selectedSq, setSelectedSq] = useState('b2');
-  const [highlighted, setHighlighted] = useState(getAdjacentSquares('b2'));
+  const [activePresetId, setActivePresetId] = useState(TACTICAL_PRESETS[0].id);
+  const [boardState, setBoardState] = useState(TACTICAL_PRESETS[0].board);
+  const [selectedSq, setSelectedSq] = useState(TACTICAL_PRESETS[0].selectedSq);
+  const [lastMove, setLastMove] = useState(TACTICAL_PRESETS[0].lastMove);
+  const [statusMessage, setStatusMessage] = useState(TACTICAL_PRESETS[0].desc);
   const [isStarterKitOpen, setIsStarterKitOpen] = useState(false);
 
+  // Calculate real legal moves and combat targets using OTTv2 official rules
+  const moveDetails = useMemo(() => {
+    return getSquareMoveDetails(boardState, selectedSq);
+  }, [boardState, selectedSq]);
+
+  const highlighted = moveDetails.emptyMoves;
+  const capturable = useMemo(() => moveDetails.captureMoves.map((c) => c.sq), [moveDetails]);
+
   const handleSquareClick = (sq, piece) => {
-    setSelectedSq(sq);
-    setHighlighted(getAdjacentSquares(sq));
-    soundFx.playMove();
+    const isLegalEmpty = moveDetails.emptyMoves.includes(sq);
+    const isCapturable = moveDetails.captureMoves.some((c) => c.sq === sq);
+
+    // 1. Move or capture piece if currently selected piece can legally go to 'sq'
+    if (selectedSq && (isLegalEmpty || isCapturable)) {
+      const movingPiece = boardState[selectedSq];
+      const capturedPiece = boardState[sq];
+
+      const newBoard = { ...boardState };
+      delete newBoard[selectedSq];
+      newBoard[sq] = movingPiece;
+
+      const newMove = {
+        from: selectedSq,
+        to: sq,
+        player: movingPiece.player,
+        captured: capturedPiece ? capturedPiece.type : null,
+      };
+
+      setBoardState(newBoard);
+      setSelectedSq(sq);
+      setLastMove(newMove);
+
+      const isWhiteWinW2 = sq === WHITE_GOAL && movingPiece.player === 'W';
+      const isBlackWinB2 = sq === BLACK_GOAL && movingPiece.player === 'B';
+
+      if (isWhiteWinW2) {
+        soundFx.playVictory();
+        setStatusMessage('👑 CHIẾN THẮNG MÃ W2: Quân Trắng đã đột phá thành công vào ô góc đích i9!');
+      } else if (isBlackWinB2) {
+        soundFx.playVictory();
+        setStatusMessage('🎯 CHIẾN THẮNG MÃ B2: Quân Đen đã kết liễu trận đấu khi tiến vào ô đích a1!');
+      } else if (isCapturable) {
+        soundFx.playCapture();
+        setStatusMessage(
+          `⚔️ ĂN QUÂN THÀNH CÔNG: ${PIECE_NAMES[movingPiece.type]} ăn ${PIECE_NAMES[capturedPiece.type]} tại ô ${sq}!`
+        );
+      } else {
+        soundFx.playMove();
+        setStatusMessage(
+          `Đã di chuyển ${movingPiece.player === 'W' ? 'Trắng' : 'Đen'} ${PIECE_NAMES[movingPiece.type]} từ ${selectedSq} tới ${sq}.`
+        );
+      }
+      return;
+    }
+
+    // 2. Click on an existing piece -> Select this piece and highlight its legal moves
+    if (piece) {
+      setSelectedSq(sq);
+      soundFx.playMove();
+      const details = getSquareMoveDetails(boardState, sq);
+      const totalLegal = details.emptyMoves.length + details.captureMoves.length;
+      if (totalLegal > 0) {
+        setStatusMessage(
+          `Đang chọn ${piece.player === 'W' ? 'Trắng' : 'Đen'} ${PIECE_NAMES[piece.type]} tại ${sq}: có ${totalLegal} nước hợp lệ (ô xanh: đi được, ô đỏ: ăn quân). Nhấp ô xanh/đỏ để đi thử!`
+        );
+      } else {
+        setStatusMessage(
+          `Quân ${piece.player === 'W' ? 'Trắng' : 'Đen'} ${PIECE_NAMES[piece.type]} tại ${sq} đang bị chặn kín bởi quân cùng phe (0 nước hợp lệ).`
+        );
+      }
+      return;
+    }
+
+    // 3. Click on an empty square that is NOT a legal move -> Clear selection, do NOT highlight empty square!
+    setSelectedSq(null);
+    setStatusMessage(`Ô ${sq} là ô trống. Hãy nhấp vào một quân cờ để xem nước đi hợp lệ hoặc điều khiển nước cờ.`);
   };
 
   const handleSelectPreset = (preset) => {
-    setActivePreset(preset);
+    setActivePresetId(preset.id);
+    setBoardState(preset.board);
     setSelectedSq(preset.selectedSq);
-    setHighlighted(preset.highlighted);
+    setLastMove(preset.lastMove);
+    setStatusMessage(preset.desc);
+
     if (preset.id === 'rock_scissors') {
       soundFx.playCapture();
     } else if (preset.id.includes('goal')) {
@@ -99,6 +179,11 @@ export function HomePage() {
     } else {
       soundFx.playMove();
     }
+  };
+
+  const handleResetCurrentPreset = () => {
+    const currentPreset = TACTICAL_PRESETS.find((p) => p.id === activePresetId) || TACTICAL_PRESETS[0];
+    handleSelectPreset(currentPreset);
   };
 
   return (
@@ -180,14 +265,26 @@ export function HomePage() {
 
           {/* Tactical Scenario Quick Presets */}
           <div className="preset-selector-wrap">
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-              Chọn tình huống chiến thuật:
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
+                Chọn tình huống chiến thuật:
+              </span>
+              <button
+                type="button"
+                className="btn btn-outline btn-xs"
+                onClick={handleResetCurrentPreset}
+                style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+                title="Khôi phục lại thế cờ ban đầu"
+              >
+                <RotateCcw size={12} />
+                <span>Đặt lại</span>
+              </button>
+            </div>
             <div className="preset-buttons-grid">
               {TACTICAL_PRESETS.map((p) => (
                 <button
                   key={p.id}
-                  className={`preset-btn ${activePreset.id === p.id ? 'active' : ''}`}
+                  className={`preset-btn ${activePresetId === p.id ? 'active' : ''}`}
                   onClick={() => handleSelectPreset(p)}
                 >
                   <span className="preset-icon">{p.icon}</span>
@@ -201,7 +298,7 @@ export function HomePage() {
           <div className="scenario-callout">
             <Zap size={16} color="var(--amber-400)" style={{ flexShrink: 0, marginTop: '2px' }} />
             <p style={{ margin: 0, fontSize: '0.875rem', color: '#fff' }}>
-              {activePreset.desc}
+              {statusMessage}
             </p>
           </div>
 
@@ -230,10 +327,11 @@ export function HomePage() {
 
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <BoardSVG
-            boardState={activePreset.board}
+            boardState={boardState}
             selectedSquare={selectedSq}
             highlightedSquares={highlighted}
-            lastMove={activePreset.lastMove}
+            capturableSquares={capturable}
+            lastMove={lastMove}
             onSquareClick={handleSquareClick}
             size={480}
           />
