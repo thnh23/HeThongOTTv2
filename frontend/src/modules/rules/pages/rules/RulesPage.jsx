@@ -1,24 +1,31 @@
-import React, { useState } from 'react';
-import { BookOpen, Award, ShieldAlert, Cpu, CheckCircle, Target, Compass, Sparkles } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { BookOpen, Award, ShieldAlert, Cpu, CheckCircle, Target, Compass, Sparkles, Swords } from 'lucide-react';
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
 import {
   INITIAL_BOARD,
   PIECE_SYMBOLS,
   PIECE_NAMES,
-  getAdjacentSquares,
+  BEATS,
+  WHITE_GOAL,
+  BLACK_GOAL,
+  getSquareMoveDetails,
 } from '@/shared/constants/gameState.js';
 import './RulesPage.css';
 
 export function RulesPage() {
-  const [selectedSquare, setSelectedSquare] = useState('b2');
-  const [highlightedSquares, setHighlightedSquares] = useState(getAdjacentSquares('b2'));
+  const [selectedSquare, setSelectedSquare] = useState('f2');
 
-  const handleSquareClick = (sq, piece) => {
+  const moveDetails = useMemo(() => {
+    return getSquareMoveDetails(INITIAL_BOARD, selectedSquare);
+  }, [selectedSquare]);
+
+  const handleSquareClick = (sq) => {
     setSelectedSquare(sq);
-    setHighlightedSquares(getAdjacentSquares(sq));
   };
 
   const currentPiece = INITIAL_BOARD[selectedSquare];
+  const isWhiteGoal = selectedSquare === WHITE_GOAL;
+  const isBlackGoal = selectedSquare === BLACK_GOAL;
 
   return (
     <div className="rules-page animate-fade-in">
@@ -27,7 +34,7 @@ export function RulesPage() {
           Quy Chuẩn Luật Chơi <span className="gradient-text">OTTv2</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
-          Đặc tả chính thức về bàn cờ, cơ chế di chuyển, luật ăn quân và chuẩn giao thức bot.
+          Đặc tả chính thức về bàn cờ 9×9, cơ chế di chuyển 8 hướng, luật ăn quân và điều kiện thắng cuộc.
         </p>
       </div>
 
@@ -36,10 +43,10 @@ export function RulesPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1rem' }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--cyan-400)', fontSize: '1.25rem', margin: 0 }}>
             <Sparkles size={22} />
-            Thế Trận Khởi Đầu Bàn Cờ 9×9 (Trực Quan)
+            Thế Trận Khởi Đầu Bàn Cờ 9×9 (Trực Quan &amp; Tương Tác)
           </h3>
           <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            💡 Nhấp vào ô bất kỳ để xem tầm di chuyển 8 hướng
+            💡 Nhấp vào quân bất kỳ để xem nước đi hợp lệ &amp; luật chặn quân
           </span>
         </div>
 
@@ -49,7 +56,8 @@ export function RulesPage() {
             <BoardSVG
               boardState={INITIAL_BOARD}
               selectedSquare={selectedSquare}
-              highlightedSquares={highlightedSquares}
+              highlightedSquares={moveDetails.emptyMoves}
+              capturableSquares={moveDetails.captureMoves.map((c) => c.sq)}
               onSquareClick={handleSquareClick}
               size={480}
             />
@@ -58,37 +66,126 @@ export function RulesPage() {
           {/* Board Inspector & Layout Guide */}
           <div className="board-preview-info">
             {/* Selected Square Inspector */}
-            <div className="board-info-block" style={{ borderLeft: '4px solid var(--amber-400)' }}>
-              <h4 style={{ color: 'var(--amber-400)' }}>
-                <Target size={18} />
-                Chi Tiết Ô Được Chọn: <code>{selectedSquare}</code>
-              </h4>
+            <div className="board-info-block inspector-card-active" style={{ borderLeft: '4px solid var(--amber-400)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <h4 style={{ color: 'var(--amber-400)', margin: 0 }}>
+                  <Target size={18} />
+                  Chi Tiết Ô: <code>{selectedSquare}</code>
+                </h4>
+                {isWhiteGoal && (
+                  <span className="goal-tag gold-tag">👑 ĐÍCH PHE TRẮNG (W2)</span>
+                )}
+                {isBlackGoal && (
+                  <span className="goal-tag cyan-tag">🎯 ĐÍCH PHE ĐEN (W2)</span>
+                )}
+              </div>
+
               {currentPiece ? (
                 <div>
-                  <p>
-                    <strong>Quân cờ:</strong> {PIECE_SYMBOLS[currentPiece.type]} {PIECE_NAMES[currentPiece.type]}
-                  </p>
-                  <p>
-                    <strong>Phe điều khiển:</strong>{' '}
-                    <span
-                      className="inspect-badge"
-                      style={{
-                        background: currentPiece.player === 'W' ? '#FFFFFF' : '#1E293B',
-                        color: currentPiece.player === 'W' ? '#0F172A' : '#38BDF8',
-                        border: currentPiece.player === 'B' ? '1px solid #38BDF8' : 'none',
-                      }}
-                    >
-                      {currentPiece.player === 'W' ? 'Phe Trắng (White)' : 'Phe Đen (Black)'}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '2rem' }}>{PIECE_SYMBOLS[currentPiece.type]}</span>
+                    <div>
+                      <div style={{ fontWeight: '700', fontSize: '1.05rem', color: 'var(--text-primary)' }}>
+                        {PIECE_NAMES[currentPiece.type]} ({currentPiece.type})
+                      </div>
+                      <span
+                        className="inspect-badge"
+                        style={{
+                          background: currentPiece.player === 'W' ? '#FFFFFF' : '#0B1120',
+                          color: currentPiece.player === 'W' ? '#0F172A' : '#38BDF8',
+                          border: currentPiece.player === 'B' ? '1px solid #38BDF8' : '1px solid #CBD5E1',
+                        }}
+                      >
+                        {currentPiece.player === 'W' ? '⚪ Phe Trắng (Đi trước)' : '🔴 Phe Đen'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Combat rule note */}
+                  <div className="combat-power-pill">
+                    <Swords size={14} style={{ color: 'var(--amber-400)', flexShrink: 0 }} />
+                    <span>
+                      {PIECE_NAMES[currentPiece.type]} <strong>ăn được {PIECE_NAMES[BEATS[currentPiece.type]]}</strong> • Không ăn được quân cùng loại • Bị kẻ mạnh hơn chặn
                     </span>
-                  </p>
-                  <p style={{ marginTop: '0.4rem', color: 'var(--emerald-400)', fontSize: '0.82rem' }}>
-                    ✦ Các ô viền xanh lá là các hướng có thể di chuyển 1 ô theo 8 hướng.
-                  </p>
+                  </div>
+
+                  {/* Legal Moves List */}
+                  <div className="analysis-group">
+                    <div className="analysis-header" style={{ color: 'var(--emerald-400)' }}>
+                      <CheckCircle size={15} />
+                      Nước đi hợp lệ ({moveDetails.legalMoves.length} ô):
+                    </div>
+                    {moveDetails.legalMoves.length > 0 ? (
+                      <div className="square-chips-list">
+                        {moveDetails.emptyMoves.map((sq) => (
+                          <span key={sq} className="chip empty-move">
+                            ● {sq} (ô trống)
+                          </span>
+                        ))}
+                        {moveDetails.captureMoves.map((c) => (
+                          <span key={c.sq} className="chip capture-move">
+                            ⚔️ {c.sq} (Ăn {c.piece.type})
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="empty-analysis-notice">
+                        Không có ô hợp lệ nào (Bị quây kín bởi quân mình ở khai cuộc).
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Friendly Blocked Explanation */}
+                  {moveDetails.blockedFriendly.length > 0 && (
+                    <div className="analysis-group">
+                      <div className="analysis-header" style={{ color: 'var(--text-muted)' }}>
+                        <ShieldAlert size={15} />
+                        Bị chặn bởi quân cùng phe ({moveDetails.blockedFriendly.length} ô):
+                      </div>
+                      <div className="square-chips-list">
+                        {moveDetails.blockedFriendly.map((b) => (
+                          <span key={b.sq} className="chip friendly-blocked-chip">
+                            ✕ {b.sq} ({b.piece.type})
+                          </span>
+                        ))}
+                      </div>
+                      <p className="analysis-subtext">
+                        🛡️ <em>Luật OTTv2: Không được di chuyển vào ô đang có quân cùng phe.</em>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Goal Explanations when clicking a goal square */}
+                  {isWhiteGoal && (
+                    <div className="goal-callout gold">
+                      👑 <strong>Ô i9 là Đích của Trắng (Mã W2):</strong> Ban đầu do quân Đen <code>{currentPiece.type}</code> chốt giữ. Khi phe Trắng tiến được bất kỳ quân nào vào ô này, Trắng lập tức thắng ngay ván đấu.
+                    </div>
+                  )}
+                  {isBlackGoal && (
+                    <div className="goal-callout cyan">
+                      🎯 <strong>Ô a1 là Đích của Đen (Mã W2):</strong> Ban đầu do quân Trắng <code>{currentPiece.type}</code> chốt giữ. Khi phe Đen tiến được bất kỳ quân nào vào ô này, Đen lập tức thắng ngay ván đấu.
+                    </div>
+                  )}
                 </div>
               ) : (
-                <p style={{ color: 'var(--text-muted)' }}>
-                  Ô trống (Khu vực trung tâm hàng 3 đến 7 ban đầu hoàn toàn trống để cơ động chiến thuật).
-                </p>
+                <div>
+                  <p style={{ color: 'var(--text-secondary)' }}>
+                    Ô <code>{selectedSquare}</code> là ô trống trong thế trận khởi đầu (Khu vực trung tâm từ hàng 3 đến hàng 7).
+                  </p>
+                  {isWhiteGoal && (
+                    <div className="goal-callout gold">
+                      👑 <strong>Ô i9 là Đích của Trắng (Mã W2):</strong> Trắng chỉ cần đưa quân vào ô này là Thắng ngay!
+                    </div>
+                  )}
+                  {isBlackGoal && (
+                    <div className="goal-callout cyan">
+                      🎯 <strong>Ô a1 là Đích của Đen (Mã W2):</strong> Đen chỉ cần đưa quân vào ô này là Thắng ngay!
+                    </div>
+                  )}
+                  <p style={{ color: 'var(--cyan-400)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                    👉 Nhấp vào một quân cờ ở hàng 1, 2 (Trắng) hoặc hàng 8, 9 (Đen) để xem nước đi hợp lệ!
+                  </p>
+                </div>
               )}
             </div>
 
@@ -120,10 +217,10 @@ export function RulesPage() {
                 Ô Góc Đích Chiến Thắng (Mã W2)
               </h4>
               <p>
-                👑 <strong>Trắng vào ô <code>i9</code></strong> (góc trên bên phải) ➔ Thắng ngay.
+                👑 <strong>Trắng vào ô <code>i9</code></strong> (góc trên bên phải) ➔ Thắng ngay lập tức.
               </p>
               <p>
-                🎯 <strong>Đen vào ô <code>a1</code></strong> (góc dưới bên trái) ➔ Thắng ngay.
+                🎯 <strong>Đen vào ô <code>a1</code></strong> (góc dưới bên trái) ➔ Thắng ngay lập tức.
               </p>
             </div>
           </div>

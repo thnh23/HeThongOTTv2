@@ -65,6 +65,23 @@ export const INITIAL_BOARD = {
   i1: { player: 'W', type: 'P' },
 };
 
+export const WHITE_GOAL = 'i9';
+export const BLACK_GOAL = 'a1';
+
+export const BEATS = {
+  R: 'S', // Búa đập Kéo
+  S: 'P', // Kéo cắt Bao
+  P: 'R', // Bao bọc Búa
+};
+
+/**
+ * Kiểm tra xem quân tấn công có thể ăn quân phòng thủ không
+ */
+export function canCapture(attackerType, defenderType) {
+  if (!attackerType || !defenderType) return false;
+  return BEATS[attackerType] === defenderType;
+}
+
 /**
  * Tính các ô lân cận hợp lệ theo 8 hướng (tối đa 8 ô)
  */
@@ -90,4 +107,81 @@ export function getAdjacentSquares(sq) {
   });
 
   return results;
+}
+
+/**
+ * Phân tích chi tiết nước đi hợp lệ và lý do bị chặn từ 1 ô theo luật OTTv2
+ * @param {Object} boardState Bản đồ ô cờ {"a1": {player: 'W', type: 'R'}}
+ * @param {string} sq Tọa độ ô (ví dụ 'f2')
+ */
+export function getSquareMoveDetails(boardState = {}, sq) {
+  if (!sq) {
+    return {
+      piece: null,
+      legalMoves: [],
+      emptyMoves: [],
+      captureMoves: [],
+      blockedFriendly: [],
+      blockedSameType: [],
+      blockedDefeated: [],
+    };
+  }
+
+  const piece = boardState[sq] || null;
+  if (!piece) {
+    return {
+      piece: null,
+      legalMoves: [],
+      emptyMoves: [],
+      captureMoves: [],
+      blockedFriendly: [],
+      blockedSameType: [],
+      blockedDefeated: [],
+    };
+  }
+
+  const adjacent = getAdjacentSquares(sq);
+  const emptyMoves = [];
+  const captureMoves = [];
+  const blockedFriendly = [];
+  const blockedSameType = [];
+  const blockedDefeated = [];
+
+  adjacent.forEach((targetSq) => {
+    const targetPiece = boardState[targetSq];
+    if (!targetPiece) {
+      // Ô trống -> Luôn đi được
+      emptyMoves.push(targetSq);
+    } else if (targetPiece.player === piece.player) {
+      // Ô có quân mình -> Bị chặn (không được dẫm lên quân cùng phe)
+      blockedFriendly.push({ sq: targetSq, piece: targetPiece });
+    } else {
+      // Ô có quân địch
+      if (targetPiece.type === piece.type) {
+        // Cùng loại -> Chặn đường, không ăn nhau
+        blockedSameType.push({ sq: targetSq, piece: targetPiece });
+      } else if (canCapture(piece.type, targetPiece.type)) {
+        // Khác loại & Kẻ mạnh hơn ăn kẻ yếu -> Ăn được
+        captureMoves.push({ sq: targetSq, piece: targetPiece });
+      } else {
+        // Kẻ yếu hơn -> Bị chặn, không vào được ô của kẻ mạnh
+        blockedDefeated.push({ sq: targetSq, piece: targetPiece });
+      }
+    }
+  });
+
+  const legalMoves = [
+    ...emptyMoves,
+    ...captureMoves.map((c) => c.sq),
+  ];
+
+  return {
+    piece,
+    legalMoves,
+    emptyMoves,
+    captureMoves,
+    blockedFriendly,
+    blockedSameType,
+    blockedDefeated,
+  };
 }

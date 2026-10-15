@@ -137,8 +137,53 @@
   box-shadow: 0 0 8px rgba(34, 211, 238, 0.35);
 }
 
+.capturable-target-pulse {
+  animation: capturablePulse 1.2s ease-in-out infinite;
+}
+
+@keyframes capturablePulse {
+  0%, 100% {
+    stroke-opacity: 0.95;
+    stroke-width: 2.2px;
+  }
+  50% {
+    stroke-opacity: 0.4;
+    stroke-width: 1.4px;
+  }
+}
+
+.goal-legend-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.goal-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.gold-tag {
+  background: rgba(245, 158, 11, 0.12);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.cyan-tag {
+  background: rgba(34, 211, 238, 0.12);
+  color: #38BDF8;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+}
+
 @media (max-width: 600px) {
-  .rules-mini-legend {
+  .rules-mini-legend,
+  .goal-legend-group {
     display: none;
   }
   .board-container {

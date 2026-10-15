@@ -20,6 +20,7 @@ export function BoardSVG({
   boardState = {},
   selectedSquare = null,
   highlightedSquares = [],
+  capturableSquares = [],
   lastMove = null,
   onSquareClick = () => {},
   size = 540,
@@ -103,13 +104,13 @@ export function BoardSVG({
 
           {/* Goal Gradients */}
           <radialGradient id="gradGoldGoal" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(245, 158, 11, 0.4)" />
-            <stop offset="100%" stopColor="rgba(245, 158, 11, 0.05)" />
+            <stop offset="0%" stopColor="rgba(245, 158, 11, 0.35)" />
+            <stop offset="100%" stopColor="rgba(245, 158, 11, 0.04)" />
           </radialGradient>
 
           <radialGradient id="gradCyanGoal" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(34, 211, 238, 0.4)" />
-            <stop offset="100%" stopColor="rgba(34, 211, 238, 0.05)" />
+            <stop offset="0%" stopColor="rgba(34, 211, 238, 0.35)" />
+            <stop offset="100%" stopColor="rgba(34, 211, 238, 0.04)" />
           </radialGradient>
 
           {/* Arrowhead marker for move trajectory */}
@@ -150,20 +151,23 @@ export function BoardSVG({
 
             const isSelected = selectedSquare === sqName;
             const isHighlighted = highlightedSquares.includes(sqName);
+            const isCapturable = capturableSquares.includes(sqName);
             const isLastFrom = lastMove?.from === sqName;
             const isLastTo = lastMove?.to === sqName;
             const isHovered = hoveredSquare === sqName;
 
             let fillColor = isDark ? '#0F162A' : '#141E38';
 
-            if (isLastTo) {
+            if (isCapturable) {
+              fillColor = 'rgba(239, 68, 68, 0.32)';
+            } else if (isLastTo) {
               fillColor = 'rgba(34, 211, 238, 0.28)';
             } else if (isLastFrom) {
               fillColor = 'rgba(99, 102, 241, 0.30)';
             } else if (isSelected) {
               fillColor = 'rgba(245, 158, 11, 0.38)';
             } else if (isHighlighted) {
-              fillColor = 'rgba(52, 211, 153, 0.30)';
+              fillColor = 'rgba(52, 211, 153, 0.28)';
             } else if (isWhiteGoal) {
               fillColor = 'url(#gradGoldGoal)';
             } else if (isBlackGoal) {
@@ -180,6 +184,13 @@ export function BoardSVG({
                 onMouseEnter={() => setHoveredSquare(sqName)}
                 onMouseLeave={() => setHoveredSquare(null)}
               >
+                <title>
+                  {sqName}
+                  {isWhiteGoal ? ' — Ô đích phe Trắng (Mã W2)' : ''}
+                  {isBlackGoal ? ' — Ô đích phe Đen (Mã W2)' : ''}
+                  {piece ? ` (${piece.player === 'W' ? 'Trắng' : 'Đen'} ${PIECE_NAMES[piece.type]})` : ' (Trống)'}
+                </title>
+
                 {/* Cell Base Rect */}
                 <rect
                   x={x}
@@ -188,7 +199,9 @@ export function BoardSVG({
                   height={cellSize}
                   fill={fillColor}
                   stroke={
-                    isSelected
+                    isCapturable
+                      ? '#EF4444'
+                      : isSelected
                       ? '#F59E0B'
                       : isHighlighted
                       ? '#34D399'
@@ -201,45 +214,80 @@ export function BoardSVG({
                       : isBlackGoal
                       ? '#38BDF8'
                       : isHovered
-                      ? 'rgba(255, 255, 255, 0.22)'
+                      ? 'rgba(255, 255, 255, 0.24)'
                       : 'rgba(255, 255, 255, 0.06)'
                   }
                   strokeWidth={
-                    isSelected || isHighlighted || isLastTo || isLastFrom || isWhiteGoal || isBlackGoal
+                    isCapturable || isSelected || isHighlighted || isLastTo || isLastFrom || isWhiteGoal || isBlackGoal
                       ? 2
                       : 1
                   }
                 />
 
-                {/* Goal Markers */}
+                {/* Goal Markers: Elegant corner ribbon + non-overlapping design */}
                 {isWhiteGoal && (
                   <g pointerEvents="none">
-                    <circle cx={x + cellSize / 2} cy={y + cellSize / 2} r="18" fill="rgba(245, 158, 11, 0.15)" />
+                    {/* Top-Right Corner Triangle Badge for White's Goal */}
+                    <polygon
+                      points={`${x + cellSize - 13},${y} ${x + cellSize},${y} ${x + cellSize},${y + 13}`}
+                      fill="#F59E0B"
+                    />
                     <text
-                      x={x + cellSize - 4}
-                      y={y + 11}
-                      fontSize="9"
-                      fill="#FBBF24"
-                      fontWeight="800"
+                      x={x + cellSize - 2}
+                      y={y + 7.5}
+                      fontSize="6.5"
+                      fill="#0F172A"
+                      fontWeight="900"
                       textAnchor="end"
                     >
-                      👑 ĐÍCH W
+                      W
                     </text>
+                    {!piece && (
+                      <g>
+                        <circle cx={x + cellSize / 2} cy={y + cellSize / 2} r="14" fill="rgba(245, 158, 11, 0.16)" />
+                        <text
+                          x={x + cellSize / 2}
+                          y={y + cellSize / 2 + 5}
+                          fontSize="15"
+                          textAnchor="middle"
+                        >
+                          👑
+                        </text>
+                      </g>
+                    )}
                   </g>
                 )}
+
                 {isBlackGoal && (
                   <g pointerEvents="none">
-                    <circle cx={x + cellSize / 2} cy={y + cellSize / 2} r="18" fill="rgba(56, 189, 248, 0.15)" />
+                    {/* Bottom-Left Corner Triangle Badge for Black's Goal */}
+                    <polygon
+                      points={`${x},${y + cellSize - 13} ${x},${y + cellSize} ${x + 13},${y + cellSize}`}
+                      fill="#06B6D4"
+                    />
                     <text
-                      x={x + 4}
-                      y={y + cellSize - 4}
-                      fontSize="9"
-                      fill="#38BDF8"
-                      fontWeight="800"
+                      x={x + 2}
+                      y={y + cellSize - 2.5}
+                      fontSize="6.5"
+                      fill="#0F172A"
+                      fontWeight="900"
                       textAnchor="start"
                     >
-                      🎯 ĐÍCH B
+                      B
                     </text>
+                    {!piece && (
+                      <g>
+                        <circle cx={x + cellSize / 2} cy={y + cellSize / 2} r="14" fill="rgba(6, 182, 212, 0.16)" />
+                        <text
+                          x={x + cellSize / 2}
+                          y={y + cellSize / 2 + 5}
+                          fontSize="15"
+                          textAnchor="middle"
+                        >
+                          🎯
+                        </text>
+                      </g>
+                    )}
                   </g>
                 )}
 
@@ -253,6 +301,33 @@ export function BoardSVG({
                     opacity="0.9"
                     className="highlight-target-dot"
                   />
+                )}
+
+                {/* Capturable square attack indicator */}
+                {isCapturable && (
+                  <g pointerEvents="none">
+                    <rect
+                      x={x + 2}
+                      y={y + 2}
+                      width={cellSize - 4}
+                      height={cellSize - 4}
+                      fill="none"
+                      stroke="#EF4444"
+                      strokeWidth="2"
+                      strokeDasharray="4 2"
+                      className="capturable-target-pulse"
+                    />
+                    <text
+                      x={x + cellSize - 3}
+                      y={y + 11}
+                      fontSize="9"
+                      textAnchor="end"
+                      fill="#F87171"
+                      fontWeight="bold"
+                    >
+                      ⚔️
+                    </text>
+                  </g>
                 )}
 
                 {/* Piece Rendering */}
@@ -430,19 +505,27 @@ export function BoardSVG({
         <div className="legend-group">
           <div className="legend-item">
             <span className="legend-piece legend-white">W</span>
-            <span>Trắng (White - Đi trước)</span>
+            <span>Trắng (Đi trước)</span>
           </div>
           <div className="legend-item">
             <span className="legend-piece legend-black">B</span>
-            <span>Đen (Black)</span>
+            <span>Đen</span>
           </div>
         </div>
+        <div className="legend-group goal-legend-group">
+          <span className="goal-tag gold-tag" title="Nếu quân Trắng vào ô i9, Trắng thắng ngay (Mã W2)">
+            👑 i9: Đích Trắng
+          </span>
+          <span className="goal-tag cyan-tag" title="Nếu quân Đen vào ô a1, Đen thắng ngay (Mã W2)">
+            🎯 a1: Đích Đen
+          </span>
+        </div>
         <div className="legend-group rules-mini-legend">
-          <span>👊 Búa (R) ăn ✂️ Kéo</span>
+          <span>👊 R ăn ✂️ S</span>
           <span>•</span>
-          <span>✂️ Kéo (S) ăn ✋ Bao</span>
+          <span>✂️ S ăn ✋ P</span>
           <span>•</span>
-          <span>✋ Bao (P) ăn 👊 Búa</span>
+          <span>✋ P ăn 👊 R</span>
         </div>
       </div>
     </div>
