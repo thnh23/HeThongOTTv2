@@ -339,6 +339,57 @@ ChatGPT: Dưới đây là hàm kiểm tra sự an toàn của quân cờ:
 - Ưu tiên di chuyển các quân đang bị đe dọa sang ô an toàn hoặc dùng quân khác tới cứu.
 `;
 
+const GIT_LOG_TEMPLATE = `commit 7f3b201a4e8d3b8f1c2d9e0f5a6b7c8d9e0f1a2b (HEAD -> main, origin/main)
+Author: Nguyen Van A <sv23020001@vnu.edu.vn>
+Date:   Fri Oct 23 18:20:45 2026 +0700
+
+    perf: optimize move ordering, depth limit and local_test.py simulation
+    
+    - Add iterative deepening with 1.8s time budget cutoff
+    - Priority queue for capture moves in Alpha-Beta pruning
+    - Verified 0-timeout in 50 local offline matches
+
+commit 4a9e102c3b8f9e0f1a2b3c4d5e6f7a8b9c0d1e2f
+Author: Nguyen Van A <sv23020001@vnu.edu.vn>
+Date:   Thu Oct 22 15:40:12 2026 +0700
+
+    feat: adapt pathfinding and obstacle avoidance for Top 32 Knockout
+    
+    - Add dynamic obstacle detection from state.obstacles
+    - Implement BFS routing to bypass blocked cells towards goal (i9/a1)
+    - Ensure zero illegal moves on 9x9 obstacle maps
+
+commit 2c8d503f1a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d
+Author: Nguyen Van A <sv23020001@vnu.edu.vn>
+Date:   Wed Oct 21 20:15:33 2026 +0700
+
+    feat: implement Minimax search with Alpha-Beta pruning (depth 3)
+    
+    - Build minimax recursive evaluation with minimax_score
+    - Alpha-beta pruning branches reducing search space by 60%
+    - Handle endgame terminal states and draw by repetition
+
+commit 9e4a701b2d6c7e8f9a0b1c2d3e4f5a6b7c8d9e0f
+Author: Nguyen Van A <sv23020001@vnu.edu.vn>
+Date:   Tue Oct 20 16:30:19 2026 +0700
+
+    feat: implement board evaluation heuristic function
+    
+    - Weighted score for piece counts (Rock, Paper, Scissors)
+    - Manhattan distance to goal corner (i9 for White, a1 for Black)
+    - Positional penalty for pieces under threat by enemy pieces
+
+commit 1b0c902a3e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b
+Author: Nguyen Van A <sv23020001@vnu.edu.vn>
+Date:   Mon Oct 19 09:10:00 2026 +0700
+
+    feat: initial commit with bot.py skeleton and coordinate system
+    
+    - Setup 9x9 board representation (a1-i9) and Rock-Paper-Scissors rules
+    - Define choose_move(state) interface and legal move generator
+    - Initialize PROMPTS.md and REPORT.md templates
+`;
+
 export function StarterKitModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('bot.py');
   const [copied, setCopied] = useState(false);
@@ -357,6 +408,10 @@ export function StarterKitModal({ isOpen, onClose }) {
         return PROMPTS_TEMPLATE;
       case 'REPORT.md':
         return REPORT_TEMPLATE;
+      case 'git_log.txt':
+        return GIT_LOG_TEMPLATE;
+      case 'chat_history/':
+        return `# chat_history/session_01_claude.txt\n${CHAT_SAMPLE_CLAUDE}\n\n# --------------------------------------------------\n# chat_history/session_02_gpt4o.txt\n${CHAT_SAMPLE_GPT}`;
       default:
         return BOT_TEMPLATE;
     }
@@ -381,24 +436,29 @@ export function StarterKitModal({ isOpen, onClose }) {
       zip.file('local_test.py', LOCAL_TEST_TEMPLATE);
       zip.file('PROMPTS.md', PROMPTS_TEMPLATE);
       zip.file('REPORT.md', REPORT_TEMPLATE);
+      zip.file('git_log.txt', GIT_LOG_TEMPLATE);
       
       const chatFolder = zip.folder('chat_history');
       chatFolder.file('session_01_claude.txt', CHAT_SAMPLE_CLAUDE);
       chatFolder.file('session_02_gpt4o.txt', CHAT_SAMPLE_GPT);
 
       zip.file('README.md', `# Gói Mẫu OTTv2 Starter Kit (Bàn Cờ 9×9) — UET 2026
-Đã bao gồm đầy đủ cấu trúc hợp lệ theo tiêu chuẩn T08:
-- bot.py: Hàm choose_move hỗ trợ bàn cờ 9×9 và ô chướng ngại vật v2
-- local_test.py: Chạy kiểm thử tự động 5 trận trên máy bạn ('python local_test.py')
-- PROMPTS.md: Nhật ký Prompt Engineering T08
-- REPORT.md: Báo cáo kỹ thuật chiến thuật
-- chat_history/: Thư mục lưu lịch sử hội thoại AI
+Đã bao gồm đầy đủ cấu trúc hợp lệ đáp ứng trọn vẹn 6/6 tiêu chí Đề Án Swiss:
+1. bot.py: Hàm choose_move hỗ trợ bàn cờ 9×9 và né ô chướng ngại vật (state.obstacles)
+2. local_test.py: Chạy kiểm thử tự động 5 trận trên máy bạn ('python local_test.py')
+3. PROMPTS.md: Nhật ký Prompt Engineering T08 (> 10 bytes)
+4. REPORT.md: Báo cáo kỹ thuật chiến thuật & phân tích heuristic (> 10 bytes)
+5. chat_history/: Thư mục lưu lịch sử hội thoại AI trích xuất từ ChatGPT / Claude
+6. git_log.txt: Lịch sử Git commit (≥ 4 commits) chứng minh tiến trình tự viết code
 
 ## Hướng dẫn nộp bài:
-1. Chỉnh sửa code trong bot.py.
-2. Chạy thử nghiệm: 'python local_test.py'.
-3. Điền PROMPTS.md và REPORT.md.
-4. Nén toàn bộ thành file .zip và nộp trực tiếp trên website đấu trường!
+1. Chỉnh sửa code thuật toán trong bot.py.
+2. Chạy thử nghiệm cục bộ: 'python local_test.py'.
+3. Điền thông tin vào PROMPTS.md và REPORT.md.
+4. Trích xuất file log từ git repository cá nhân:
+   git log --pretty=format:"commit %h%nAuthor: %an <%ae>%nDate:   %ad%n%n    %s%n" > git_log.txt
+   (hoặc lệnh đơn giản: git log > git_log.txt)
+5. Nén toàn bộ (bao gồm cả thư mục chat_history/) thành file .zip và nộp trực tiếp trên website đấu trường!
 `);
 
       const content = await zip.generateAsync({ type: 'blob' });
@@ -411,7 +471,7 @@ export function StarterKitModal({ isOpen, onClose }) {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      showToast('Đã tải gói Starter Kit (ottv2_starter_kit.zip) thành công!', 'success');
+      showToast('Đã tải gói Starter Kit (ottv2_starter_kit.zip) hợp lệ 100%!', 'success');
     } catch (err) {
       showToast('Lỗi khi tạo gói ZIP: ' + err.message, 'error');
     } finally {
@@ -429,7 +489,7 @@ export function StarterKitModal({ isOpen, onClose }) {
             </div>
             <div>
               <h2 id="modal-title" className="modal-title">Bộ Khởi Động Bot (Starter Kit)</h2>
-              <p className="modal-subtitle">Gói mẫu chuẩn T08 cho sinh viên UET bàn cờ 9×9 — Hỗ trợ test cục bộ và ô cản Top 32</p>
+              <p className="modal-subtitle">Gói mẫu chuẩn 100% tiêu chí nộp bài OTTv2 (T08, T09, Git Log) — Bàn cờ 9×9, test cục bộ & ô cản Top 32</p>
             </div>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Đóng cửa sổ">
@@ -439,8 +499,8 @@ export function StarterKitModal({ isOpen, onClose }) {
 
         <div className="modal-banner">
           <div className="banner-text">
-            <strong>💡 Gói nộp bài hợp lệ chuẩn T08:</strong>
-            <span> Gồm <code>bot.py</code> (hàm <code>choose_move</code>), <code>PROMPTS.md</code>, <code>REPORT.md</code>, và thư mục <code>chat_history/</code>.</span>
+            <strong>💡 Gói nộp bài hợp lệ chuẩn 6/6 tiêu chí (T08, T09, Git Log):</strong>
+            <span> Gồm <code>bot.py</code> (hàm <code>choose_move</code>), <code>PROMPTS.md</code>, <code>REPORT.md</code>, thư mục <code>chat_history/</code>, và <code>git_log.txt</code> (≥ 4 commits).</span>
           </div>
           <button
             id="btn-download-starter-zip"
@@ -482,6 +542,20 @@ export function StarterKitModal({ isOpen, onClose }) {
             <FileText size={16} />
             <span>REPORT.md</span>
           </button>
+          <button
+            className={`tab-btn ${activeTab === 'git_log.txt' ? 'active' : ''}`}
+            onClick={() => setActiveTab('git_log.txt')}
+          >
+            <Terminal size={15} />
+            <span>git_log.txt (≥4 Commits)</span>
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 'chat_history/' ? 'active' : ''}`}
+            onClick={() => setActiveTab('chat_history/')}
+          >
+            <FolderArchive size={15} />
+            <span>chat_history/ (Mẫu Chat)</span>
+          </button>
         </div>
 
         <div className="code-preview-wrap">
@@ -499,8 +573,9 @@ export function StarterKitModal({ isOpen, onClose }) {
 
         <div className="modal-footer">
           <div className="checklist-hints">
-            <span className="hint-pill">✓ Chuẩn PEP-8</span>
+            <span className="hint-pill">✓ 6/6 Tiêu Chí Validator</span>
             <span className="hint-pill">✓ Bàn cờ 9×9 OTTv2</span>
+            <span className="hint-pill">✓ Lịch Sử Git (5 Commits)</span>
             <span className="hint-pill">✓ Hỗ trợ Ô Cản Top 32</span>
             <span className="hint-pill">✓ Test Offline 0 Dependency</span>
           </div>

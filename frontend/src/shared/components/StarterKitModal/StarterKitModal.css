@@ -133,17 +133,21 @@
   gap: 0.5rem;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .tab-btn {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.6rem 1rem;
-  font-size: 0.875rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--text-secondary);
   border-bottom: 2px solid transparent;
+  flex-shrink: 0;
+  white-space: nowrap;
   transition: all var(--transition-fast);
 }
 

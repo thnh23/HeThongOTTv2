@@ -51,6 +51,7 @@ class SubmissionResponse(BaseModel):
     validation: dict
     errors: List[str]
     warnings: List[str]
+    commit_count: int = 0
     test_run_result: Optional[dict] = None
     submitted_at: datetime
 
@@ -120,7 +121,11 @@ async def submit_package(
         zip_path=zip_file_path,
         is_active=val_res.is_valid,
         validation=val_res.to_dict(),
+        commit_count=val_res.commit_count,
     )
+    if val_res.commit_count > 0:
+        current_user.commit_count = max(current_user.commit_count or 0, val_res.commit_count)
+
     db.add(submission)
     db.commit()
     db.refresh(submission)
@@ -134,6 +139,7 @@ async def submit_package(
         validation=val_res.details,
         errors=val_res.errors,
         warnings=val_res.warnings,
+        commit_count=val_res.commit_count,
         test_run_result=submission.test_run_result,
         submitted_at=submission.submitted_at,
     )
@@ -164,6 +170,7 @@ def get_submission_history(
                 validation=val_data.get("details", {}),
                 errors=val_data.get("errors", []),
                 warnings=val_data.get("warnings", []),
+                commit_count=s.commit_count or (val_data.get("commit_count") or 0),
                 test_run_result=s.test_run_result,
                 submitted_at=s.submitted_at,
             )
@@ -200,6 +207,7 @@ def get_submission_status(
         validation=val_data.get("details", {}),
         errors=val_data.get("errors", []),
         warnings=val_data.get("warnings", []),
+        commit_count=sub.commit_count or (val_data.get("commit_count") or 0),
         test_run_result=sub.test_run_result,
         submitted_at=sub.submitted_at,
     )

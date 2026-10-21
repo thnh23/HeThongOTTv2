@@ -41,6 +41,7 @@ class ValidationResult:
     warnings: List[str] = field(default_factory=list)
     detected_api_keys: List[Dict[str, str]] = field(default_factory=list)
     extracted_path: Optional[str] = None
+    commit_count: int = 0
 
     def to_dict(self) -> dict:
         return {
@@ -50,6 +51,7 @@ class ValidationResult:
             "warnings": self.warnings,
             "detected_api_keys": self.detected_api_keys,
             "extracted_path": self.extracted_path,
+            "commit_count": self.commit_count,
         }
 
 
@@ -230,16 +232,50 @@ def validate_submission_zip(
 
     # 7. Kiểm tra git_log (Chuẩn Liêm Chính Học Thuật Giải Đấu Swiss)
     git_found = False
+    commit_count = 0
+    git_log_file = None
     for k, path in files_map.items():
         if os.path.basename(k) in ("git_log.txt", "git.log", "git_log.md"):
             git_found = True
+            git_log_file = path
             break
-    for k, path in dirs_map.items():
-        if os.path.basename(k) == ".git":
-            git_found = True
-            break
+    if not git_found:
+        for k, path in dirs_map.items():
+            if os.path.basename(k) == ".git":
+                git_found = True
+                break
+
+    # Trích xuất và đếm số lượng commit
+    if git_log_file and os.path.isfile(git_log_file):
+        try:
+            with open(git_log_file, "r", encoding="utf-8", errors="ignore") as gf:
+                content = gf.read()
+                # 1. Định dạng chuẩn: commit [a-f0-9]{7,}
+                full_commits = re.findall(r"^commit\s+[a-f0-9]{7,}", content, re.MULTILINE | re.IGNORECASE)
+                if full_commits:
+                    commit_count = len(full_commits)
+                else:
+                    # 2. Định dạng git log --oneline
+                    oneline_commits = [
+                        line for line in content.splitlines()
+                        if re.match(r"^[a-f0-9]{6,12}\s+", line.strip(), re.IGNORECASE)
+                    ]
+                    if oneline_commits:
+                        commit_count = len(oneline_commits)
+                    else:
+                        # 3. Đếm số dòng không rỗng (ước tính)
+                        non_empty = [l for l in content.splitlines() if l.strip()]
+                        commit_count = min(len(non_empty), 5)
+        except Exception:
+            pass
 
     details["git_log"] = git_found
+    if git_found and commit_count > 0 and commit_count < 4:
+        warnings.append(
+            f"Lưu ý: Lịch sử Git chỉ ghi nhận {commit_count} commit. "
+            "Quy định giải đấu khuyến nghị tối thiểu 4–5 commits để minh chứng quá trình tự phát triển mã nguồn."
+        )
+
     if tier and str(tier).upper() == "C" and not git_found:
         errors.append("Bảng C yêu cầu bắt buộc phải có git_log.txt hoặc thư mục .git để xác thực tiến trình code.")
 
@@ -265,4 +301,5 @@ def validate_submission_zip(
         warnings=warnings,
         detected_api_keys=detected_keys,
         extracted_path=target_root,
+        commit_count=commit_count,
     )

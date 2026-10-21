@@ -187,21 +187,24 @@ export function SubmitPage() {
             </div>
 
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', marginBottom: '1.25rem', lineHeight: 1.6 }}>
-              Trước khi nộp, hãy chuẩn bị gói nén <code>.ZIP</code> gồm 4 thành phần bắt buộc:
+              Trước khi nộp, hãy chuẩn bị gói nén <code>.ZIP</code> gồm 5 thành phần bắt buộc (đáp ứng trọn vẹn 6 tiêu chí kiểm tra):
             </p>
 
             <ul className="guide-file-list">
               <li>
-                <strong>bot.py</strong>: Chứa hàm quyết định nước đi <code>choose_move(state)</code>
+                <strong>bot.py</strong>: Chứa hàm quyết định nước đi <code>choose_move(state)</code> trên bàn cờ 9×9
               </li>
               <li>
-                <strong>PROMPTS.md</strong>: Nhật ký Prompt Engineering tương tác cùng AI (T08)
+                <strong>PROMPTS.md</strong>: Nhật ký Prompt Engineering tương tác cùng AI (T08 &gt; 10 bytes)
               </li>
               <li>
-                <strong>REPORT.md</strong>: Báo cáo phân tích thuật toán và hàm heuristic
+                <strong>REPORT.md</strong>: Báo cáo phân tích thuật toán, hàm heuristic & kiểm soát thời gian
               </li>
               <li>
                 <strong>chat_history/</strong>: Thư mục chứa lịch sử hội thoại trích xuất từ ChatGPT / Claude
+              </li>
+              <li>
+                <strong>git_log.txt</strong>: Lịch sử Git commit (≥ 4 commits chứng minh tiến trình tự phát triển mã nguồn)
               </li>
             </ul>
 
@@ -314,7 +317,7 @@ export function SubmitPage() {
               {selectedFile ? selectedFile.name : 'Kéo thả file .ZIP hoặc bấm vào đây để chọn'}
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              Hỗ trợ định dạng file <code>.zip</code> (tối đa 25MB) chứa <code>bot.py</code>, <code>PROMPTS.md</code>, <code>REPORT.md</code>, và <code>chat_history/</code>
+              Hỗ trợ định dạng file <code>.zip</code> (tối đa 25MB) chứa <code>bot.py</code>, <code>PROMPTS.md</code>, <code>REPORT.md</code>, <code>chat_history/</code>, và <code>git_log.txt</code>
             </p>
           </div>
           {selectedFile && (
@@ -422,8 +425,10 @@ export function SubmitPage() {
               <span>Báo cáo <code>REPORT.md</code></span>
             </li>
             <li className={`checklist-item ${latestSubmission.validation?.git_log ? 'passed' : 'failed'}`}>
-              {latestSubmission.validation?.git_log ? <CheckCircle2 size={18} /> : <CheckCircle2 size={18} style={{ opacity: 0.5 }} />}
-              <span>Lịch sử Git commit (≥ 4 commits)</span>
+              {latestSubmission.validation?.git_log ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+              <span>
+                Lịch sử Git commit {latestSubmission.commit_count > 0 ? `(${latestSubmission.commit_count} commits)` : '(≥ 4 commits)'}
+              </span>
             </li>
           </ul>
 

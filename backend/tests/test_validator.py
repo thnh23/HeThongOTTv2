@@ -171,3 +171,52 @@ class TestSecurityScannerT09:
         assert result.is_valid is True
         assert len(result.detected_api_keys) >= 1
         assert any("T09" in w for w in result.warnings)
+
+    def test_git_log_parsing_and_commit_count(self, temp_dir):
+        """Kiểm tra trích xuất commit_count từ git_log.txt."""
+        zip_path = os.path.join(temp_dir, "with_git_log.zip")
+        extract_to = os.path.join(temp_dir, "extracted")
+        git_log_content = """commit 7f3b201a4e8d (HEAD -> main)
+Author: Nguyen Van A <sv@vnu.edu.vn>
+Date:   Fri Oct 23 18:20:45 2026 +0700
+
+    perf: optimize move ordering
+
+commit 4a9e102c3b8f
+Author: Nguyen Van A <sv@vnu.edu.vn>
+Date:   Thu Oct 22 15:40:12 2026 +0700
+
+    feat: adapt obstacle avoidance
+
+commit 2c8d503f1a7b
+Author: Nguyen Van A <sv@vnu.edu.vn>
+Date:   Wed Oct 21 20:15:33 2026 +0700
+
+    feat: implement minimax
+
+commit 9e4a701b2d6c
+Author: Nguyen Van A <sv@vnu.edu.vn>
+Date:   Tue Oct 20 16:30:19 2026 +0700
+
+    feat: heuristic evaluation
+
+commit 1b0c902a3e5f
+Author: Nguyen Van A <sv@vnu.edu.vn>
+Date:   Mon Oct 19 09:10:00 2026 +0700
+
+    feat: initial commit
+"""
+        create_mock_zip(zip_path, {
+            "bot.py": VALID_BOT_CODE,
+            "PROMPTS.md": "# Prompts log đầy đủ",
+            "REPORT.md": "# Báo cáo chiến thuật",
+            "chat_history/session1.txt": "Log chat",
+            "git_log.txt": git_log_content,
+        })
+
+        result = validate_submission_zip(zip_path, extract_to, tier="C")
+        assert result.is_valid is True
+        assert result.details["git_log"] is True
+        assert result.commit_count == 5
+        assert len(result.errors) == 0
+
