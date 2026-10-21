@@ -36,10 +36,11 @@ router = APIRouter(prefix="/api/submit", tags=["submit"])
 class ValidationDetailSchema(BaseModel):
     bot_py: bool = False
     choose_move_fn: bool = False
-    prompts_md: bool = False
-    chat_history: bool = False
     report_md: bool = False
     git_log: bool = False
+
+    class Config:
+        extra = "ignore"
 
 
 class SubmissionResponse(BaseModel):

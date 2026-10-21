@@ -107,8 +107,6 @@ def validate_submission_zip(
     details: Dict[str, bool] = {
         "bot_py": False,
         "choose_move_fn": False,
-        "prompts_md": False,
-        "chat_history": False,
         "report_md": False,
         "git_log": False,
     }
@@ -167,7 +165,7 @@ def validate_submission_zip(
             rel_file = os.path.normpath(os.path.join(rel, f)) if rel != "." else f
             files_map[rel_file.lower()] = os.path.join(root, f)
 
-    # 3. Kiểm tra bot.py
+    # 3. Tiêu chí 1: Mã nguồn bot.py & Hàm choose_move(state)
     bot_file = None
     for k, path in files_map.items():
         if k == "bot.py" or k.endswith("/bot.py") or k.endswith("\\bot.py"):
@@ -181,25 +179,9 @@ def validate_submission_zip(
         else:
             errors.append("File bot.py thiếu định nghĩa hàm 'def choose_move(state)'.")
     else:
-        errors.append("Thiếu file bắt buộc 'bot.py'.")
+        errors.append("Thiếu file mã nguồn bắt buộc 'bot.py'.")
 
-    # 4. Kiểm tra PROMPTS.md (T08)
-    prompts_file = None
-    for k, path in files_map.items():
-        if os.path.basename(k) in ("prompts.md", "prompt.md"):
-            prompts_file = path
-            break
-
-    if prompts_file and os.path.isfile(prompts_file):
-        size = os.path.getsize(prompts_file)
-        if size > 10:
-            details["prompts_md"] = True
-        else:
-            errors.append("File 'PROMPTS.md' bị rỗng hoặc quá ngắn (< 10 bytes).")
-    else:
-        errors.append("Thiếu file bắt buộc 'PROMPTS.md' (T08: Không nhận gói nộp thiếu danh sách prompt).")
-
-    # 5. Kiểm tra REPORT.md
+    # 4. Tiêu chí 2: Ý tưởng chiến thuật & Thuật toán (REPORT.md)
     report_file = None
     for k, path in files_map.items():
         if os.path.basename(k) in ("report.md", "baocao.md"):
@@ -210,27 +192,11 @@ def validate_submission_zip(
         if os.path.getsize(report_file) > 10:
             details["report_md"] = True
         else:
-            errors.append("File 'REPORT.md' bị rỗng hoặc quá ngắn.")
+            errors.append("File báo cáo ý tưởng 'REPORT.md' bị rỗng hoặc quá ngắn.")
     else:
-        errors.append("Thiếu file bắt buộc 'REPORT.md'.")
+        errors.append("Thiếu file báo cáo ý tưởng & phân tích giải thuật 'REPORT.md'.")
 
-    # 6. Kiểm tra chat_history/
-    chat_dir = None
-    for k, path in dirs_map.items():
-        if os.path.basename(k) in ("chat_history", "chat_histories", "chats", "chat"):
-            chat_dir = path
-            break
-
-    if chat_dir and os.path.isdir(chat_dir):
-        chat_files = [f for f in os.listdir(chat_dir) if os.path.isfile(os.path.join(chat_dir, f))]
-        if len(chat_files) >= 1:
-            details["chat_history"] = True
-        else:
-            errors.append("Thư mục 'chat_history/' rỗng, chưa chứa file xuất lịch sử chat.")
-    else:
-        errors.append("Thiếu thư mục bắt buộc 'chat_history/'.")
-
-    # 7. Kiểm tra git_log (Chuẩn Liêm Chính Học Thuật Giải Đấu Swiss)
+    # 5. Tiêu chí 3: Lịch sử commit Git (Minh chứng quá trình tự lập trình)
     git_found = False
     commit_count = 0
     git_log_file = None
@@ -270,7 +236,9 @@ def validate_submission_zip(
             pass
 
     details["git_log"] = git_found
-    if git_found and commit_count > 0 and commit_count < 4:
+    if not git_found:
+        errors.append("Thiếu lịch sử commit Git ('git_log.txt' hoặc thư mục '.git') để xác thực tiến trình tự viết code.")
+    elif commit_count > 0 and commit_count < 4:
         warnings.append(
             f"Lưu ý: Lịch sử Git chỉ ghi nhận {commit_count} commit. "
             "Quy định giải đấu khuyến nghị tối thiểu 4–5 commits để minh chứng quá trình tự phát triển mã nguồn."

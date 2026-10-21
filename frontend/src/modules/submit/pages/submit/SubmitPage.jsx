@@ -187,24 +187,18 @@ export function SubmitPage() {
             </div>
 
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', marginBottom: '1.25rem', lineHeight: 1.6 }}>
-              Trước khi nộp, hãy chuẩn bị gói nén <code>.ZIP</code> gồm 5 thành phần bắt buộc (đáp ứng trọn vẹn 6 tiêu chí kiểm tra):
+              Trước khi nộp, hãy chuẩn bị gói nén <code>.ZIP</code> gồm 3 thành phần chính (đáp ứng 4 tiêu chí kiểm tra năng lực lập trình):
             </p>
 
             <ul className="guide-file-list">
               <li>
-                <strong>bot.py</strong>: Chứa hàm quyết định nước đi <code>choose_move(state)</code> trên bàn cờ 9×9
+                <strong>bot.py</strong>: Chứa mã nguồn sinh viên và hàm quyết định nước đi <code>choose_move(state)</code> trên bàn cờ 9×9
               </li>
               <li>
-                <strong>PROMPTS.md</strong>: Nhật ký Prompt Engineering tương tác cùng AI (T08 &gt; 10 bytes)
+                <strong>REPORT.md</strong>: Báo cáo ý tưởng chiến thuật, giải thuật tìm kiếm, hàm heuristic &amp; kiểm soát thời gian
               </li>
               <li>
-                <strong>REPORT.md</strong>: Báo cáo phân tích thuật toán, hàm heuristic & kiểm soát thời gian
-              </li>
-              <li>
-                <strong>chat_history/</strong>: Thư mục chứa lịch sử hội thoại trích xuất từ ChatGPT / Claude
-              </li>
-              <li>
-                <strong>git_log.txt</strong>: Lịch sử Git commit (≥ 4 commits chứng minh tiến trình tự phát triển mã nguồn)
+                <strong>git_log.txt</strong>: Lịch sử commit Git (≥ 4 commits minh chứng quá trình tự lập trình từng bước)
               </li>
             </ul>
 
@@ -317,7 +311,7 @@ export function SubmitPage() {
               {selectedFile ? selectedFile.name : 'Kéo thả file .ZIP hoặc bấm vào đây để chọn'}
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              Hỗ trợ định dạng file <code>.zip</code> (tối đa 25MB) chứa <code>bot.py</code>, <code>PROMPTS.md</code>, <code>REPORT.md</code>, <code>chat_history/</code>, và <code>git_log.txt</code>
+              Hỗ trợ định dạng file <code>.zip</code> (tối đa 25MB) chứa <code>bot.py</code>, <code>REPORT.md</code>, và <code>git_log.txt</code>
             </p>
           </div>
           {selectedFile && (
@@ -406,23 +400,15 @@ export function SubmitPage() {
           <ul className="validation-checklist" aria-label="Tiêu chí kiểm tra cấu trúc gói nộp">
             <li className={`checklist-item ${latestSubmission.validation?.bot_py ? 'passed' : 'failed'}`}>
               {latestSubmission.validation?.bot_py ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
-              <span>File <code>bot.py</code> hợp lệ</span>
+              <span>Mã nguồn <code>bot.py</code> hợp lệ</span>
             </li>
             <li className={`checklist-item ${latestSubmission.validation?.choose_move_fn ? 'passed' : 'failed'}`}>
               {latestSubmission.validation?.choose_move_fn ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
-              <span>Hàm <code>choose_move(state)</code></span>
-            </li>
-            <li className={`checklist-item ${latestSubmission.validation?.prompts_md ? 'passed' : 'failed'}`}>
-              {latestSubmission.validation?.prompts_md ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
-              <span>File <code>PROMPTS.md</code> (T08)</span>
-            </li>
-            <li className={`checklist-item ${latestSubmission.validation?.chat_history ? 'passed' : 'failed'}`}>
-              {latestSubmission.validation?.chat_history ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
-              <span>Thư mục <code>chat_history/</code></span>
+              <span>Hàm thuật toán <code>choose_move(state)</code></span>
             </li>
             <li className={`checklist-item ${latestSubmission.validation?.report_md ? 'passed' : 'failed'}`}>
               {latestSubmission.validation?.report_md ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
-              <span>Báo cáo <code>REPORT.md</code></span>
+              <span>Ý tưởng &amp; Báo cáo chiến thuật <code>REPORT.md</code></span>
             </li>
             <li className={`checklist-item ${latestSubmission.validation?.git_log ? 'passed' : 'failed'}`}>
               {latestSubmission.validation?.git_log ? <CheckCircle2 size={18} /> : <XCircle size={18} />}

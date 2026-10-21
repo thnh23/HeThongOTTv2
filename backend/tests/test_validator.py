@@ -38,65 +38,77 @@ def some_other_function():
 '''
 
 
-class TestValidatorT08:
-    """T08: Cổng nộp báo lỗi khi thiếu PROMPTS.md hoặc thiếu các file bắt buộc."""
+class TestValidatorSubmissionCriteria:
+    """Kiểm tra các tiêu chí chấm: Code sinh viên (bot.py), Ý tưởng (REPORT.md), Lịch sử commit (git_log)."""
 
-    def test_valid_package_tier_a(self, temp_dir):
+    def test_valid_package_passes(self, temp_dir):
         zip_path = os.path.join(temp_dir, "submission.zip")
         extract_to = os.path.join(temp_dir, "extracted")
         create_mock_zip(zip_path, {
             "bot.py": VALID_BOT_CODE,
-            "PROMPTS.md": "# Prompts log\n1. Viết bot cơ bản...",
-            "REPORT.md": "# Báo cáo chiến thuật bot OTTv2...",
-            "chat_history/chat1.txt": "User: Giúp tôi viết bot\nAI: Đây là code...",
+            "REPORT.md": "# Báo cáo ý tưởng & chiến thuật bot OTTv2...",
+            "git_log.txt": "commit 1111111\ncommit 2222222\ncommit 3333333\ncommit 4444444\ncommit 5555555\n",
         })
 
         result = validate_submission_zip(zip_path, extract_to, tier="A")
         assert result.is_valid is True
         assert result.details["bot_py"] is True
         assert result.details["choose_move_fn"] is True
-        assert result.details["prompts_md"] is True
-        assert result.details["chat_history"] is True
         assert result.details["report_md"] is True
+        assert result.details["git_log"] is True
+        assert result.commit_count == 5
         assert len(result.errors) == 0
 
-    def test_missing_prompts_md_rejected_t08(self, temp_dir):
-        """T08: Thiếu PROMPTS.md phải bị từ chối nhận."""
-        zip_path = os.path.join(temp_dir, "missing_prompts.zip")
+    def test_prompts_and_chat_not_required(self, temp_dir):
+        """Khuyến khích học code: không yêu cầu PROMPTS.md hay chat_history/."""
+        zip_path = os.path.join(temp_dir, "no_ai_prompts.zip")
         extract_to = os.path.join(temp_dir, "extracted")
         create_mock_zip(zip_path, {
             "bot.py": VALID_BOT_CODE,
-            "REPORT.md": "# Báo cáo chiến thuật bot...",
-            "chat_history/chat1.txt": "Lịch sử chat...",
+            "REPORT.md": "# Báo cáo ý tưởng chiến thuật & hàm heuristic...",
+            "git_log.txt": "commit 1111111\ncommit 2222222\ncommit 3333333\ncommit 4444444\n",
+        })
+
+        result = validate_submission_zip(zip_path, extract_to, tier="A")
+        assert result.is_valid is True
+        assert "prompts_md" not in result.details
+        assert "chat_history" not in result.details
+        assert len(result.errors) == 0
+
+    def test_missing_report_md_rejected(self, temp_dir):
+        """Thiếu REPORT.md phải bị từ chối nhận."""
+        zip_path = os.path.join(temp_dir, "missing_report.zip")
+        extract_to = os.path.join(temp_dir, "extracted")
+        create_mock_zip(zip_path, {
+            "bot.py": VALID_BOT_CODE,
+            "git_log.txt": "commit 1111111\ncommit 2222222\ncommit 3333333\ncommit 4444444\n",
         })
 
         result = validate_submission_zip(zip_path, extract_to, tier="A")
         assert result.is_valid is False
-        assert result.details["prompts_md"] is False
-        assert any("PROMPTS.md" in err for err in result.errors)
+        assert result.details["report_md"] is False
+        assert any("REPORT.md" in err for err in result.errors)
 
-    def test_empty_prompts_md_rejected(self, temp_dir):
-        """File PROMPTS.md rỗng phải bị từ chối."""
-        zip_path = os.path.join(temp_dir, "empty_prompts.zip")
+    def test_empty_report_md_rejected(self, temp_dir):
+        """File REPORT.md rỗng phải bị từ chối."""
+        zip_path = os.path.join(temp_dir, "empty_report.zip")
         extract_to = os.path.join(temp_dir, "extracted")
         create_mock_zip(zip_path, {
             "bot.py": VALID_BOT_CODE,
-            "PROMPTS.md": "",
-            "REPORT.md": "Báo cáo nội dung đầy đủ ở đây.",
-            "chat_history/chat1.txt": "Chat log...",
+            "REPORT.md": "",
+            "git_log.txt": "commit 1111111\ncommit 2222222\ncommit 3333333\ncommit 4444444\n",
         })
 
         result = validate_submission_zip(zip_path, extract_to, tier="A")
         assert result.is_valid is False
-        assert any("PROMPTS.md" in err for err in result.errors)
+        assert any("REPORT.md" in err for err in result.errors)
 
     def test_missing_bot_py_rejected(self, temp_dir):
         zip_path = os.path.join(temp_dir, "no_bot.zip")
         extract_to = os.path.join(temp_dir, "extracted")
         create_mock_zip(zip_path, {
-            "PROMPTS.md": "Prompts...",
             "REPORT.md": "Report...",
-            "chat_history/chat1.txt": "Chat...",
+            "git_log.txt": "commit 1111111\ncommit 2222222\ncommit 3333333\ncommit 4444444\n",
         })
 
         result = validate_submission_zip(zip_path, extract_to, tier="A")
@@ -109,9 +121,8 @@ class TestValidatorT08:
         extract_to = os.path.join(temp_dir, "extracted")
         create_mock_zip(zip_path, {
             "bot.py": INVALID_BOT_CODE,
-            "PROMPTS.md": "Prompts...",
             "REPORT.md": "Report...",
-            "chat_history/chat1.txt": "Chat...",
+            "git_log.txt": "commit 1111111\ncommit 2222222\ncommit 3333333\ncommit 4444444\n",
         })
 
         result = validate_submission_zip(zip_path, extract_to, tier="A")
@@ -119,19 +130,19 @@ class TestValidatorT08:
         assert result.details["choose_move_fn"] is False
         assert any("choose_move" in err for err in result.errors)
 
-    def test_tier_c_requires_git_log(self, temp_dir):
-        zip_path = os.path.join(temp_dir, "tier_c_no_git.zip")
+    def test_missing_git_log_rejected(self, temp_dir):
+        """Thiếu git_log.txt hoặc .git phải bị từ chối để xác thực sinh viên tự code."""
+        zip_path = os.path.join(temp_dir, "no_git.zip")
         extract_to = os.path.join(temp_dir, "extracted")
         create_mock_zip(zip_path, {
             "bot.py": VALID_BOT_CODE,
-            "PROMPTS.md": "Prompts đầy đủ cho Bảng C...",
             "REPORT.md": "Báo cáo chi tiết thuật toán Minimax...",
-            "chat_history/chat1.txt": "Lịch sử chat...",
         })
 
-        result = validate_submission_zip(zip_path, extract_to, tier="C")
+        result = validate_submission_zip(zip_path, extract_to, tier="A")
         assert result.is_valid is False
-        assert any("Bảng C" in err for err in result.errors)
+        assert result.details["git_log"] is False
+        assert any("git_log" in err for err in result.errors)
 
 
 class TestSecurityScannerT09:
@@ -161,9 +172,9 @@ class TestSecurityScannerT09:
         extract_to = os.path.join(temp_dir, "extracted")
         create_mock_zip(zip_path, {
             "bot.py": VALID_BOT_CODE,
-            "PROMPTS.md": "Prompts log...",
             "REPORT.md": "Báo cáo...",
-            "chat_history/leak.txt": "My OpenAI Key is: sk-proj1234567890abcdefghijklmnopqrstuvwxyz",
+            "git_log.txt": "commit 1111111\ncommit 2222222\ncommit 3333333\ncommit 4444444\n",
+            "leak_config.txt": "My OpenAI Key is: sk-proj1234567890abcdefghijklmnopqrstuvwxyz",
         })
 
         result = validate_submission_zip(zip_path, extract_to, tier="A")

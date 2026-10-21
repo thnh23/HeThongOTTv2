@@ -408,7 +408,7 @@ export function ProfilePage() {
               <Upload size={40} color="var(--text-muted)" style={{ margin: '0 auto 1rem', opacity: 0.6 }} />
               <h4>Bạn chưa nộp gói bài thi nào</h4>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '480px', margin: '0.5rem auto 1.5rem' }}>
-                Chuẩn bị gói nén <code>.ZIP</code> gồm <code>bot.py</code>, <code>PROMPTS.md</code>, <code>REPORT.md</code> và thư mục <code>chat_history/</code> để nộp bài.
+                Chuẩn bị gói nén <code>.ZIP</code> gồm <code>bot.py</code>, <code>REPORT.md</code> và <code>git_log.txt</code> (hoặc <code>.git</code>) để nộp bài.
               </p>
               <Link to="/submit" className="btn btn-primary btn-sm">
                 <Upload size={14} />
@@ -447,14 +447,8 @@ export function ProfilePage() {
                       <span className={`file-chip ${v.choose_move_fn ? 'ok' : 'fail'}`}>
                         {v.choose_move_fn ? '✓' : '✕'} choose_move(state)
                       </span>
-                      <span className={`file-chip ${v.prompts_md ? 'ok' : 'fail'}`}>
-                        {v.prompts_md ? '✓' : '✕'} PROMPTS.md
-                      </span>
-                      <span className={`file-chip ${v.chat_history ? 'ok' : 'fail'}`}>
-                        {v.chat_history ? '✓' : '✕'} chat_history/
-                      </span>
                       <span className={`file-chip ${v.report_md ? 'ok' : 'fail'}`}>
-                        {v.report_md ? '✓' : '✕'} REPORT.md
+                        {v.report_md ? '✓' : '✕'} REPORT.md (Ý Tưởng)
                       </span>
                       <span className={`file-chip ${v.git_log ? 'ok' : 'fail'}`}>
                         {v.git_log ? '✓' : '✕'} Git History (≥4 commits)

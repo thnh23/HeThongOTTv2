@@ -30,7 +30,7 @@ const TOURNAMENT_WEIGHTS = {
 export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState('prompts');
+  const [activeTab, setActiveTab] = useState('bot');
   const [submissionFiles, setSubmissionFiles] = useState(null);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -196,33 +196,35 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
           <div className="review-files-col">
             <div className="files-nav-tabs">
               <button
-                className={`tab-btn ${activeTab === 'prompts' ? 'active' : ''}`}
-                onClick={() => setActiveTab('prompts')}
-              >
-                <Sparkles size={15} />
-                <span>PROMPTS.md (T08)</span>
-              </button>
-              <button
                 className={`tab-btn ${activeTab === 'bot' ? 'active' : ''}`}
                 onClick={() => setActiveTab('bot')}
               >
                 <FileCode size={15} />
-                <span>bot.py</span>
+                <span>bot.py (Mã Nguồn)</span>
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'git_log' ? 'active' : ''}`}
+                onClick={() => setActiveTab('git_log')}
+              >
+                <GitBranch size={15} />
+                <span>git_log.txt (Lịch Sử)</span>
               </button>
               <button
                 className={`tab-btn ${activeTab === 'report' ? 'active' : ''}`}
                 onClick={() => setActiveTab('report')}
               >
                 <FileText size={15} />
-                <span>REPORT.md</span>
+                <span>REPORT.md (Ý Tưởng)</span>
               </button>
-              <button
-                className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
-                onClick={() => setActiveTab('chat')}
-              >
-                <MessageSquare size={15} />
-                <span>chat_history/</span>
-              </button>
+              {submissionFiles?.prompts_md && (
+                <button
+                  className={`tab-btn ${activeTab === 'prompts' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('prompts')}
+                >
+                  <Sparkles size={15} />
+                  <span>PROMPTS.md (Cũ)</span>
+                </button>
+              )}
             </div>
 
             <div className="file-content-viewport">
@@ -242,14 +244,10 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
               ) : (
                 <pre className="file-code-pre">
                   <code>
-                    {activeTab === 'prompts' && (submissionFiles.prompts_md || 'File PROMPTS.md trống')}
                     {activeTab === 'bot' && (submissionFiles.bot_py || 'File bot.py trống')}
+                    {activeTab === 'git_log' && (submissionFiles.git_log || 'Chưa tìm thấy git_log.txt hoặc lịch sử git')}
                     {activeTab === 'report' && (submissionFiles.report_md || 'File REPORT.md trống')}
-                    {activeTab === 'chat' && (
-                      submissionFiles.chat_history?.length > 0
-                        ? submissionFiles.chat_history.map((c, idx) => `=== ${c.filename} ===\n${c.content}\n\n`).join('')
-                        : 'Không có file hội thoại trong thư mục chat_history/'
-                    )}
+                    {activeTab === 'prompts' && (submissionFiles.prompts_md || 'File PROMPTS.md trống')}
                   </code>
                 </pre>
               )}
@@ -274,7 +272,7 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
             <div className="weights-pill-banner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
               <div>
                 <strong>Trọng số: </strong>
-                <span>Bot: {TOURNAMENT_WEIGHTS.bot}% • AI: {TOURNAMENT_WEIGHTS.ai}% • Vấn đáp: {TOURNAMENT_WEIGHTS.interview}% • Báo cáo: {TOURNAMENT_WEIGHTS.report}%</span>
+                <span>Code &amp; Thi Đấu: {TOURNAMENT_WEIGHTS.bot}% • Lịch Sử Git: {TOURNAMENT_WEIGHTS.ai}% • Vấn Đáp: {TOURNAMENT_WEIGHTS.interview}% • Ý Tưởng &amp; Báo Cáo: {TOURNAMENT_WEIGHTS.report}%</span>
               </div>
               <button
                 type="button"
@@ -310,7 +308,7 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
               {/* Score Bot */}
               <div className="grade-field">
                 <div className="grade-field-label">
-                  <label htmlFor="score-bot">1. Hiệu Quả Thi Đấu (Swiss &amp; Top 32)</label>
+                  <label htmlFor="score-bot">1. Mã Nguồn &amp; Hiệu Quả Thi Đấu (Swiss &amp; Top 32)</label>
                   <span className="field-weight">Trọng số {TOURNAMENT_WEIGHTS.bot}%</span>
                 </div>
                 <div className="grade-input-wrap">
@@ -332,10 +330,10 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
                 </span>
               </div>
 
-              {/* Score AI Profile */}
+              {/* Score AI Profile -> Git Commit History */}
               <div className="grade-field">
                 <div className="grade-field-label">
-                  <label htmlFor="score-ai">2. Hồ Sơ Prompt &amp; Quy Trình AI (T08)</label>
+                  <label htmlFor="score-ai">2. Tiến Trình Code &amp; Lịch Sử Commit (Git History)</label>
                   <span className="field-weight">Trọng số {TOURNAMENT_WEIGHTS.ai}%</span>
                 </div>
                 <div className="grade-input-wrap">
@@ -352,7 +350,7 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
                   />
                   <span className="unit-label">/ 100</span>
                 </div>
-                <span className="grade-hint">Đánh giá PROMPTS.md, chat_history, quy trình phát triển và kiểm soát mã AI</span>
+                <span className="grade-hint">Đánh giá lịch sử Git (≥4 commits), thời gian commit trải đều các ngày, tự viết và nâng cấp mã</span>
               </div>
 
               {/* Score Interview */}
@@ -381,7 +379,7 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
               {/* Score Report */}
               <div className="grade-field">
                 <div className="grade-field-label">
-                  <label htmlFor="score-report">4. Báo Cáo Kỹ Thuật (REPORT.md)</label>
+                  <label htmlFor="score-report">4. Ý Tưởng Chiến Thuật &amp; Heuristic (REPORT.md)</label>
                   <span className="field-weight">Trọng số {TOURNAMENT_WEIGHTS.report}%</span>
                 </div>
                 <div className="grade-input-wrap">
@@ -398,7 +396,7 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
                   />
                   <span className="unit-label">/ 100</span>
                 </div>
-                <span className="grade-hint">Báo cáo kiến trúc, độ phức tạp thời gian/không gian và phân tích các ván đấu thực tế</span>
+                <span className="grade-hint">Ý tưởng tiếp cận bài toán cờ 9×9, công thức heuristic lượng giá, khả năng xử lý ô cản và phân bổ thời gian</span>
               </div>
 
               {/* Notes */}

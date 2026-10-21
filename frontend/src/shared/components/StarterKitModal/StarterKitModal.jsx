@@ -262,81 +262,34 @@ if __name__ == '__main__':
     print("=" * 65)
 `;
 
-const PROMPTS_TEMPLATE = `# Nhật Ký Prompt Engineering (T08)
-**Sinh viên / Nhóm:** [Điền họ và tên - MSSV]
-**Lớp môn học:** Lập Trình Mạng (INT3304) — Học kỳ II, 2026
-**Giải đấu:** Giải Đấu Cờ Thuật Toán OTTv2 (Swiss 13 Vòng & Top 32)
-**Mô hình AI sử dụng:** Claude 3.5 Sonnet / GPT-4o / Gemini 2.5 Pro
-
----
-
-## 1. Mục Tiêu Chiến Thuật
-- Xây dựng hàm lượng giá heuristic cân bằng giữa phòng thủ và săn quân trên bàn cờ 9x9.
-- Kiểm soát các ô trung tâm và bảo vệ ô góc đích (i9 đối với Trắng, a1 đối với Đen).
-- Thích ứng với vòng Chung kết Top 32: Nhận diện và né tránh linh hoạt các ô chướng ngại vật ngẫu nhiên.
-- Tối ưu thuật toán Minimax kết hợp cắt tỉa Alpha-Beta trong giới hạn thời gian (2.0s / nước đi).
-
-## 2. Lịch Sử Các Phiên Prompting
-
-### Phiên 1: Khởi tạo luật và bộ sinh nước đi 9x9
-- **Prompt:** "Tôi đang tham gia giải đấu cờ OTTv2 (Oẳn Tù Tì 9x9 bàn cờ). Hãy viết hàm Python kiểm tra nước đi hợp lệ cho quân Kéo, Búa, Bao theo 8 hướng..."
-- **Phản hồi từ AI:** Đưa ra hàm sinh nước đi cơ bản bằng cách lặp 2 chiều qua 8 hướng.
-- **Điều chỉnh của sinh viên:** Sửa lại logic toạ độ theo chuẩn 0-indexed (a1 đến i9) và thêm kiểm tra các ô chướng ngại vật obstacles cho Bot v2.
-
-### Phiên 2: Xây dựng hàm lượng giá bàn cờ (Heuristic)
-- **Prompt:** "Thiết kế hàm evaluate_state(state, my_color) đánh giá ưu thế dựa trên số lượng quân, khoảng cách tới ô đích i9/a1..."
-- **Phản hồi từ AI:** Đề xuất tính khoảng cách Manhattan và trọng số ăn quân.
-- **Điều chỉnh của sinh viên:** Thêm điểm phạt nếu quân cờ phe mình đứng cạnh quân đối thủ có thể ăn được mình.
-
-### Phiên 3: Tối ưu hoá thời gian và bộ nhớ
-- **Prompt:** "Làm thế nào để chạy Minimax độ sâu 4 mà không vượt quá thời gian 2.0s trên máy chấm phân tán?"
-- **Phản hồi từ AI:** Đề xuất sắp xếp nước đi (Move Ordering) ưu tiên các nước ăn quân trước để Alpha-Beta cắt tỉa tối đa.
-- **Điều chỉnh của sinh viên:** Thêm cơ chế Time Budgeting ngắt sớm nếu thời gian vượt quá 1.8s.
-`;
-
-const REPORT_TEMPLATE = `# Báo Cáo Kỹ Thuật Chiến Thuật Bot Cờ OTTv2
+const REPORT_TEMPLATE = `# Báo Cáo Ý Tưởng & Chiến Thuật Bot Cờ OTTv2
 **Sinh viên thực hiện:** [Họ và tên - MSSV]
 **Lớp môn học:** Lập Trình Mạng (INT3304) — Trường Đại học Công nghệ (UET)
 
 ---
 
-## 1. Kiến Trúc & Thuật Toán Chính
-- **Thuật toán chính:** [Minimax Alpha-Beta / Heuristic Greedy Search / MCTS]
+## 1. Ý Tưởng Thuật Toán & Kiến Trúc Chính
+- **Giải thuật tìm kiếm:** [Minimax Alpha-Beta / Heuristic Greedy Search / MCTS]
 - **Độ sâu tìm kiếm:** [Depth 3 - 4]
-- **Chiến lược quản lý thời gian (Time Budgeting):**
+- **Chiến lược phân bổ thời gian (Time Budgeting - tối đa 2.0s / nước):**
   - Khai cuộc (Nước 1 - 20): 0.5s / nước đi (mở đường cho quân chủ lực tiến lên)
   - Trung cuộc (Nước 21 - 80): 1.5s / nước đi (tìm kiếm sâu, tính toán ăn quân và gài bẫy)
   - Tàn cuộc (Nước 81+): 0.8s / nước đi (chạy nước rút vào ô đích)
 
-## 2. Hàm Lượng Giá (Heuristic Function)
+## 2. Hàm Lượng Giá Thế Cờ (Heuristic Evaluation Function)
 Công thức lượng giá tổng quát của Bot:
 $$Score = W_1 \\times PieceAdvantage + W_2 \\times GoalDistance + W_3 \\times SafetyControl$$
-- **PieceAdvantage:** Chênh lệch số quân cờ còn sống (Kéo, Búa, Bao).
-- **GoalDistance:** Khoảng cách Chebyshev từ quân gần nhất tới ô đích đối phương.
+- **PieceAdvantage:** Chênh lệch số quân cờ còn sống (Kéo, Búa, Bao theo luật Oẳn Tù Tì).
+- **GoalDistance:** Khoảng cách Manhattan / Chebyshev từ quân gần nhất tới ô đích đối phương (i9 với Trắng, a1 với Đen).
 - **SafetyControl:** Mức độ an toàn tránh bị ăn bởi quân đối phương kề cận.
 
-## 3. Khả Năng Thích Ứng Ô Chướng Ngại Vật (Bot v2 - Top 32)
-- Tự động lọc các ô cản khỏi danh sách nước đi hợp lệ.
+## 3. Khả Năng Thích Ứng Ô Chướng Ngại Vật (Bot v2 - Vòng Chung Kết Top 32)
+- Tự động nhận diện và né tránh ô chướng ngại vật (state.obstacles).
 - Sử dụng thuật toán tìm đường ngắn nhất (BFS / A*) để đi vòng qua ô cản khi tiến về ô đích.
 
-## 4. Kết Quả Thử Nghiệm Local (local_test.py)
+## 4. Kết Quả Thử Nghiệm Cục Bộ (local_test.py)
 - Thử nghiệm 20 trận với đối thủ mẫu: Thắng 17, Hòa 2, Thua 1.
 - Tỉ lệ thắng trung bình: 85%.
-`;
-
-const CHAT_SAMPLE_CLAUDE = `User: Hãy hướng dẫn cách viết bot cờ OTTv2 (9x9) bằng Python tối ưu cho giải đấu Swiss.
-Claude: Chào bạn! Để xây dựng một bot cờ OTTv2 mạnh cho thể thức 13 vòng Swiss và Top 32, bạn cần nắm vững:
-1. Quy tắc di chuyển 1 ô theo 8 hướng.
-2. Quy tắc Oẳn Tù Tì: Búa (R) ăn Kéo (S), Kéo (S) ăn Bao (P), Bao (P) ăn Búa (R).
-3. Mục tiêu chiến lược: Đưa quân vào ô đích (i9 đối với Trắng, a1 đối với Đen).
-4. Khả năng né chướng ngại vật (state.obstacles) cho vòng Knockout Top 32.
-`;
-
-const CHAT_SAMPLE_GPT = `User: Viết hàm đánh giá heuristic tránh bị đối phương ăn quân trong cờ OTTv2.
-ChatGPT: Dưới đây là hàm kiểm tra sự an toàn của quân cờ:
-- Với mỗi quân cờ của phe mình, duyệt 8 ô xung quanh.
-- Nếu có quân đối phương khắc chế loại quân của mình (ví dụ Búa địch kề bên Kéo ta), trừ điểm an toàn.
-- Ưu tiên di chuyển các quân đang bị đe dọa sang ô an toàn hoặc dùng quân khác tới cứu.
 `;
 
 const GIT_LOG_TEMPLATE = `commit 7f3b201a4e8d3b8f1c2d9e0f5a6b7c8d9e0f1a2b (HEAD -> main, origin/main)
@@ -387,7 +340,7 @@ Date:   Mon Oct 19 09:10:00 2026 +0700
     
     - Setup 9x9 board representation (a1-i9) and Rock-Paper-Scissors rules
     - Define choose_move(state) interface and legal move generator
-    - Initialize PROMPTS.md and REPORT.md templates
+    - Initialize REPORT.md strategy template
 `;
 
 export function StarterKitModal({ isOpen, onClose }) {
@@ -404,14 +357,10 @@ export function StarterKitModal({ isOpen, onClose }) {
         return BOT_TEMPLATE;
       case 'local_test.py':
         return LOCAL_TEST_TEMPLATE;
-      case 'PROMPTS.md':
-        return PROMPTS_TEMPLATE;
       case 'REPORT.md':
         return REPORT_TEMPLATE;
       case 'git_log.txt':
         return GIT_LOG_TEMPLATE;
-      case 'chat_history/':
-        return `# chat_history/session_01_claude.txt\n${CHAT_SAMPLE_CLAUDE}\n\n# --------------------------------------------------\n# chat_history/session_02_gpt4o.txt\n${CHAT_SAMPLE_GPT}`;
       default:
         return BOT_TEMPLATE;
     }
@@ -434,31 +383,24 @@ export function StarterKitModal({ isOpen, onClose }) {
       const zip = new JSZip();
       zip.file('bot.py', BOT_TEMPLATE);
       zip.file('local_test.py', LOCAL_TEST_TEMPLATE);
-      zip.file('PROMPTS.md', PROMPTS_TEMPLATE);
       zip.file('REPORT.md', REPORT_TEMPLATE);
       zip.file('git_log.txt', GIT_LOG_TEMPLATE);
-      
-      const chatFolder = zip.folder('chat_history');
-      chatFolder.file('session_01_claude.txt', CHAT_SAMPLE_CLAUDE);
-      chatFolder.file('session_02_gpt4o.txt', CHAT_SAMPLE_GPT);
 
       zip.file('README.md', `# Gói Mẫu OTTv2 Starter Kit (Bàn Cờ 9×9) — UET 2026
-Đã bao gồm đầy đủ cấu trúc hợp lệ đáp ứng trọn vẹn 6/6 tiêu chí Đề Án Swiss:
+Tập trung vào năng lực tự lập trình và phát triển thuật toán cờ chiến thuật:
 1. bot.py: Hàm choose_move hỗ trợ bàn cờ 9×9 và né ô chướng ngại vật (state.obstacles)
 2. local_test.py: Chạy kiểm thử tự động 5 trận trên máy bạn ('python local_test.py')
-3. PROMPTS.md: Nhật ký Prompt Engineering T08 (> 10 bytes)
-4. REPORT.md: Báo cáo kỹ thuật chiến thuật & phân tích heuristic (> 10 bytes)
-5. chat_history/: Thư mục lưu lịch sử hội thoại AI trích xuất từ ChatGPT / Claude
-6. git_log.txt: Lịch sử Git commit (≥ 4 commits) chứng minh tiến trình tự viết code
+3. REPORT.md: Báo cáo ý tưởng chiến thuật & phân tích heuristic (> 10 bytes)
+4. git_log.txt: Lịch sử Git commit (≥ 4 commits) chứng minh tiến trình tự viết code
 
 ## Hướng dẫn nộp bài:
 1. Chỉnh sửa code thuật toán trong bot.py.
 2. Chạy thử nghiệm cục bộ: 'python local_test.py'.
-3. Điền thông tin vào PROMPTS.md và REPORT.md.
+3. Điền thông tin ý tưởng và hàm lượng giá vào REPORT.md.
 4. Trích xuất file log từ git repository cá nhân:
    git log --pretty=format:"commit %h%nAuthor: %an <%ae>%nDate:   %ad%n%n    %s%n" > git_log.txt
    (hoặc lệnh đơn giản: git log > git_log.txt)
-5. Nén toàn bộ (bao gồm cả thư mục chat_history/) thành file .zip và nộp trực tiếp trên website đấu trường!
+5. Nén toàn bộ thành file .zip và nộp trực tiếp trên website đấu trường!
 `);
 
       const content = await zip.generateAsync({ type: 'blob' });
@@ -471,7 +413,7 @@ export function StarterKitModal({ isOpen, onClose }) {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      showToast('Đã tải gói Starter Kit (ottv2_starter_kit.zip) hợp lệ 100%!', 'success');
+      showToast('Đã tải gói Starter Kit (ottv2_starter_kit.zip) hợp lệ!', 'success');
     } catch (err) {
       showToast('Lỗi khi tạo gói ZIP: ' + err.message, 'error');
     } finally {
@@ -489,7 +431,7 @@ export function StarterKitModal({ isOpen, onClose }) {
             </div>
             <div>
               <h2 id="modal-title" className="modal-title">Bộ Khởi Động Bot (Starter Kit)</h2>
-              <p className="modal-subtitle">Gói mẫu chuẩn 100% tiêu chí nộp bài OTTv2 (T08, T09, Git Log) — Bàn cờ 9×9, test cục bộ & ô cản Top 32</p>
+              <p className="modal-subtitle">Gói mẫu chuẩn: Code sinh viên (bot.py), Ý tưởng (REPORT.md) &amp; Lịch sử Git commit (git_log.txt)</p>
             </div>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Đóng cửa sổ">
@@ -499,8 +441,8 @@ export function StarterKitModal({ isOpen, onClose }) {
 
         <div className="modal-banner">
           <div className="banner-text">
-            <strong>💡 Gói nộp bài hợp lệ chuẩn 6/6 tiêu chí (T08, T09, Git Log):</strong>
-            <span> Gồm <code>bot.py</code> (hàm <code>choose_move</code>), <code>PROMPTS.md</code>, <code>REPORT.md</code>, thư mục <code>chat_history/</code>, và <code>git_log.txt</code> (≥ 4 commits).</span>
+            <strong>💡 Tiêu chí đánh giá bài nộp:</strong>
+            <span> Gồm <code>bot.py</code> (hàm <code>choose_move</code>), báo cáo ý tưởng (<code>REPORT.md</code>), và lịch sử commit (<code>git_log.txt</code> ≥ 4 commits).</span>
           </div>
           <button
             id="btn-download-starter-zip"
@@ -529,18 +471,11 @@ export function StarterKitModal({ isOpen, onClose }) {
             <span>local_test.py (Test Cục Bộ)</span>
           </button>
           <button
-            className={`tab-btn ${activeTab === 'PROMPTS.md' ? 'active' : ''}`}
-            onClick={() => setActiveTab('PROMPTS.md')}
-          >
-            <FileText size={16} />
-            <span>PROMPTS.md (T08)</span>
-          </button>
-          <button
             className={`tab-btn ${activeTab === 'REPORT.md' ? 'active' : ''}`}
             onClick={() => setActiveTab('REPORT.md')}
           >
             <FileText size={16} />
-            <span>REPORT.md</span>
+            <span>REPORT.md (Báo Cáo Ý Tưởng)</span>
           </button>
           <button
             className={`tab-btn ${activeTab === 'git_log.txt' ? 'active' : ''}`}
@@ -548,13 +483,6 @@ export function StarterKitModal({ isOpen, onClose }) {
           >
             <Terminal size={15} />
             <span>git_log.txt (≥4 Commits)</span>
-          </button>
-          <button
-            className={`tab-btn ${activeTab === 'chat_history/' ? 'active' : ''}`}
-            onClick={() => setActiveTab('chat_history/')}
-          >
-            <FolderArchive size={15} />
-            <span>chat_history/ (Mẫu Chat)</span>
           </button>
         </div>
 
@@ -573,8 +501,8 @@ export function StarterKitModal({ isOpen, onClose }) {
 
         <div className="modal-footer">
           <div className="checklist-hints">
-            <span className="hint-pill">✓ 6/6 Tiêu Chí Validator</span>
-            <span className="hint-pill">✓ Bàn cờ 9×9 OTTv2</span>
+            <span className="hint-pill">✓ Code Python Chuẩn 9×9</span>
+            <span className="hint-pill">✓ Báo Cáo Ý Tưởng REPORT.md</span>
             <span className="hint-pill">✓ Lịch Sử Git (5 Commits)</span>
             <span className="hint-pill">✓ Hỗ trợ Ô Cản Top 32</span>
             <span className="hint-pill">✓ Test Offline 0 Dependency</span>

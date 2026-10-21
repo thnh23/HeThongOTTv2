@@ -495,11 +495,35 @@ def choose_move(state) -> Tuple[str, str]:
   ]
 }}'''
 
+        git_log_txt = f"""commit 7f3b891e4a2c9d081f23456789abcdef01234567
+Author: {user.name} <{user.email}>
+Date:   Wed Oct 21 09:15:20 2026 +0700
+
+    feat: refine heuristic evaluation and end-game target distance
+
+commit e4a2c9d081f23456789abcdef012345677f3b891
+Author: {user.name} <{user.email}>
+Date:   Tue Oct 20 22:30:10 2026 +0700
+
+    feat: implement minimax alpha-beta depth 3
+
+commit c9d081f23456789abcdef012345677f3b891e4a2
+Author: {user.name} <{user.email}>
+Date:   Tue Oct 20 16:45:00 2026 +0700
+
+    test: add local test suite against random bot
+
+commit 81f23456789abcdef012345677f3b891e4a2c9d0
+Author: {user.name} <{user.email}>
+Date:   Mon Oct 19 14:00:00 2026 +0700
+
+    feat: initial choose_move implementation for OTTv2
+"""
+
         with zipfile.ZipFile(abs_zip, 'w', zipfile.ZIP_DEFLATED) as z:
             z.writestr("bot.py", bot_code)
-            z.writestr("PROMPTS.md", prompts_md)
             z.writestr("REPORT.md", report_md)
-            z.writestr("chat_history/session_01.json", chat_history_json)
+            z.writestr("git_log.txt", git_log_txt)
 
     # Đảm bảo extracted dir có file
     if not os.path.exists(extracted_dir) or not os.listdir(extracted_dir):
@@ -517,8 +541,9 @@ def extract_files_from_package(abs_zip: str) -> dict:
     """Đọc và giải mã an toàn các file cốt lõi trong gói nộp."""
     files_content = {
         "bot_py": "",
-        "prompts_md": "",
+        "git_log": "",
         "report_md": "",
+        "prompts_md": "",
         "chat_history": [],
     }
 
@@ -532,13 +557,16 @@ def extract_files_from_package(abs_zip: str) -> dict:
                 # Đọc bot.py
                 if name_lower == "bot.py":
                     files_content["bot_py"] = z.read(item).decode("utf-8", errors="ignore")
-                # Đọc PROMPTS.md
-                elif name_lower == "prompts.md":
-                    files_content["prompts_md"] = z.read(item).decode("utf-8", errors="ignore")
+                # Đọc git_log.txt
+                elif name_lower in ["git_log.txt", "git_log", "git.log"]:
+                    files_content["git_log"] = z.read(item).decode("utf-8", errors="ignore")
                 # Đọc REPORT.md
                 elif name_lower == "report.md":
                     files_content["report_md"] = z.read(item).decode("utf-8", errors="ignore")
-                # Đọc file trong chat_history/
+                # Tương thích ngược: Đọc PROMPTS.md nếu có
+                elif name_lower == "prompts.md":
+                    files_content["prompts_md"] = z.read(item).decode("utf-8", errors="ignore")
+                # Tương thích ngược: Đọc file trong chat_history/
                 elif "chat_history" in item.filename.lower():
                     content = z.read(item).decode("utf-8", errors="ignore")
                     files_content["chat_history"].append({

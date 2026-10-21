@@ -51,9 +51,8 @@ def create_in_memory_zip() -> io.BytesIO:
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.writestr("bot.py", "def choose_move(state):\n    return ('e2', 'e3')\n")
-        zf.writestr("PROMPTS.md", "# Prompts\n1. Initial prompt\n")
-        zf.writestr("REPORT.md", "# Report\nMy bot strategy\n")
-        zf.writestr("chat_history/session1.txt", "Chat history content\n")
+        zf.writestr("REPORT.md", "# Report\nMy bot strategy and heuristic\n")
+        zf.writestr("git_log.txt", "commit 1111111\ncommit 2222222\ncommit 3333333\ncommit 4444444\n")
     buffer.seek(0)
     return buffer
 
@@ -72,7 +71,8 @@ class TestSubmitAPI:
         assert data["is_valid"] is True
         assert data["status"] == "valid"
         assert data["validation"]["bot_py"] is True
-        assert data["validation"]["prompts_md"] is True
+        assert data["validation"]["report_md"] is True
+        assert data["validation"]["git_log"] is True
 
         sub_id = data["id"]
 

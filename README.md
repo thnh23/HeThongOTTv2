@@ -27,9 +27,9 @@
 
 * **BoardSVG & Replay Player:** Bàn cờ vector 9×9 trực quan, mượt mà. Trình chiếu phát lại toàn bộ lịch sử nước đi với thanh trượt tiến độ, điều chỉnh tốc độ (1x–4x) và xuất file replay JSON.
 * **WebSocket Live Streaming:** Cập nhật bảng xếp hạng và phát sóng trực tiếp ván đấu đang diễn ra theo thời gian thực không cần tải lại trang.
-* **Thẩm định gói bài nộp tự động (Validator T08/T09):** Tự động kiểm tra cấu trúc gói `.zip` (`bot.py`, `PROMPTS.md`, `REPORT.md`, `chat_history/`) và quét rò rỉ mã bí mật API Key.
+* **Thẩm định gói bài nộp tự động (Validator T08/T09):** Tự động kiểm tra cấu trúc gói `.zip` (`bot.py`, `REPORT.md`, `git_log.txt` với $\ge 4$ commits) và quét rò rỉ mã bí mật API Key.
 * **Sandbox cô lập an toàn (Sandbox T10):** Chạy code bot trong môi trường kiểm soát, chặn truy cập mạng trái phép và xử lý bot crash/timeout mà không làm ảnh hưởng máy chủ.
-* **Admin BTC & Chấm Điểm Hồ Sơ AI:** Giao diện chấm thi chuyên dụng cho Hội đồng: duyệt trực tiếp mã nguồn bot và nhật ký prompt, tự động tính điểm theo trọng số Bảng 5 spec (Tier A, B, C) và điều hành vòng đấu Round-Robin 2 lượt đổi phe.
+* **Admin BTC & Hội Đồng Chấm Điểm:** Giao diện chấm thi chuyên dụng cho Hội đồng: duyệt trực tiếp mã nguồn bot, tiến trình tự lập trình qua lịch sử Git commit, báo cáo ý tưởng thuật toán, tự động tính điểm theo trọng số Bảng điểm Swiss 13 Vòng & Top 32 và điều hành giải đấu tập trung.
 * **Bảo vệ toàn diện:** Middleware Rate Limiting trượt cửa sổ chống DoS/brute-force, `ErrorBoundary` ngăn chặn sập giao diện, giao diện tối ưu 100% trên thiết bị di động.
 
 ---

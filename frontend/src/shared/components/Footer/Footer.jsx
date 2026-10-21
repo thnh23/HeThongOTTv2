@@ -96,7 +96,7 @@ export function Footer() {
               <Link to="/rules#grading">Thang Điểm Lũy Tiến Học Phần</Link>
             </li>
             <li>
-              <Link to="/rules#prompts">Quy Chuẩn PROMPTS.md</Link>
+              <Link to="/rules#git">Lịch Sử Git &amp; Tiến Trình Code</Link>
             </li>
             <li>
               <Link to="/admin">Cổng Quản Trị BTC (Admin)</Link>
