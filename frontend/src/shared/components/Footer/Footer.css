@@ -1,6 +1,6 @@
 .footer {
   border-top: 1px solid var(--border-subtle);
-  background: rgba(8, 12, 20, 0.95);
+  background: #FFFFFF;
   padding: 3rem 1.5rem 2rem;
   margin-top: auto;
 }
@@ -22,11 +22,13 @@
 .footer-desc {
   color: var(--text-muted);
   font-size: 0.9rem;
-  max-width: 400px;
+  max-width: 440px;
+  line-height: 1.6;
 }
 
 .footer-col h4 {
-  font-size: 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 1rem;
 }
@@ -45,7 +47,7 @@
 }
 
 .footer-links a:hover {
-  color: var(--primary-400);
+  color: var(--primary-600);
 }
 
 .footer-bottom {

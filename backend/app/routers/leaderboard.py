@@ -24,12 +24,16 @@ class LeaderboardEntry(BaseModel):
     rank: int
     user_id: str
     name: str
+    student_id: Optional[str] = None
+    bot_name: Optional[str] = None
     tier: str
     matches_played: int
     wins: int
     draws: int
     losses: int
     points: int
+    buchholz: float = 0.0
+    sonneborn_berger: float = 0.0
     win_rate: float     # phần trăm 0 - 100%
 
 
@@ -48,20 +52,24 @@ class UserMatchHistoryItem(BaseModel):
 
 @router.get("", response_model=List[LeaderboardEntry])
 def get_leaderboard(
-    tier: str = Query("A", pattern="^[ABCabc]$", description="Bảng thi đấu (A, B hoặc C)"),
+    tier: str = Query("ALL", description="Bảng thi đấu (A, B, C, ALL hoặc SWISS)"),
     db: Session = Depends(get_db),
 ):
     """
-    Tính toán và trả về Bảng xếp hạng cho Bảng A, B hoặc C:
+    Tính toán và trả về Bảng xếp hạng Thụy Sĩ (Swiss System) hoặc theo Bảng:
       - Thắng: 3 điểm
       - Hòa:   1 điểm
       - Thua:  0 điểm
+      - Hệ số phụ: Buchholz Cut 1 và Sonneborn-Berger (SB)
     """
     target_tier = tier.upper()
+    is_all_swiss = target_tier in ("ALL", "SWISS")
 
-    # Lấy tất cả user thuộc bảng này
-    users = db.query(User).filter(User.tier == target_tier).all()
-    user_map = {u.id: u.name for u in users}
+    # Lấy danh sách user
+    query = db.query(User)
+    if not is_all_swiss:
+        query = query.filter(User.tier == target_tier)
+    users = query.all()
 
     # Khởi tạo bảng thống kê
     stats = {}
@@ -69,37 +77,42 @@ def get_leaderboard(
         stats[u.id] = {
             "user_id": u.id,
             "name": u.name,
-            "tier": target_tier,
+            "student_id": getattr(u, "student_id", None) or u.email.split("@")[0],
+            "bot_name": f"Bot_{u.name.replace(' ', '_')}",
+            "tier": u.tier or ("A" if not is_all_swiss else "SWISS"),
             "matches_played": 0,
             "wins": 0,
             "draws": 0,
             "losses": 0,
             "points": 0,
+            "opponents": [],  # list of (opp_id, result_for_user)
         }
 
-    # Lấy các trận đã hoàn thành trong bảng
-    matches = (
-        db.query(Match)
-        .filter(Match.tier == target_tier, Match.status == "done")
-        .all()
-    )
+    # Lấy các trận đã hoàn thành
+    match_query = db.query(Match).filter(Match.status == "done")
+    if not is_all_swiss:
+        match_query = match_query.filter(Match.tier == target_tier)
+    matches = match_query.all()
 
     for m in matches:
         aid, bid = m.bot_a_id, m.bot_b_id
 
-        # Đảm bảo bot có trong stats kể cả khi user chưa set tier chuẩn
+        # Đảm bảo bot có trong stats
         for uid in (aid, bid):
             if uid not in stats:
                 u = db.query(User).filter(User.id == uid).first()
                 stats[uid] = {
                     "user_id": uid,
                     "name": u.name if u else "Unknown",
-                    "tier": target_tier,
+                    "student_id": getattr(u, "student_id", None) if u else uid[:8],
+                    "bot_name": f"Bot_{u.name.replace(' ', '_')}" if u else f"Bot_{uid[:6]}",
+                    "tier": (u.tier if u else None) or ("A" if not is_all_swiss else "SWISS"),
                     "matches_played": 0,
                     "wins": 0,
                     "draws": 0,
                     "losses": 0,
                     "points": 0,
+                    "opponents": [],
                 }
 
         stats[aid]["matches_played"] += 1
@@ -109,21 +122,54 @@ def get_leaderboard(
             stats[aid]["wins"] += 1
             stats[aid]["points"] += 3
             stats[bid]["losses"] += 1
+            stats[aid]["opponents"].append((bid, "win"))
+            stats[bid]["opponents"].append((aid, "loss"))
         elif m.winner == 'B':
             stats[bid]["wins"] += 1
             stats[bid]["points"] += 3
             stats[aid]["losses"] += 1
+            stats[aid]["opponents"].append((bid, "loss"))
+            stats[bid]["opponents"].append((aid, "win"))
         else:
             # Hòa
             stats[aid]["draws"] += 1
             stats[aid]["points"] += 1
             stats[bid]["draws"] += 1
             stats[bid]["points"] += 1
+            stats[aid]["opponents"].append((bid, "draw"))
+            stats[bid]["opponents"].append((aid, "draw"))
 
-    # Sắp xếp theo Điểm giảm dần -> Số trận thắng giảm dần -> Tỉ lệ thắng
+    # Tính toán Buchholz và Sonneborn-Berger cho từng thí sinh
+    for uid, entry in stats.items():
+        opponents = entry["opponents"]
+        opp_scores = [stats[opp_id]["points"] for opp_id, _ in opponents if opp_id in stats]
+
+        # Buchholz = Tổng điểm của đối thủ
+        # Nếu có >= 2 đối thủ, áp dụng Buchholz Cut-1 (bỏ điểm thấp nhất)
+        if len(opp_scores) >= 2:
+            entry["buchholz"] = float(sum(opp_scores) - min(opp_scores))
+        else:
+            entry["buchholz"] = float(sum(opp_scores))
+
+        # Sonneborn-Berger = 100% điểm đối thủ mình thắng + 50% điểm đối thủ mình hòa
+        sb = 0.0
+        for opp_id, res in opponents:
+            if opp_id in stats:
+                opp_pts = stats[opp_id]["points"]
+                if res == "win":
+                    sb += opp_pts
+                elif res == "draw":
+                    sb += opp_pts * 0.5
+        entry["sonneborn_berger"] = round(sb, 1)
+
+    # Sắp xếp theo FIDE / Swiss standard:
+    # 1. Điểm Match Points (giảm dần)
+    # 2. Buchholz Cut-1 (giảm dần)
+    # 3. Sonneborn-Berger (giảm dần)
+    # 4. Số trận thắng (giảm dần)
     sorted_entries = sorted(
         stats.values(),
-        key=lambda x: (x["points"], x["wins"], -x["losses"]),
+        key=lambda x: (x["points"], x["buchholz"], x["sonneborn_berger"], x["wins"], -x["losses"]),
         reverse=True,
     )
 
@@ -136,12 +182,16 @@ def get_leaderboard(
                 rank=rank_idx,
                 user_id=entry["user_id"],
                 name=entry["name"],
+                student_id=entry.get("student_id"),
+                bot_name=entry.get("bot_name"),
                 tier=entry["tier"],
                 matches_played=played,
                 wins=entry["wins"],
                 draws=entry["draws"],
                 losses=entry["losses"],
                 points=entry["points"],
+                buchholz=entry.get("buchholz", 0.0),
+                sonneborn_berger=entry.get("sonneborn_berger", 0.0),
                 win_rate=win_rate,
             )
         )

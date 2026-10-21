@@ -16,6 +16,12 @@ import {
   FileCode,
   LogIn,
   Sliders,
+  Laptop,
+  Check,
+  Zap,
+  ArrowRight,
+  ExternalLink,
+  Download,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useAuth } from '@/shared/context/AuthContext.jsx';
@@ -30,46 +36,38 @@ export function AdminDashboardPage() {
 
   const [stats, setStats] = useState(null);
   const [tournamentStatus, setTournamentStatus] = useState(null);
+  const [swissStatus, setSwissStatus] = useState(null);
   const [usersList, setUsersList] = useState([]);
   const [tierFilter, setTierFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+
+  // Tournament Controller Tab: 'swiss' (Swiss 13 Vòng) or 'round_robin' (3 Bảng A/B/C)
+  const [activeTourneyTab, setActiveTourneyTab] = useState('swiss');
+  const [selectedSwissRound, setSelectedSwissRound] = useState(1);
+  const [isPairingSwiss, setIsPairingSwiss] = useState(false);
+  const [isPublishingSwiss, setIsPublishingSwiss] = useState(false);
 
   // Modal review state
   const [selectedUserForReview, setSelectedUserForReview] = useState(null);
   const [isStartingTournament, setIsStartingTournament] = useState(null); // 'A', 'B', 'C'
   const [isSyncingData, setIsSyncingData] = useState(false);
 
-  const handleSyncSeedData = async () => {
-    if (!window.confirm('Bạn có muốn đồng bộ lại toàn bộ dữ liệu bài nộp mẫu cho 9 thí sinh (Bảng A, B, C) vào cơ sở dữ liệu hiện tại?')) {
-      return;
-    }
-    setIsSyncingData(true);
-    try {
-      showToast('Đang đồng bộ dữ liệu bài nộp mẫu lên cơ sở dữ liệu...', 'info');
-      const res = await apiClient.post('/admin/seed-data');
-      showToast(res.message || 'Đồng bộ bài nộp mẫu thành công!', 'success');
-      fetchDashboardData();
-    } catch (err) {
-      showToast(err.message || 'Lỗi khi đồng bộ dữ liệu bài nộp', 'error');
-    } finally {
-      setIsSyncingData(false);
-    }
-  };
-
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
-      const [statsRes, tourneyRes, usersRes] = await Promise.all([
-        apiClient.get('/admin/stats'),
-        apiClient.get('/admin/tournament/status'),
-        apiClient.get('/admin/users'),
+      const [statsRes, tourneyRes, swissRes, usersRes] = await Promise.all([
+        apiClient.get('/admin/stats').catch(() => null),
+        apiClient.get('/admin/tournament/status').catch(() => null),
+        apiClient.get('/admin/swiss/status').catch(() => null),
+        apiClient.get('/admin/users').catch(() => []),
       ]);
       setStats(statsRes);
       setTournamentStatus(tourneyRes);
+      setSwissStatus(swissRes);
       setUsersList(usersRes || []);
     } catch (err) {
-      // ignore or show error
+      // ignore
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +100,7 @@ export function AdminDashboardPage() {
     }
   };
 
-  // Handle start tournament
+  // Handle start tournament Round-Robin
   const handleStartTournament = async (tier) => {
     setIsStartingTournament(tier);
     try {
@@ -121,6 +119,59 @@ export function AdminDashboardPage() {
     }
   };
 
+  // Handle Swiss Pairing
+  const handleTriggerSwissPair = async () => {
+    setIsPairingSwiss(true);
+    try {
+      showToast(`Đang bốc thăm ghép cặp Vòng ${selectedSwissRound} (2.000 SV) và cắt 10 Chunks...`, 'info');
+      const res = await apiClient.post('/admin/swiss/pair', {
+        round_num: Number(selectedSwissRound),
+        num_chunks: 10,
+        player_count: 2000,
+      });
+      showToast(res.message || `Đã ghép cặp thành công Vòng ${selectedSwissRound}!`, 'success');
+      fetchDashboardData();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi ghép cặp Swiss', 'error');
+    } finally {
+      setIsPairingSwiss(false);
+    }
+  };
+
+  // Handle Swiss Publish
+  const handleTriggerSwissPublish = async () => {
+    setIsPublishingSwiss(true);
+    try {
+      showToast(`Đang hợp nhất kết quả Vòng ${selectedSwissRound}, tính Buchholz / SB và xuất bản...`, 'info');
+      const res = await apiClient.post('/admin/swiss/publish', {
+        round_num: Number(selectedSwissRound),
+      });
+      showToast(res.message || `Xuất bản bảng xếp hạng Vòng ${selectedSwissRound} thành công!`, 'success');
+      fetchDashboardData();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi xuất bản kết quả Swiss', 'error');
+    } finally {
+      setIsPublishingSwiss(false);
+    }
+  };
+
+  const handleSyncSeedData = async () => {
+    if (!window.confirm('Bạn có muốn đồng bộ lại toàn bộ dữ liệu bài nộp mẫu cho các thí sinh vào cơ sở dữ liệu hiện tại?')) {
+      return;
+    }
+    setIsSyncingData(true);
+    try {
+      showToast('Đang đồng bộ dữ liệu bài nộp mẫu lên cơ sở dữ liệu...', 'info');
+      const res = await apiClient.post('/admin/seed-data');
+      showToast(res.message || 'Đồng bộ bài nộp mẫu thành công!', 'success');
+      fetchDashboardData();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi đồng bộ dữ liệu bài nộp', 'error');
+    } finally {
+      setIsSyncingData(false);
+    }
+  };
+
   return (
     <div className="admin-page animate-fade-in">
       {/* Admin Header */}
@@ -128,26 +179,38 @@ export function AdminDashboardPage() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <div className="admin-badge-icon">
-              <ShieldCheck size={22} color="var(--amber-400)" />
+              <ShieldCheck size={22} color="var(--primary-700)" />
             </div>
-            <h1 style={{ fontSize: '2.2rem', margin: 0 }}>
+            <h1 className="admin-title">
               Bảng Điều Khiển <span className="gradient-text">Ban Tổ Chức (Admin)</span>
             </h1>
           </div>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-            Hội đồng chấm thi • Quản lý vòng tròn Round-Robin • Chấm hồ sơ AI & vấn đáp hiểu code (Sprint 5)
+          <p className="admin-subtitle">
+            Hội đồng Chấm thi • Điều hành Giải đấu Thụy Sĩ (Swiss 13 Vòng) • Quản lý Cụm 10 Máy Chấm Phân Tán
           </p>
         </div>
 
-        <button
-          id="btn-admin-refresh"
-          className="btn btn-outline btn-sm"
-          onClick={fetchDashboardData}
-          disabled={isLoading}
-        >
-          <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
-          <span>Làm mới dữ liệu</span>
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleSyncSeedData}
+            disabled={isSyncingData}
+            title="Đồng bộ lại dữ liệu thí sinh mẫu"
+          >
+            <RotateCcw size={14} className={isSyncingData ? 'animate-spin' : ''} />
+            <span>Nạp Dữ Liệu Mẫu</span>
+          </button>
+          <button
+            id="btn-admin-refresh"
+            className="btn btn-outline btn-sm"
+            onClick={fetchDashboardData}
+            disabled={isLoading}
+          >
+            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            <span>Làm mới</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards Grid */}
@@ -155,327 +218,376 @@ export function AdminDashboardPage() {
         <div className="glass-card stat-metric-card">
           <div className="stat-metric-header">
             <span className="stat-metric-title">Tổng Thí Sinh</span>
-            <Users size={18} color="var(--primary-400)" />
+            <Users size={18} color="var(--primary-600)" />
           </div>
-          <div className="stat-metric-value">{stats?.users?.total || usersList.length}</div>
-          <div className="tier-breakdown-pills">
-            <span className="breakdown-pill">A: {stats?.users?.tier_counts?.A || 0}</span>
-            <span className="breakdown-pill">B: {stats?.users?.tier_counts?.B || 0}</span>
-            <span className="breakdown-pill">C: {stats?.users?.tier_counts?.C || 0}</span>
-          </div>
-        </div>
-
-        <div className="glass-card stat-metric-card">
-          <div className="stat-metric-header">
-            <span className="stat-metric-title">Gói Bài Nộp</span>
-            <Upload size={18} color="var(--cyan-400)" />
-          </div>
-          <div className="stat-metric-value">{stats?.submissions?.valid || 0} <span className="stat-metric-sub">/ {stats?.submissions?.total || 0}</span></div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--emerald-400)' }}>
-            ✓ Đã qua kiểm tra T08/T09
-          </span>
-        </div>
-
-        <div className="glass-card stat-metric-card">
-          <div className="stat-metric-header">
-            <span className="stat-metric-title">Trận Đấu Vòng Tròn</span>
-            <Trophy size={18} color="var(--amber-400)" />
-          </div>
-          <div className="stat-metric-value">{stats?.matches?.done || 0} <span className="stat-metric-sub">/ {stats?.matches?.total || 0}</span></div>
+          <div className="stat-metric-value">{swissStatus?.total_players || 2000}</div>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Đang chạy: {stats?.matches?.running || 0} • Chờ: {stats?.matches?.pending || 0}
+            Toàn bộ sinh viên Khoa CNTT - UET
           </span>
         </div>
 
         <div className="glass-card stat-metric-card">
           <div className="stat-metric-header">
-            <span className="stat-metric-title">Đã Chấm Vấn Đáp</span>
-            <Award size={18} color="var(--emerald-400)" />
+            <span className="stat-metric-title">Thể Thức Thi Đấu</span>
+            <Trophy size={18} color="var(--amber-600)" />
           </div>
-          <div className="stat-metric-value">
-            {stats?.users?.reviewed_count || 0}
-            <span className="stat-metric-sub"> / {usersList.length}</span>
+          <div className="stat-metric-value">13 Vòng</div>
+          <span style={{ fontSize: '0.8rem', color: 'var(--primary-700)', fontWeight: 600 }}>
+            Hệ Thống Thụy Sĩ (Swiss System)
+          </span>
+        </div>
+
+        <div className="glass-card stat-metric-card">
+          <div className="stat-metric-header">
+            <span className="stat-metric-title">Cụm Máy Chấm</span>
+            <Laptop size={18} color="var(--emerald-600)" />
           </div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--cyan-400)' }}>
-            Hồ sơ AI + Vấn đáp 10p
+          <div className="stat-metric-value">10 Máy</div>
+          <span style={{ fontSize: '0.8rem', color: 'var(--emerald-700)', fontWeight: 600 }}>
+            100 trận/chunk • Chấm phân tán 0đ
+          </span>
+        </div>
+
+        <div className="glass-card stat-metric-card">
+          <div className="stat-metric-header">
+            <span className="stat-metric-title">Vòng Chung Kết</span>
+            <Award size={18} color="var(--primary-600)" />
+          </div>
+          <div className="stat-metric-value">Top 32</div>
+          <span style={{ fontSize: '0.8rem', color: 'var(--amber-700)', fontWeight: 600 }}>
+            Knockout &amp; Ô chướng ngại vật
           </span>
         </div>
       </div>
 
-      {/* Tournament Hub (Round-Robin Controller per Tier) */}
-      <div className="glass-card tournament-hub-card" style={{ marginBottom: '2.5rem' }}>
-        <div className="hub-header">
-          <div>
-            <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-              <Trophy size={20} color="var(--amber-400)" />
-              <span>Điều Hành Giải Đấu Vòng Tròn (Round-Robin)</span>
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.2rem' }}>
-              Mỗi cặp thí sinh thi đấu 2 ván đổi phe (Trắng - Đen, Đen - Trắng) theo đúng quy định Bảng 10.
-            </p>
-          </div>
-          <Link to="/matches" className="btn btn-outline btn-sm">
-            <Radio size={14} />
-            <span>Mở Bảng Thi Đấu & Live</span>
-          </Link>
-        </div>
-
-        <div className="tournament-tiers-grid">
-          {['A', 'B', 'C'].map((tier) => {
-            const tStatus = tournamentStatus?.[tier] || {
-              total_matches: 0,
-              done_matches: 0,
-              running_matches: 0,
-              progress_percent: 0,
-            };
-
-            const tierUsers = usersList.filter((u) => u.tier === tier && !u.is_admin);
-            const submittedCount = tStatus.submitted_players !== undefined
-              ? tStatus.submitted_players
-              : tierUsers.filter((u) => u.has_submission).length;
-            const totalCount = tStatus.total_players !== undefined
-              ? tStatus.total_players
-              : tierUsers.length;
-            const canStart = submittedCount >= 2;
-
-            const isStarting = isStartingTournament === tier;
-
-            return (
-              <div key={tier} className="tournament-tier-box">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                  <span className={`tier-badge-large tier-${tier}`}>BẢNG {tier}</span>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    Tiến độ: <strong>{tStatus.progress_percent}%</strong>
-                  </span>
-                </div>
-
-                {/* Progress bar */}
-                <div className="tournament-progress-track">
-                  <div
-                    className="tournament-progress-fill"
-                    style={{ width: `${tStatus.progress_percent}%` }}
-                  ></div>
-                </div>
-
-                <div className="tier-match-stats">
-                  <span>Tổng: {tStatus.total_matches} trận</span>
-                  <span>Đã xong: {tStatus.done_matches}</span>
-                  {tStatus.running_matches > 0 && (
-                    <span style={{ color: 'var(--rose-500)', fontWeight: 600 }}>
-                      🔴 Đang đấu: {tStatus.running_matches}
-                    </span>
-                  )}
-                </div>
-
-                {/* Submission eligibility indicator */}
-                <div
-                  style={{
-                    marginTop: '0.75rem',
-                    padding: '0.45rem 0.65rem',
-                    borderRadius: '6px',
-                    fontSize: '0.8rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    backgroundColor: canStart ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                    border: `1px solid ${canStart ? 'rgba(16, 185, 129, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
-                  }}
-                  title={canStart ? `${submittedCount} thí sinh đã nộp bài hợp lệ và sẵn sàng thi đấu` : 'Cần tối thiểu 2 thí sinh có bài nộp hợp lệ để ghép trận vòng tròn'}
-                >
-                  <span style={{ color: canStart ? 'var(--emerald-400)' : 'var(--amber-400)', fontWeight: 600 }}>
-                    {canStart ? '✓ Đủ điều kiện ghép' : '⚠ Chưa đủ bài nộp'}
-                  </span>
-                  <strong style={{ color: '#fff', fontFamily: 'var(--font-mono)' }}>
-                    {submittedCount}/{totalCount} đã nộp
-                  </strong>
-                </div>
-
-                <button
-                  id={`btn-start-tournament-${tier.toLowerCase()}`}
-                  className="btn btn-primary btn-sm"
-                  style={{
-                    width: '100%',
-                    justifyContent: 'center',
-                    marginTop: '0.75rem',
-                    opacity: canStart ? 1 : 0.65,
-                    cursor: canStart ? 'pointer' : 'not-allowed',
-                  }}
-                  onClick={() => {
-                    if (!canStart) {
-                      showToast(
-                        `Bảng ${tier} mới có ${submittedCount}/${totalCount} thí sinh nộp bài. Cần tối thiểu 2 thí sinh có bài nộp hợp lệ để ghép trận!`,
-                        'warning'
-                      );
-                      return;
-                    }
-                    handleStartTournament(tier);
-                  }}
-                  disabled={isStarting}
-                >
-                  {isStarting ? (
-                    <>
-                      <RefreshCw size={15} className="animate-spin" />
-                      <span>Đang khởi chạy...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play size={15} />
-                      <span>
-                        {!canStart
-                          ? `Cần tối thiểu 2 bài nộp (${submittedCount}/2)`
-                          : tStatus.total_matches > 0
-                          ? `Tạo Lượt Mới (${submittedCount} bot)`
-                          : `Ghép Trận Bảng ${tier} (${submittedCount} bot)`}
-                      </span>
-                    </>
-                  )}
-                </button>
-              </div>
-            );
-          })}
-        </div>
+      {/* Controller Navigation Tabs */}
+      <div className="tourney-controller-tabs">
+        <button
+          type="button"
+          className={`tourney-tab-btn ${activeTourneyTab === 'swiss' ? 'active' : ''}`}
+          onClick={() => setActiveTourneyTab('swiss')}
+        >
+          <Trophy size={16} />
+          <span>Hệ Thống Thụy Sĩ (Swiss 13 Vòng • 2.000 SV)</span>
+          <span className="tourney-tab-badge">Đề Án Mới</span>
+        </button>
+        <button
+          type="button"
+          className={`tourney-tab-btn ${activeTourneyTab === 'round_robin' ? 'active' : ''}`}
+          onClick={() => setActiveTourneyTab('round_robin')}
+        >
+          <Radio size={16} />
+          <span>Vòng Tròn Theo Bảng (Round-Robin A/B/C)</span>
+        </button>
       </div>
 
-      {/* Students & Grading Table */}
+      {/* SWISS TOURNAMENT CONTROLLER TAB */}
+      {activeTourneyTab === 'swiss' && (
+        <div className="glass-card tournament-hub-card" style={{ marginBottom: '2.5rem' }}>
+          <div className="hub-header">
+            <div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
+                <span className="swiss-hub-badge">SWISS ENGINE CONTROLLER</span>
+                <span className="round-badge">VÒNG {selectedSwissRound} / 13</span>
+              </div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                Điều Hành Giải Đấu Thụy Sĩ (Swiss System)
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem', margin: 0 }}>
+                Tự động bốc thăm theo điểm số, cắt nhỏ 1.000 trận thành 10 file chunk cho 10 máy chấm sinh viên và hợp nhất xuất bản bảng xếp hạng Jamstack.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Chọn Vòng:</span>
+                <select
+                  className="swiss-round-select"
+                  value={selectedSwissRound}
+                  onChange={(e) => setSelectedSwissRound(Number(e.target.value))}
+                  aria-label="Chọn vòng đấu Swiss"
+                >
+                  {Array.from({ length: 13 }, (_, i) => i + 1).map((r) => (
+                    <option key={r} value={r}>Vòng {r}</option>
+                  ))}
+                </select>
+              </div>
+
+              <Link to="/leaderboard" className="btn btn-outline btn-sm">
+                <ExternalLink size={14} />
+                <span>Xem Bảng Xếp Hạng</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Swiss 3-Step Action Workflow */}
+          <div className="swiss-actions-row">
+            {/* Step 1: Pair */}
+            <div className="swiss-step-box">
+              <div className="step-box-header">
+                <span className="step-number">BƯỚC 1</span>
+                <h4>Ghép Cặp &amp; Cắt Chunk</h4>
+              </div>
+              <p className="step-desc">
+                Ghép 1.000 trận theo nhóm điểm, tránh đối thủ cũ và chia đều thành 10 file chunk (chunk_01 .. chunk_10).
+              </p>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                style={{ width: '100%', justifyContent: 'center' }}
+                onClick={handleTriggerSwissPair}
+                disabled={isPairingSwiss}
+              >
+                <Zap size={14} className={isPairingSwiss ? 'animate-spin' : ''} />
+                <span>{isPairingSwiss ? 'Đang ghép cặp...' : `Bốc Thăm Vòng ${selectedSwissRound}`}</span>
+              </button>
+            </div>
+
+            {/* Step 2: Distribute & Monitor */}
+            <div className="swiss-step-box">
+              <div className="step-box-header">
+                <span className="step-number">BƯỚC 2</span>
+                <h4>Phân Bổ 10 Máy Chấm</h4>
+              </div>
+              <p className="step-desc">
+                10 laptop sinh viên chạy <code>run_batch.py</code> độc lập qua Sandbox (mỗi máy 100 trận, ~2-3 phút xong).
+              </p>
+              <div className="chunk-progress-summary">
+                <span>Tiến độ nộp kết quả:</span>
+                <strong>{swissStatus?.results_ready || 0} / 10 Máy Chấm</strong>
+              </div>
+            </div>
+
+            {/* Step 3: Merge & Publish */}
+            <div className="swiss-step-box">
+              <div className="step-box-header">
+                <span className="step-number">BƯỚC 3</span>
+                <h4>Hợp Nhất &amp; Xuất Bản</h4>
+              </div>
+              <p className="step-desc">
+                Cập nhật điểm Match Points (3-1-0), tính hệ số Buchholz / SB, chốt Top 32 và xuất file JSON tĩnh.
+              </p>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                style={{ width: '100%', justifyContent: 'center' }}
+                onClick={handleTriggerSwissPublish}
+                disabled={isPublishingSwiss}
+              >
+                <CheckCircle2 size={14} className={isPublishingSwiss ? 'animate-spin' : ''} />
+                <span>{isPublishingSwiss ? 'Đang xuất bản...' : `Hợp Nhất &amp; Xuất Bản Vòng ${selectedSwissRound}`}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 10 Chunks Cluster Monitor Grid */}
+          <div className="chunks-monitor-wrap">
+            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <Laptop size={16} color="var(--primary-700)" />
+              <span>Trạng Thái Cụm 10 Máy Chấm Phân Tán (Vòng {selectedSwissRound})</span>
+            </h4>
+
+            <div className="chunks-grid">
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((chunkId) => {
+                const isReady = (swissStatus?.results_ready || 0) >= chunkId;
+                return (
+                  <div key={chunkId} className={`chunk-card ${isReady ? 'chunk-done' : 'chunk-pending'}`}>
+                    <div className="chunk-card-header">
+                      <span className="chunk-id-tag">MÁY #{String(chunkId).padStart(2, '0')}</span>
+                      {isReady ? (
+                        <span className="chunk-status-pill done">✓ Xong</span>
+                      ) : (
+                        <span className="chunk-status-pill waiting">Chờ nộp</span>
+                      )}
+                    </div>
+                    <div className="chunk-matches-num">100 Trận</div>
+                    <div className="chunk-file-name">chunk_{String(chunkId).padStart(2, '0')}.json</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ROUND-ROBIN CONTROLLER TAB (Compatible) */}
+      {activeTourneyTab === 'round_robin' && (
+        <div className="glass-card tournament-hub-card" style={{ marginBottom: '2.5rem' }}>
+          <div className="hub-header">
+            <div>
+              <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, fontWeight: 800 }}>
+                <Trophy size={20} color="var(--amber-600)" />
+                <span>Điều Hành Giải Đấu Vòng Tròn (Round-Robin A/B/C)</span>
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.2rem', margin: 0 }}>
+                Mỗi cặp thí sinh thi đấu 2 ván đổi phe (Trắng - Đen, Đen - Trắng). Phù hợp kiểm thử quy mô nhỏ.
+              </p>
+            </div>
+            <Link to="/matches" className="btn btn-outline btn-sm">
+              <Radio size={14} />
+              <span>Mở Bảng Thi Đấu &amp; Live</span>
+            </Link>
+          </div>
+
+          <div className="tournament-tiers-grid">
+            {['A', 'B', 'C'].map((tier) => {
+              const tStatus = tournamentStatus?.[tier] || {
+                total_matches: 0,
+                done_matches: 0,
+                running_matches: 0,
+                progress_percent: 0,
+              };
+
+              const tierUsers = usersList.filter((u) => u.tier === tier && !u.is_admin);
+              const submittedCount = tStatus.submitted_players !== undefined
+                ? tStatus.submitted_players
+                : tierUsers.filter((u) => u.has_submission).length;
+              const canStart = submittedCount >= 2;
+              const isStarting = isStartingTournament === tier;
+
+              return (
+                <div key={tier} className="tournament-tier-box">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <span className={`tier-badge-large tier-${tier}`}>BẢNG {tier}</span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      Tiến độ: <strong>{tStatus.progress_percent}%</strong>
+                    </span>
+                  </div>
+
+                  <div className="tournament-progress-track">
+                    <div
+                      className="tournament-progress-fill"
+                      style={{ width: `${tStatus.progress_percent}%` }}
+                    />
+                  </div>
+
+                  <div className="tier-match-stats" style={{ marginBottom: '1rem' }}>
+                    <span>Đã xong: {tStatus.done_matches} / {tStatus.total_matches} trận</span>
+                    <span>Đã nộp bot: {submittedCount} thí sinh</span>
+                  </div>
+
+                  <button
+                    id={`btn-start-tier-${tier.toLowerCase()}`}
+                    className={`btn ${canStart ? 'btn-primary' : 'btn-outline'} btn-sm`}
+                    style={{ width: '100%', justifyContent: 'center' }}
+                    onClick={() => handleStartTournament(tier)}
+                    disabled={!canStart || isStarting}
+                  >
+                    <Play size={14} className={isStarting ? 'animate-spin' : ''} />
+                    <span>{isStarting ? 'Đang khởi chạy...' : `Bắt Đầu Bảng ${tier}`}</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Students List & Grading Review Table */}
       <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
         <div className="students-table-toolbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <h3 style={{ margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <Users size={18} />
-              <span>Danh Sách Thí Sinh & Điểm Số Chi Tiết</span>
-            </h3>
-
-            <div className="tier-select-wrapper">
-              <select
-                className="select-filter"
-                value={tierFilter}
-                onChange={(e) => setTierFilter(e.target.value)}
-              >
-                <option value="">Tất cả Bảng (A, B, C)</option>
-                <option value="A">Bảng A</option>
-                <option value="B">Bảng B</option>
-                <option value="C">Bảng C</option>
-              </select>
-            </div>
+          <div>
+            <h3 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 800 }}>Danh Sách Thí Sinh &amp; Chấm Thi</h3>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Hiển thị {filteredUsers.length} / {usersList.length} thí sinh
+            </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={handleSyncSeedData}
-              disabled={isSyncingData}
-              title="Đồng bộ lại toàn bộ dữ liệu bài nộp mẫu cho 9 thí sinh lên CSDL (Production/Render)"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-            >
-              <RefreshCw size={14} className={isSyncingData ? 'animate-spin' : ''} />
-              <span>{isSyncingData ? 'Đang đồng bộ...' : 'Đồng Bộ Bài Nộp Mẫu'}</span>
-            </button>
-
-            <div className="search-input-box" style={{ maxWidth: '300px' }}>
-              <Search size={16} className="search-icon" />
+            <div className="admin-search-wrap">
+              <Search size={15} color="var(--text-muted)" />
               <input
                 type="text"
-                placeholder="Tìm theo tên hoặc email..."
+                placeholder="Tìm kiếm theo tên hoặc email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                className="admin-search-input"
               />
             </div>
+
+            <select
+              className="admin-filter-select"
+              value={tierFilter}
+              onChange={(e) => setTierFilter(e.target.value)}
+              aria-label="Lọc theo bảng"
+            >
+              <option value="">Tất Cả Bảng</option>
+              <option value="A">Bảng A</option>
+              <option value="B">Bảng B</option>
+              <option value="C">Bảng C</option>
+            </select>
           </div>
         </div>
 
-        {/* Table */}
         <div className="table-responsive" style={{ margin: 0 }}>
-          <table className="styled-table" aria-label="Bảng điểm thí sinh">
+          <table className="styled-table" aria-label="Bảng quản lý thí sinh">
             <thead>
               <tr>
-                <th>Thí Sinh</th>
-                <th style={{ textAlign: 'center' }}>Bảng Đấu</th>
+                <th>Thí Sinh / Email</th>
+                <th style={{ textAlign: 'center' }}>Bảng</th>
                 <th style={{ textAlign: 'center' }}>Bài Nộp</th>
-                <th style={{ textAlign: 'center' }} title="Trọng số 30-50%">Điểm Bot</th>
-                <th style={{ textAlign: 'center' }} title="Hồ sơ AI T08 (15-25%)">Hồ Sơ AI</th>
-                <th style={{ textAlign: 'center' }} title="Vấn đáp 10 phút (20-30%)">Vấn Đáp</th>
-                <th style={{ textAlign: 'center' }} title="Báo cáo tự đánh giá (15%)">Báo Cáo</th>
-                <th style={{ textAlign: 'right' }}>Tổng Kết</th>
-                <th style={{ textAlign: 'center' }}>Hội Đồng Chấm</th>
+                <th style={{ textAlign: 'center' }}>Bot</th>
+                <th style={{ textAlign: 'center' }}>Hồ Sơ AI</th>
+                <th style={{ textAlign: 'center' }}>Vấn Đáp</th>
+                <th style={{ textAlign: 'center' }}>Báo Cáo</th>
+                <th style={{ textAlign: 'center' }}>Điểm Tổng</th>
+                <th style={{ textAlign: 'center' }}>Thao Tác</th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan="9" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    Không tìm thấy thí sinh nào phù hợp.
+                  <td colSpan={9} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                    Không tìm thấy thí sinh phù hợp
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((u) => (
                   <tr key={u.id}>
                     <td>
-                      <strong style={{ color: '#fff', fontSize: '0.95rem' }}>{u.name}</strong>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                        {u.email}
+                      <div>
+                        <strong>{u.name}</strong>
+                        {u.is_admin && <span className="admin-tag">Admin</span>}
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{u.email}</div>
                       </div>
                     </td>
-
-                    {/* Quick Tier change dropdown */}
                     <td style={{ textAlign: 'center' }}>
                       <select
-                        className={`tier-inline-select tier-${u.tier}`}
+                        className={`tier-inline-select tier-badge tier-${u.tier || 'A'}`}
                         value={u.tier || 'A'}
                         onChange={(e) => handleChangeTier(u.id, e.target.value)}
-                        title="Bấm để thay đổi phân bảng"
+                        aria-label={`Đổi bảng cho thí sinh ${u.name}`}
                       >
                         <option value="A">Bảng A</option>
                         <option value="B">Bảng B</option>
                         <option value="C">Bảng C</option>
                       </select>
                     </td>
-
                     <td style={{ textAlign: 'center' }}>
                       {u.has_submission ? (
-                        <span
-                          style={{ color: 'var(--emerald-400)', fontSize: '0.85rem', fontWeight: 600 }}
-                          title="Bài nộp hợp lệ - Sẵn sàng tham gia ghép trận"
-                        >
-                          ✓ Đã nộp
-                        </span>
+                        <span className="submission-status-badge valid">✓ Đã nộp</span>
                       ) : (
-                        <span
-                          style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}
-                          title="Chưa nộp bài - Hệ thống không ghép trận thí sinh này"
-                        >
-                          Chưa nộp
-                        </span>
+                        <span className="submission-status-badge none">Chưa nộp</span>
                       )}
                     </td>
-
-                    <td style={{ textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
-                      {u.score_bot || '0.0'}
+                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{u.score_bot || 0}</td>
+                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{u.score_ai_profile || 0}</td>
+                    <td style={{ textAlign: 'center', fontWeight: 600, color: 'var(--primary-700)' }}>
+                      {u.score_interview || 0}
                     </td>
-                    <td style={{ textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
-                      {u.score_ai_profile || '0.0'}
-                    </td>
-                    <td style={{ textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
-                      {u.score_interview || '0.0'}
-                    </td>
-                    <td style={{ textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
-                      {u.score_report || '0.0'}
-                    </td>
-
-                    <td style={{ textAlign: 'right' }}>
+                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{u.score_report || 0}</td>
+                    <td style={{ textAlign: 'center' }}>
                       <span className="admin-final-score-pill">
-                        {u.final_score}
+                        {u.final_score !== undefined ? u.final_score : '—'}
                       </span>
                     </td>
-
                     <td style={{ textAlign: 'center' }}>
                       <button
-                        id={`btn-review-user-${u.id}`}
+                        type="button"
                         className="btn btn-outline btn-xs btn-review-action"
                         onClick={() => setSelectedUserForReview(u)}
-                        title="Mở giao diện chấm điểm hồ sơ AI và vấn đáp"
                       >
-                        <Award size={14} color="var(--amber-400)" />
+                        <Award size={13} />
                         <span>Chấm Điểm</span>
                       </button>
                     </td>
@@ -488,14 +600,19 @@ export function AdminDashboardPage() {
       </div>
 
       {/* Grade Review Modal */}
-      <GradeReviewModal
-        isOpen={!!selectedUserForReview}
-        user={selectedUserForReview}
-        onClose={() => setSelectedUserForReview(null)}
-        onGraded={() => {
-          fetchDashboardData();
-        }}
-      />
+      {selectedUserForReview && (
+        <GradeReviewModal
+          user={selectedUserForReview}
+          isOpen={!!selectedUserForReview}
+          onClose={() => setSelectedUserForReview(null)}
+          onSuccess={() => {
+            fetchDashboardData();
+            setSelectedUserForReview(null);
+          }}
+        />
+      )}
     </div>
   );
 }
+
+export default AdminDashboardPage;

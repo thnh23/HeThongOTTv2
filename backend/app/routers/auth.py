@@ -28,6 +28,7 @@ import bcrypt
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
+
 # ── Pydantic schemas ────────────────────────────
 
 class RegisterRequest(BaseModel):

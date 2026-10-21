@@ -21,6 +21,8 @@ export function BoardSVG({
   selectedSquare = null,
   highlightedSquares = [],
   capturableSquares = [],
+  obstacles = [], // Top 32 obstacle squares (e.g. ['c3', 'c7', 'g3', 'g7', 'e5'])
+  theme = 'wood', // 'wood' (Lichess classic) or 'academic'
   lastMove = null,
   onSquareClick = () => {},
   size = 540,
@@ -79,6 +81,15 @@ export function BoardSVG({
   const activeCol = hoveredSquare ? hoveredSquare[0] : selectedSquare ? selectedSquare[0] : null;
   const activeRow = hoveredSquare ? hoveredSquare[1] : selectedSquare ? selectedSquare[1] : null;
 
+  // Colors based on theme
+  const isWood = theme === 'wood';
+  const outerPlateFill = isWood ? '#C89B6D' : '#F1F5F9';
+  const outerPlateStroke = isWood ? '#A07048' : '#CBD5E1';
+  const lightCellColor = isWood ? '#F0D9B5' : '#FFFFFF';
+  const darkCellColor = isWood ? '#B58863' : '#E2E8F0';
+  const labelColor = isWood ? '#6F4E37' : '#475569';
+  const activeLabelColor = isWood ? '#1D4ED8' : '#1D4ED8';
+
   return (
     <div className="board-container">
       <svg
@@ -86,32 +97,37 @@ export function BoardSVG({
         viewBox={`0 0 ${totalSize} ${totalSize}`}
         style={{ maxWidth: '100%', height: 'auto', width: size }}
         role="img"
-        aria-label="Bàn cờ chiến thuật OTTv2 9x9"
+        aria-label="Bàn cờ chiến thuật OTTv2 9x9 phong cách Lichess"
       >
         <defs>
           {/* Piece Gradients */}
           <linearGradient id="gradWhitePiece" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="60%" stopColor="#F1F5F9" />
-            <stop offset="100%" stopColor="#CBD5E1" />
+            <stop offset="60%" stopColor="#F8FAFC" />
+            <stop offset="100%" stopColor="#E2E8F0" />
           </linearGradient>
 
           <linearGradient id="gradBlackPiece" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1E293B" />
-            <stop offset="70%" stopColor="#0F172A" />
-            <stop offset="100%" stopColor="#020617" />
+            <stop offset="0%" stopColor="#334155" />
+            <stop offset="70%" stopColor="#1E293B" />
+            <stop offset="100%" stopColor="#0F172A" />
           </linearGradient>
 
-          {/* Goal Gradients */}
+          {/* Goal Radial Gradients */}
           <radialGradient id="gradGoldGoal" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(245, 158, 11, 0.35)" />
-            <stop offset="100%" stopColor="rgba(245, 158, 11, 0.04)" />
+            <stop offset="0%" stopColor="rgba(245, 158, 11, 0.45)" />
+            <stop offset="100%" stopColor="rgba(245, 158, 11, 0.15)" />
           </radialGradient>
 
           <radialGradient id="gradCyanGoal" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(34, 211, 238, 0.35)" />
-            <stop offset="100%" stopColor="rgba(34, 211, 238, 0.04)" />
+            <stop offset="0%" stopColor="rgba(2, 132, 199, 0.45)" />
+            <stop offset="100%" stopColor="rgba(2, 132, 199, 0.15)" />
           </radialGradient>
+
+          {/* Top 32 Obstacle Pattern */}
+          <pattern id="obstaclePattern" width="10" height="10" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="0" y2="10" stroke="#334155" strokeWidth="3" />
+          </pattern>
 
           {/* Arrowhead marker for move trajectory */}
           <marker
@@ -122,7 +138,7 @@ export function BoardSVG({
             refY="5"
             orient="auto"
           >
-            <polygon points="0 1, 9 5, 0 9" fill="#22D3EE" />
+            <polygon points="0 1, 9 5, 0 9" fill="#1D4ED8" />
           </marker>
         </defs>
 
@@ -132,10 +148,10 @@ export function BoardSVG({
           y={padding - 6}
           width={cellSize * 9 + 12}
           height={cellSize * 9 + 12}
-          rx="14"
-          fill="#0A0F1D"
-          stroke="rgba(255, 255, 255, 0.14)"
-          strokeWidth="2"
+          rx="12"
+          fill={outerPlateFill}
+          stroke={outerPlateStroke}
+          strokeWidth="2.5"
         />
 
         {/* 9x9 Cells */}
@@ -148,6 +164,7 @@ export function BoardSVG({
             const isDark = (cIdx + rIdx) % 2 === 0;
             const isWhiteGoal = sqName === 'i9';
             const isBlackGoal = sqName === 'a1';
+            const isObstacle = obstacles.includes(sqName);
 
             const isSelected = selectedSquare === sqName;
             const isHighlighted = highlightedSquares.includes(sqName);
@@ -156,18 +173,20 @@ export function BoardSVG({
             const isLastTo = lastMove?.to === sqName;
             const isHovered = hoveredSquare === sqName;
 
-            let fillColor = isDark ? '#0F162A' : '#141E38';
+            let fillColor = isDark ? darkCellColor : lightCellColor;
 
-            if (isCapturable) {
-              fillColor = 'rgba(239, 68, 68, 0.32)';
+            if (isObstacle) {
+              fillColor = '#475569';
+            } else if (isCapturable) {
+              fillColor = 'rgba(239, 68, 68, 0.42)';
             } else if (isLastTo) {
-              fillColor = 'rgba(34, 211, 238, 0.28)';
+              fillColor = 'rgba(29, 78, 216, 0.35)';
             } else if (isLastFrom) {
-              fillColor = 'rgba(99, 102, 241, 0.30)';
+              fillColor = 'rgba(129, 140, 248, 0.35)';
             } else if (isSelected) {
-              fillColor = 'rgba(245, 158, 11, 0.38)';
+              fillColor = 'rgba(245, 158, 11, 0.45)';
             } else if (isHighlighted) {
-              fillColor = 'rgba(52, 211, 153, 0.28)';
+              fillColor = 'rgba(16, 185, 129, 0.38)';
             } else if (isWhiteGoal) {
               fillColor = 'url(#gradGoldGoal)';
             } else if (isBlackGoal) {
@@ -179,15 +198,18 @@ export function BoardSVG({
             return (
               <g
                 key={sqName}
-                className="cell-square"
-                onClick={() => onSquareClick(sqName, piece)}
+                className={`cell-square ${isObstacle ? 'obstacle-cell' : ''}`}
+                onClick={() => {
+                  if (!isObstacle) onSquareClick(sqName, piece);
+                }}
                 onMouseEnter={() => setHoveredSquare(sqName)}
                 onMouseLeave={() => setHoveredSquare(null)}
               >
                 <title>
                   {sqName}
+                  {isObstacle ? ' — Ô chướng ngại vật Top 32 (Không thể di chuyển vào)' : ''}
                   {isWhiteGoal ? ' — Ô đích phe Trắng (Mã W2)' : ''}
-                  {isBlackGoal ? ' — Ô đích phe Đen (Mã W2)' : ''}
+                  {isBlackGoal ? ' — Ô đích phe Đen (Mã B2)' : ''}
                   {piece ? ` (${piece.player === 'W' ? 'Trắng' : 'Đen'} ${PIECE_NAMES[piece.type]})` : ' (Trống)'}
                 </title>
 
@@ -204,30 +226,53 @@ export function BoardSVG({
                       : isSelected
                       ? '#F59E0B'
                       : isHighlighted
-                      ? '#34D399'
+                      ? '#10B981'
                       : isLastTo
-                      ? '#22D3EE'
+                      ? '#1D4ED8'
                       : isLastFrom
-                      ? '#818CF8'
+                      ? '#6366F1'
                       : isWhiteGoal
-                      ? '#FBBF24'
+                      ? '#D97706'
                       : isBlackGoal
-                      ? '#38BDF8'
-                      : isHovered
-                      ? 'rgba(255, 255, 255, 0.24)'
-                      : 'rgba(255, 255, 255, 0.06)'
+                      ? '#0284C7'
+                      : isHovered && !isObstacle
+                      ? 'rgba(29, 78, 216, 0.45)'
+                      : 'rgba(0, 0, 0, 0.04)'
                   }
                   strokeWidth={
                     isCapturable || isSelected || isHighlighted || isLastTo || isLastFrom || isWhiteGoal || isBlackGoal
-                      ? 2
-                      : 1
+                      ? 2.2
+                      : 0.5
                   }
                 />
 
-                {/* Goal Markers: Elegant corner ribbon + non-overlapping design */}
+                {/* Top 32 Obstacle Graphic */}
+                {isObstacle && (
+                  <g pointerEvents="none">
+                    <rect
+                      x={x + 3}
+                      y={y + 3}
+                      width={cellSize - 6}
+                      height={cellSize - 6}
+                      rx="6"
+                      fill="#334155"
+                      stroke="#1E293B"
+                      strokeWidth="1.5"
+                    />
+                    <text
+                      x={x + cellSize / 2}
+                      y={y + cellSize / 2 + 5}
+                      fontSize="17"
+                      textAnchor="middle"
+                    >
+                      🧱
+                    </text>
+                  </g>
+                )}
+
+                {/* Goal Markers: Elegant corner ribbon */}
                 {isWhiteGoal && (
                   <g pointerEvents="none">
-                    {/* Top-Right Corner Triangle Badge for White's Goal */}
                     <polygon
                       points={`${x + cellSize - 13},${y} ${x + cellSize},${y} ${x + cellSize},${y + 13}`}
                       fill="#F59E0B"
@@ -236,7 +281,7 @@ export function BoardSVG({
                       x={x + cellSize - 2}
                       y={y + 7.5}
                       fontSize="6.5"
-                      fill="#0F172A"
+                      fill="#FFFFFF"
                       fontWeight="900"
                       textAnchor="end"
                     >
@@ -244,7 +289,7 @@ export function BoardSVG({
                     </text>
                     {!piece && (
                       <g>
-                        <circle cx={x + cellSize / 2} cy={y + cellSize / 2} r="14" fill="rgba(245, 158, 11, 0.16)" />
+                        <circle cx={x + cellSize / 2} cy={y + cellSize / 2} r="14" fill="rgba(245, 158, 11, 0.22)" />
                         <text
                           x={x + cellSize / 2}
                           y={y + cellSize / 2 + 5}
@@ -260,16 +305,15 @@ export function BoardSVG({
 
                 {isBlackGoal && (
                   <g pointerEvents="none">
-                    {/* Bottom-Left Corner Triangle Badge for Black's Goal */}
                     <polygon
                       points={`${x},${y + cellSize - 13} ${x},${y + cellSize} ${x + 13},${y + cellSize}`}
-                      fill="#06B6D4"
+                      fill="#0284C7"
                     />
                     <text
                       x={x + 2}
                       y={y + cellSize - 2.5}
                       fontSize="6.5"
-                      fill="#0F172A"
+                      fill="#FFFFFF"
                       fontWeight="900"
                       textAnchor="start"
                     >
@@ -277,7 +321,7 @@ export function BoardSVG({
                     </text>
                     {!piece && (
                       <g>
-                        <circle cx={x + cellSize / 2} cy={y + cellSize / 2} r="14" fill="rgba(6, 182, 212, 0.16)" />
+                        <circle cx={x + cellSize / 2} cy={y + cellSize / 2} r="14" fill="rgba(2, 132, 199, 0.22)" />
                         <text
                           x={x + cellSize / 2}
                           y={y + cellSize / 2 + 5}
@@ -292,13 +336,13 @@ export function BoardSVG({
                 )}
 
                 {/* Highlight dot indicator for legal empty square */}
-                {isHighlighted && !piece && (
+                {isHighlighted && !piece && !isObstacle && (
                   <circle
                     cx={x + cellSize / 2}
                     cy={y + cellSize / 2}
-                    r="6"
-                    fill="#34D399"
-                    opacity="0.9"
+                    r="6.5"
+                    fill="#10B981"
+                    opacity="0.95"
                     className="highlight-target-dot"
                   />
                 )}
@@ -313,7 +357,7 @@ export function BoardSVG({
                       height={cellSize - 4}
                       fill="none"
                       stroke="#EF4444"
-                      strokeWidth="2"
+                      strokeWidth="2.2"
                       strokeDasharray="4 2"
                       className="capturable-target-pulse"
                     />
@@ -322,7 +366,7 @@ export function BoardSVG({
                       y={y + 11}
                       fontSize="9"
                       textAnchor="end"
-                      fill="#F87171"
+                      fill="#DC2626"
                       fontWeight="bold"
                     >
                       ⚔️
@@ -331,7 +375,7 @@ export function BoardSVG({
                 )}
 
                 {/* Piece Rendering */}
-                {piece && (
+                {piece && !isObstacle && (
                   <g
                     className="board-piece-group"
                     transform={`translate(${x + cellSize / 2}, ${y + cellSize / 2})`}
@@ -344,10 +388,10 @@ export function BoardSVG({
                       stroke={
                         piece.player === 'W'
                           ? '#94A3B8'
-                          : '#22D3EE'
+                          : '#0284C7'
                       }
-                      strokeWidth={piece.player === 'W' ? '1.5' : '2'}
-                      filter="drop-shadow(0px 3px 6px rgba(0,0,0,0.65))"
+                      strokeWidth={piece.player === 'W' ? '1.8' : '2.2'}
+                      filter="drop-shadow(0px 3px 5px rgba(0,0,0,0.35))"
                     />
 
                     {/* Inner Accent Ring for Black pieces */}
@@ -355,7 +399,7 @@ export function BoardSVG({
                       <circle
                         r="16"
                         fill="none"
-                        stroke="rgba(34, 211, 238, 0.25)"
+                        stroke="rgba(56, 189, 248, 0.4)"
                         strokeWidth="1"
                       />
                     )}
@@ -371,11 +415,11 @@ export function BoardSVG({
                       {PIECE_SYMBOLS[piece.type] || piece.type}
                     </text>
 
-                    {/* Miniature Accessible Letter Badge (R/S/P) in bottom corner */}
+                    {/* Miniature Accessible Letter Badge (R/S/P) */}
                     <g transform="translate(8, 8)">
                       <circle
                         r="5.5"
-                        fill={piece.player === 'W' ? '#0F172A' : '#22D3EE'}
+                        fill={piece.player === 'W' ? '#0F172A' : '#0284C7'}
                       />
                       <text
                         textAnchor="middle"
@@ -383,7 +427,7 @@ export function BoardSVG({
                         fontSize="7"
                         fontWeight="800"
                         fontFamily="var(--font-mono)"
-                        fill={piece.player === 'W' ? '#FFFFFF' : '#0F172A'}
+                        fill="#FFFFFF"
                       >
                         {piece.type}
                       </text>
@@ -398,38 +442,35 @@ export function BoardSVG({
         {/* Animated Move Vector Line Overlay between From and To */}
         {lastMoveFromCenter && lastMoveToCenter && (
           <g className="move-indicator-layer">
-            {/* Origin Ripple */}
             <circle
               cx={lastMoveFromCenter.x}
               cy={lastMoveFromCenter.y}
               r="15"
               fill="none"
-              stroke="#818CF8"
+              stroke="#6366F1"
               strokeWidth="2"
               strokeDasharray="3 3"
-              opacity="0.8"
+              opacity="0.85"
             />
-            {/* Directional Trajectory Line */}
             <line
               x1={lastMoveFromCenter.x}
               y1={lastMoveFromCenter.y}
               x2={lastMoveToCenter.x}
               y2={lastMoveToCenter.y}
-              stroke="#22D3EE"
-              strokeWidth="2.8"
+              stroke="#1D4ED8"
+              strokeWidth="3"
               strokeDasharray="4 3"
               strokeLinecap="round"
               markerEnd="url(#moveArrowhead)"
               opacity="0.95"
             />
-            {/* Target Pulse Ring */}
             <circle
               cx={lastMoveToCenter.x}
               cy={lastMoveToCenter.y}
-              r="21"
+              r="20"
               fill="none"
-              stroke="#22D3EE"
-              strokeWidth="2.2"
+              stroke="#1D4ED8"
+              strokeWidth="2.4"
               className="pulse-ring"
             />
           </g>
@@ -446,8 +487,8 @@ export function BoardSVG({
                 y={padding - 12}
                 textAnchor="middle"
                 fontSize="12"
-                fill={isActive ? 'var(--cyan-400)' : 'var(--text-muted)'}
-                fontWeight={isActive ? '800' : '600'}
+                fill={isActive ? activeLabelColor : labelColor}
+                fontWeight={isActive ? '800' : '700'}
                 fontFamily="var(--font-mono)"
               >
                 {col}
@@ -457,8 +498,8 @@ export function BoardSVG({
                 y={padding + cellSize * 9 + 18}
                 textAnchor="middle"
                 fontSize="12"
-                fill={isActive ? 'var(--cyan-400)' : 'var(--text-muted)'}
-                fontWeight={isActive ? '800' : '600'}
+                fill={isActive ? activeLabelColor : labelColor}
+                fontWeight={isActive ? '800' : '700'}
                 fontFamily="var(--font-mono)"
               >
                 {col}
@@ -478,8 +519,8 @@ export function BoardSVG({
                 y={y}
                 textAnchor="middle"
                 fontSize="12"
-                fill={isActive ? 'var(--cyan-400)' : 'var(--text-muted)'}
-                fontWeight={isActive ? '800' : '600'}
+                fill={isActive ? activeLabelColor : labelColor}
+                fontWeight={isActive ? '800' : '700'}
                 fontFamily="var(--font-mono)"
               >
                 {row}
@@ -489,8 +530,8 @@ export function BoardSVG({
                 y={y}
                 textAnchor="middle"
                 fontSize="12"
-                fill={isActive ? 'var(--cyan-400)' : 'var(--text-muted)'}
-                fontWeight={isActive ? '800' : '600'}
+                fill={isActive ? activeLabelColor : labelColor}
+                fontWeight={isActive ? '800' : '700'}
                 fontFamily="var(--font-mono)"
               >
                 {row}
@@ -511,12 +552,18 @@ export function BoardSVG({
             <span className="legend-piece legend-black">B</span>
             <span>Đen</span>
           </div>
+          {obstacles.length > 0 && (
+            <div className="legend-item">
+              <span className="legend-obstacle">🧱</span>
+              <span>Ô Cản Top 32</span>
+            </div>
+          )}
         </div>
         <div className="legend-group goal-legend-group">
           <span className="goal-tag gold-tag" title="Nếu quân Trắng vào ô i9, Trắng thắng ngay (Mã W2)">
             👑 i9: Đích Trắng
           </span>
-          <span className="goal-tag cyan-tag" title="Nếu quân Đen vào ô a1, Đen thắng ngay (Mã W2)">
+          <span className="goal-tag cyan-tag" title="Nếu quân Đen vào ô a1, Đen thắng ngay (Mã B2)">
             🎯 a1: Đích Đen
           </span>
         </div>
@@ -531,3 +578,5 @@ export function BoardSVG({
     </div>
   );
 }
+
+export default BoardSVG;

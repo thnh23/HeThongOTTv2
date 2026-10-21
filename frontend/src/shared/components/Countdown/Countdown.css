@@ -1,11 +1,12 @@
-/* Countdown.css */
+/* Countdown.css - Clean Light Academic Theme */
 .countdown-widget {
   padding: 1.25rem 1.75rem;
   border-radius: var(--radius-xl);
-  border-color: rgba(34, 211, 238, 0.25);
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.05) 0%, rgba(15, 23, 42, 0.75) 100%);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
   max-width: 640px;
-  margin: 1.5rem auto 2.5rem;
+  margin: 1.5rem auto 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
 .countdown-header {
@@ -34,10 +35,12 @@
 .countdown-deadline-tag {
   font-size: 0.8rem;
   font-family: var(--font-mono);
-  color: var(--cyan-400);
-  background: rgba(34, 211, 238, 0.1);
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
+  font-weight: 600;
+  color: var(--primary-700);
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
 }
 
 .countdown-boxes-grid {
@@ -48,13 +51,13 @@
 }
 
 .countdown-box {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
   min-width: 72px;
   text-align: center;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .countdown-num {
@@ -62,12 +65,12 @@
   font-size: 1.85rem;
   font-weight: 900;
   font-family: var(--font-mono);
-  color: #fff;
+  color: var(--text-primary);
   line-height: 1;
 }
 
 .countdown-num.highlight-sec {
-  color: var(--cyan-400);
+  color: var(--primary-600);
 }
 
 .countdown-label {
@@ -77,6 +80,7 @@
   text-transform: uppercase;
   margin-top: 0.35rem;
   font-weight: 600;
+  letter-spacing: 0.05em;
 }
 
 .countdown-separator {
@@ -90,8 +94,13 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  color: var(--amber-400);
+  color: var(--amber-700);
+  background: var(--amber-50);
+  border: 1px solid var(--amber-200);
+  border-radius: var(--radius-md);
   font-size: 0.9rem;
+  font-weight: 600;
   justify-content: center;
-  padding: 0.5rem 0;
+  padding: 0.75rem 1rem;
 }
+

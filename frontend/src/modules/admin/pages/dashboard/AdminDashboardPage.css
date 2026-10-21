@@ -1,7 +1,9 @@
-/* AdminDashboardPage CSS — Clean, High-Contrast & Operational */
+/* AdminDashboardPage.css — Clean Light Academic Theme */
+
 .admin-page {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
+  padding: 0 1rem 4rem;
 }
 
 .admin-header {
@@ -17,11 +19,26 @@
   width: 44px;
   height: 44px;
   border-radius: var(--radius-md);
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.admin-title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.admin-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0;
 }
 
 /* Stats Metric Cards */
@@ -33,10 +50,14 @@
 }
 
 .stat-metric-card {
-  padding: 1.25rem 1.5rem;
+  padding: 1.35rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .stat-metric-header {
@@ -46,43 +67,87 @@
 }
 
 .stat-metric-title {
-  font-size: 0.85rem;
+  font-size: 0.825rem;
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .stat-metric-value {
-  font-size: 2rem;
+  font-size: 2.1rem;
   font-weight: 800;
   font-family: var(--font-display);
-  color: #fff;
+  color: var(--text-primary);
   line-height: 1;
 }
 
 .stat-metric-sub {
   font-size: 1.1rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
-.tier-breakdown-pills {
+/* Controller Navigation Tabs */
+.tourney-controller-tabs {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1.5px solid var(--border-subtle);
+  padding-bottom: 0.75rem;
+  flex-wrap: wrap;
 }
 
-.breakdown-pill {
-  font-size: 0.75rem;
-  background: rgba(255, 255, 255, 0.06);
-  padding: 0.1rem 0.45rem;
-  border-radius: var(--radius-full);
+.tourney-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tourney-tab-btn:hover {
+  border-color: var(--primary-300);
+  color: var(--primary-700);
+}
+
+.tourney-tab-btn.active {
+  background: var(--primary-600);
+  border-color: var(--primary-600);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);
+}
+
+.tourney-tab-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+}
+
+.tourney-tab-btn.active .tourney-tab-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* Tournament Hub Card */
 .tournament-hub-card {
-  padding: 1.5rem 1.75rem;
+  padding: 1.75rem 2rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
 }
 
 .hub-header {
@@ -91,11 +156,190 @@
   justify-content: space-between;
   border-bottom: 1px solid var(--border-subtle);
   padding-bottom: 1.25rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
+.swiss-hub-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--primary-700);
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+}
+
+.round-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+}
+
+.swiss-round-select {
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-subtle);
+  background: var(--bg-surface-elevated);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+}
+
+.swiss-round-select:focus {
+  border-color: var(--primary-600);
+}
+
+/* Swiss 3-Step Action Row */
+.swiss-actions-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.swiss-step-box {
+  background: var(--bg-surface-elevated);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.step-box-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.step-number {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--primary-700);
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+}
+
+.step-box-header h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.step-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.chunk-progress-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+}
+
+.chunk-progress-summary strong {
+  color: var(--emerald-700);
+}
+
+/* 10 Chunks Cluster Monitor */
+.chunks-monitor-wrap {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 1.25rem;
+}
+
+.chunks-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.85rem;
+}
+
+.chunk-card {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: all var(--transition-fast);
+}
+
+.chunk-card.chunk-done {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.chunk-card.chunk-pending {
+  border-color: var(--border-subtle);
+  background: var(--bg-surface-elevated);
+}
+
+.chunk-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chunk-id-tag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.chunk-status-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+}
+
+.chunk-status-pill.done {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.chunk-status-pill.waiting {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.chunk-matches-num {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.chunk-file-name {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Round-Robin Boxes */
 .tournament-tiers-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -105,21 +349,16 @@
 .tournament-tier-box {
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
+  border-radius: var(--radius-xl);
+  padding: 1.35rem;
   display: flex;
   flex-direction: column;
-  transition: transform var(--transition-fast), border-color var(--transition-fast);
-}
-
-.tournament-tier-box:hover {
-  border-color: var(--border-bright);
 }
 
 .tournament-progress-track {
   width: 100%;
   height: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border-subtle);
   border-radius: var(--radius-full);
   overflow: hidden;
   margin-bottom: 0.85rem;
@@ -127,9 +366,8 @@
 
 .tournament-progress-fill {
   height: 100%;
-  background: var(--gradient-brand);
+  background: var(--primary-600);
   border-radius: var(--radius-full);
-  transition: width var(--transition-normal);
 }
 
 .tier-match-stats {
@@ -140,50 +378,120 @@
   color: var(--text-muted);
 }
 
-/* Table Toolbar */
+/* Students Table Toolbar */
 .students-table-toolbar {
   padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1.5px solid var(--border-subtle);
   background: var(--bg-surface-elevated);
   flex-wrap: wrap;
   gap: 1rem;
 }
 
+.admin-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.4rem 0.75rem;
+}
+
+.admin-search-input {
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  width: 220px;
+}
+
+.admin-filter-select {
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+}
+
+.admin-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  margin-left: 0.35rem;
+}
+
+.submission-status-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.submission-status-badge.valid {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.submission-status-badge.none {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
 .tier-inline-select {
-  padding: 0.2rem 0.5rem;
+  padding: 0.2rem 0.55rem;
   border-radius: var(--radius-full);
   font-weight: 700;
   font-size: 0.8rem;
   cursor: pointer;
   outline: none;
+  border: 1px solid var(--border-subtle);
 }
 
 .admin-final-score-pill {
   font-family: var(--font-display);
   font-size: 1.05rem;
   font-weight: 800;
-  color: var(--amber-400);
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--primary-700);
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
   padding: 0.2rem 0.6rem;
   border-radius: var(--radius-sm);
 }
 
 .btn-review-action {
   gap: 0.35rem;
-  border-color: rgba(245, 158, 11, 0.4);
+  border-color: var(--primary-300);
 }
 
 .btn-review-action:hover {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: var(--amber-400);
+  background: var(--primary-50);
+  border-color: var(--primary-600);
+  color: var(--primary-800);
 }
 
 @media (max-width: 1024px) {
   .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .swiss-actions-row {
+    grid-template-columns: 1fr;
+  }
+  .chunks-grid {
     grid-template-columns: repeat(2, 1fr);
   }
   .tournament-tiers-grid {
@@ -193,6 +501,9 @@
 
 @media (max-width: 640px) {
   .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .chunks-grid {
     grid-template-columns: 1fr;
   }
 }

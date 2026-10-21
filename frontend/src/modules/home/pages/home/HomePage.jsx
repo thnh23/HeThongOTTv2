@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Swords,
   Trophy,
@@ -22,6 +22,12 @@ import {
   HelpCircle,
   ChevronDown,
   ChevronUp,
+  Search,
+  GraduationCap,
+  GitBranch,
+  Laptop,
+  Check,
+  AlertTriangle,
 } from 'lucide-react';
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
 import { Countdown } from '@/shared/components/Countdown/Countdown.jsx';
@@ -86,6 +92,7 @@ const TACTICAL_PRESETS = [
 ];
 
 export function HomePage() {
+  const navigate = useNavigate();
   const [activePresetId, setActivePresetId] = useState(TACTICAL_PRESETS[0].id);
   const [boardState, setBoardState] = useState(TACTICAL_PRESETS[0].board);
   const [selectedSq, setSelectedSq] = useState(TACTICAL_PRESETS[0].selectedSq);
@@ -93,6 +100,18 @@ export function HomePage() {
   const [statusMessage, setStatusMessage] = useState(TACTICAL_PRESETS[0].desc);
   const [isStarterKitOpen, setIsStarterKitOpen] = useState(false);
   const [openFaqId, setOpenFaqId] = useState(0);
+
+  // Hero Search State
+  const [studentSearchId, setStudentSearchId] = useState('');
+
+  const handleHeroSearch = (e) => {
+    e.preventDefault();
+    if (studentSearchId.trim()) {
+      navigate(`/leaderboard?q=${encodeURIComponent(studentSearchId.trim())}`);
+    } else {
+      navigate('/leaderboard');
+    }
+  };
 
   // Calculate real legal moves and combat targets using OTTv2 official rules
   const moveDetails = useMemo(() => {
@@ -167,7 +186,7 @@ export function HomePage() {
       return;
     }
 
-    // 3. Click on an empty square that is NOT a legal move -> Clear selection, do NOT highlight empty square!
+    // 3. Click on an empty square that is NOT a legal move -> Clear selection
     setSelectedSq(null);
     setStatusMessage(`Ô ${sq} là ô trống. Hãy nhấp vào một quân cờ để xem nước đi hợp lệ hoặc điều khiển nước cờ.`);
   };
@@ -198,18 +217,18 @@ export function HomePage() {
       {/* Hero Section */}
       <section className="home-hero">
         <div className="hero-ticker">
-          <span className="ticker-badge">HOT 2026</span>
-          <span className="ticker-text">Giải Đấu OTTv2 Chính Thức Mở Cổng Nộp Bot & Thi Đấu Round-Robin</span>
+          <span className="ticker-badge">UET 2026</span>
+          <span className="ticker-text">Giải Đấu Thuật Toán & Game Chiến Thuật OTTv2 • 2.000 Sinh Viên • 13 Vòng Swiss</span>
         </div>
 
         <h1 className="hero-title">
-          Đấu Trường Trí Tuệ <br />
+          Đấu Trường Thuật Toán &amp; Game Chiến Thuật <br />
           <span className="gradient-text">Oẳn Tù Tì v2 (OTTv2)</span>
         </h1>
 
         <p className="hero-subtitle">
-          Lập trình bot cờ Búa - Kéo - Bao trên bàn 9×9, kiểm thử tự động trong Sandbox cô lập,
-          thi đấu vòng tròn phân hạng và rèn luyện kỹ năng Prompt Engineering chuẩn công nghiệp.
+          Sân chơi lập trình trí tuệ nhân tạo đối kháng 9×9 dành cho 2.000 sinh viên UET. Chấm thi tự động
+          trên Sandbox cô lập an toàn, phân hạng công bằng qua 13 Vòng Thụy Sĩ (Swiss System) và Vòng Chung Kết Top 32 Knockout.
         </p>
 
         <div className="hero-cta">
@@ -223,43 +242,164 @@ export function HomePage() {
           </button>
           <Link id="hero-submit-btn" to="/submit" className="btn btn-secondary">
             <Upload size={18} />
-            <span>Nộp Bot & Chạy Thử</span>
+            <span>Nộp Bot &amp; Kiểm Thử</span>
           </Link>
           <Link id="hero-leaderboard-btn" to="/leaderboard" className="btn btn-outline">
             <Trophy size={18} />
-            <span>Bảng Xếp Hạng</span>
+            <span>Bảng Xếp Hạng 13 Vòng</span>
           </Link>
           <Link to="/live" className="btn btn-outline">
-            <Radio size={16} color="var(--rose-500)" className="animate-pulse" />
+            <Radio size={16} color="var(--rose-600)" className="animate-pulse" />
             <span>Xem Trực Tiếp</span>
           </Link>
         </div>
 
+        {/* Hero Search Widget for 2,000 Students */}
+        <div className="hero-search-container glass-card">
+          <div className="hero-search-header">
+            <Search size={18} className="search-header-icon" />
+            <span className="search-header-title">Tra Cứu Nhanh Thí Sinh &amp; Kết Quả Thi Đấu</span>
+            <span className="search-header-badge">2.000 Thí Sinh</span>
+          </div>
+
+          <form className="hero-search-form" onSubmit={handleHeroSearch}>
+            <div className="hero-search-input-wrap">
+              <input
+                id="hero-student-search-input"
+                type="text"
+                className="hero-search-input"
+                placeholder="Nhập Mã Sinh Viên (vd: 21020001) hoặc Tên Bot để tra cứu thứ hạng, bàn đấu..."
+                value={studentSearchId}
+                onChange={(e) => setStudentSearchId(e.target.value)}
+                aria-label="Tra cứu thông tin theo mã sinh viên hoặc tên bot"
+              />
+            </div>
+            <button type="submit" className="btn btn-primary hero-search-btn">
+              <Search size={16} />
+              <span>Tra Cứu</span>
+            </button>
+          </form>
+
+          <div className="hero-search-hints">
+            <span className="hints-label">Gợi ý nhanh:</span>
+            <button
+              type="button"
+              className="hint-chip"
+              onClick={() => {
+                setStudentSearchId('21020001');
+                navigate('/leaderboard?q=21020001');
+              }}
+            >
+              21020001
+            </button>
+            <button
+              type="button"
+              className="hint-chip"
+              onClick={() => {
+                setStudentSearchId('22020456');
+                navigate('/leaderboard?q=22020456');
+              }}
+            >
+              22020456
+            </button>
+            <button
+              type="button"
+              className="hint-chip"
+              onClick={() => {
+                setStudentSearchId('23021999');
+                navigate('/leaderboard?q=23021999');
+              }}
+            >
+              23021999
+            </button>
+            <Link to="/leaderboard" className="hint-link">
+              <span>Xem bảng tổng sắp toàn giải</span>
+              <ArrowRight size={13} />
+            </Link>
+          </div>
+        </div>
+
         {/* Countdown to Submission Deadline */}
-        <div style={{ maxWidth: '680px', margin: '2rem auto 0', width: '100%' }}>
+        <div style={{ maxWidth: '680px', margin: '1.5rem auto 0', width: '100%' }}>
           <Countdown
             targetDate="2026-11-20T23:59:59"
             title="Đồng Hồ Đếm Ngược: Hạn Chót Nộp Bot Vòng Bảng"
           />
         </div>
 
-        {/* Stats Summary */}
+        {/* 4 Stats Summary Cards */}
         <div className="hero-stats">
           <div className="stat-card glass-card">
-            <span className="stat-value gradient-text">9 × 9</span>
-            <span className="stat-label">Bàn Cờ Chiến Thuật</span>
+            <span className="stat-value gradient-text">2.000</span>
+            <span className="stat-label">Thí Sinh Tranh Tài</span>
+            <span className="stat-sublabel">Toàn thể sinh viên CNTT</span>
           </div>
           <div className="stat-card glass-card">
-            <span className="stat-value gradient-cyan">3 Bảng</span>
-            <span className="stat-label">Phân Hạng A / B / C</span>
+            <span className="stat-value gradient-blue">13 Vòng</span>
+            <span className="stat-label">Hệ Thống Thụy Sĩ</span>
+            <span className="stat-sublabel">Swiss System (3-1-0)</span>
           </div>
           <div className="stat-card glass-card">
-            <span className="stat-value" style={{ color: 'var(--amber-400)' }}>100%</span>
-            <span className="stat-label">Sandbox Tự Động</span>
+            <span className="stat-value" style={{ color: 'var(--amber-600)' }}>Top 32</span>
+            <span className="stat-label">Vòng Chung Kết</span>
+            <span className="stat-sublabel">Knockout &amp; Ô Cản</span>
           </div>
           <div className="stat-card glass-card">
-            <span className="stat-value" style={{ color: 'var(--emerald-400)' }}>T08 & T09</span>
-            <span className="stat-label">Chuẩn Nộp & Bảo Mật</span>
+            <span className="stat-value" style={{ color: 'var(--emerald-600)' }}>10.0</span>
+            <span className="stat-label">Điểm A+ Học Phần</span>
+            <span className="stat-sublabel">Thang điểm minh bạch</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Academic Integrity & AI Policy Banner */}
+      <section className="integrity-section">
+        <div className="integrity-card glass-card">
+          <div className="integrity-header">
+            <div className="integrity-icon-wrap">
+              <ShieldCheck size={28} />
+            </div>
+            <div>
+              <div className="integrity-badge">Chuẩn Mực Kỹ Sư UET</div>
+              <h2 className="integrity-title">Chính Sách Liêm Chính Học Thuật &amp; Kiểm Soát AI</h2>
+              <p className="integrity-subtitle">
+                Giải đấu đề cao tư duy giải thuật độc lập và tác phong kỹ sư phần mềm. Nghiêm cấm mọi hành vi gian lận hoặc sao chép mã nguồn không trung thực.
+              </p>
+            </div>
+          </div>
+
+          <div className="integrity-grid">
+            <div className="integrity-pillar">
+              <div className="pillar-num">01</div>
+              <h4>Mã Nguồn Tự Lập Trình</h4>
+              <p>
+                Sinh viên tự viết hàm đánh giá thế cờ và thuật toán. Được dùng AI để tìm hiểu ý tưởng hoặc sửa lỗi cú pháp, tuyệt đối không copy 100% code mà không hiểu bản chất.
+              </p>
+            </div>
+
+            <div className="integrity-pillar">
+              <div className="pillar-num">02</div>
+              <h4>Tối Thiểu 4–5 Git Commits</h4>
+              <p>
+                Repository GitHub nộp qua Google Form phải thể hiện rõ lịch sử commit liên tục qua các ngày/tuần (Khởi tạo ➔ Heuristic ➔ Tìm kiếm nước đi ➔ Tối ưu). Không chấp nhận repo chỉ có 1 commit duy nhất.
+              </p>
+            </div>
+
+            <div className="integrity-pillar">
+              <div className="pillar-num">03</div>
+              <h4>Quét Cây Cú Pháp MOSS</h4>
+              <p>
+                Toàn bộ bài nộp được đối chiếu cây cú pháp trừu tượng (AST) qua hệ thống MOSS Stanford. Phát hiện sao chép giữa các sinh viên sẽ lập tức bị hủy kết quả và nhận 0 điểm.
+              </p>
+            </div>
+
+            <div className="integrity-pillar">
+              <div className="pillar-num">04</div>
+              <h4>Vấn Đáp Bảo Vệ Top 32</h4>
+              <p>
+                32 thí sinh xuất sắc nhất lọt vào Vòng Chung Kết bắt buộc trải qua 5 phút phỏng vấn trực tiếp với Hội đồng Giảng viên để xác nhận quyền tác giả trước khi nhận điểm 10.0 A+.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -311,23 +451,23 @@ export function HomePage() {
 
           {/* Dynamic Scenario Callout */}
           <div className="scenario-callout">
-            <Zap size={16} color="var(--amber-400)" style={{ flexShrink: 0, marginTop: '2px' }} />
-            <p style={{ margin: 0, fontSize: '0.875rem', color: '#fff' }}>
+            <Zap size={16} color="var(--amber-600)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--amber-900)' }}>
               {statusMessage}
             </p>
           </div>
 
           <ul className="rules-key-points">
             <li>
-              <CheckCircle2 size={16} color="var(--emerald-400)" />
+              <CheckCircle2 size={16} color="var(--emerald-600)" />
               <span><strong>Mã W1 / B1:</strong> Ăn sạch hoàn toàn 1 loại quân của đối phương</span>
             </li>
             <li>
-              <CheckCircle2 size={16} color="var(--cyan-400)" />
+              <CheckCircle2 size={16} color="var(--primary-600)" />
               <span><strong>Mã W2 / B2:</strong> Đưa quân vào ô góc đích (Trắng vào <code>i9</code>, Đen vào <code>a1</code>)</span>
             </li>
             <li>
-              <CheckCircle2 size={16} color="var(--amber-400)" />
+              <CheckCircle2 size={16} color="var(--amber-600)" />
               <span><strong>Chống Cháy Giờ (D2):</strong> Giới hạn 200 nước đi hoặc lặp thế 3 lần</span>
             </li>
           </ul>
@@ -353,31 +493,201 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* Progressive Grading Scale Section */}
+      <section className="grading-section">
+        <div className="section-header">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <GraduationCap size={18} color="var(--primary-600)" />
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary-700)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Quy Đổi Điểm Học Phần
+            </span>
+          </div>
+          <h2 className="section-title">Thang Điểm Lũy Tiến 13 Vòng Swiss</h2>
+          <p className="section-subtitle">
+            Cơ chế tính điểm công bằng, minh bạch dựa trên số trận thắng và thứ hạng thực tế sau 13 vòng đấu Thụy Sĩ
+          </p>
+        </div>
+
+        <div className="grading-grid">
+          {/* Floor Tier */}
+          <div className="grading-card glass-card">
+            <div className="grading-score-badge floor-badge">6.5 – 7.0 ĐIỂM</div>
+            <h3 className="grading-title">Mức Sàn Tiêu Chuẩn</h3>
+            <p className="grading-desc">
+              Hoàn thành sản phẩm và tham gia đầy đủ giải đấu.
+            </p>
+            <ul className="grading-reqs">
+              <li><Check size={15} color="var(--primary-600)" /> Nộp repo GitHub hợp lệ, tối thiểu 4 commits</li>
+              <li><Check size={15} color="var(--primary-600)" /> Bot vượt qua Sandbox test không bị crash</li>
+              <li><Check size={15} color="var(--primary-600)" /> Tham gia đầy đủ 13 vòng đấu không bỏ cuộc</li>
+            </ul>
+          </div>
+
+          {/* Moderate Tier */}
+          <div className="grading-card glass-card">
+            <div className="grading-score-badge moderate-badge">7.5 ĐIỂM</div>
+            <h3 className="grading-title">Mức Khá</h3>
+            <p className="grading-desc">
+              Bot có thuật toán cơ bản, biết né nước ăn và tấn công mục tiêu.
+            </p>
+            <ul className="grading-reqs">
+              <li><Check size={15} color="var(--primary-600)" /> Đạt từ <strong>4 – 5 trận thắng</strong> trong 13 vòng</li>
+              <li><Check size={15} color="var(--primary-600)" /> Có hàm Heuristic đánh giá số quân hai bên</li>
+              <li><Check size={15} color="var(--primary-600)" /> Không bị lỗi timeout 2.0s / nước đi</li>
+            </ul>
+          </div>
+
+          {/* Good Tier */}
+          <div className="grading-card glass-card">
+            <div className="grading-score-badge good-badge">8.5 ĐIỂM</div>
+            <h3 className="grading-title">Mức Khá – Giỏi</h3>
+            <p className="grading-desc">
+              Bot có chiến lược di chuyển chiếm lĩnh trung tâm và tranh đoạt góc.
+            </p>
+            <ul className="grading-reqs">
+              <li><Check size={15} color="var(--primary-600)" /> Đạt từ <strong>6 – 7 trận thắng</strong> trong 13 vòng</li>
+              <li><Check size={15} color="var(--primary-600)" /> Tìm kiếm nhìn trước 1–2 nước cờ</li>
+              <li><Check size={15} color="var(--primary-600)" /> Xử lý tốt các tình huống phòng thủ góc W2/B2</li>
+            </ul>
+          </div>
+
+          {/* Very Good Tier */}
+          <div className="grading-card glass-card">
+            <div className="grading-score-badge high-badge">9.0 ĐIỂM</div>
+            <h3 className="grading-title">Mức Giỏi</h3>
+            <p className="grading-desc">
+              Thứ hạng cao trong Top 20% toàn giải đấu quy mô 2.000 sinh viên.
+            </p>
+            <ul className="grading-reqs">
+              <li><Check size={15} color="var(--primary-600)" /> Đạt từ <strong>8 – 9 trận thắng</strong> trong 13 vòng</li>
+              <li><Check size={15} color="var(--primary-600)" /> Áp dụng Minimax hoặc Alpha-Beta Pruning</li>
+              <li><Check size={15} color="var(--primary-600)" /> Tối ưu tốc độ thực thi mượt mà</li>
+            </ul>
+          </div>
+
+          {/* Excellent Tier */}
+          <div className="grading-card glass-card">
+            <div className="grading-score-badge elite-badge">9.5 ĐIỂM</div>
+            <h3 className="grading-title">Mức Xuất Sắc</h3>
+            <p className="grading-desc">
+              Tiệm cận Top 32 kỳ thủ hạt giống hàng đầu của toàn khóa.
+            </p>
+            <ul className="grading-reqs">
+              <li><Check size={15} color="var(--primary-600)" /> Đạt từ <strong>10 – 11 trận thắng</strong> trong 13 vòng</li>
+              <li><Check size={15} color="var(--primary-600)" /> Hệ số phụ Buchholz / Sonneborn-Berger cao</li>
+              <li><Check size={15} color="var(--primary-600)" /> Cấu trúc code sạch, chú thích tường minh</li>
+            </ul>
+          </div>
+
+          {/* Top 32 Grand Final Tier */}
+          <div className="grading-card grand-card glass-card">
+            <div className="grading-score-badge gold-badge">10.0 ĐIỂM (A+)</div>
+            <h3 className="grading-title">Top 32 Chung Kết</h3>
+            <p className="grading-desc">
+              Vinh danh 32 cờ thủ xuất sắc nhất khoa bước vào Vòng Chung Kết.
+            </p>
+            <ul className="grading-reqs">
+              <li><Check size={15} color="var(--amber-600)" /> Lọt vào <strong>Top 32</strong> sau 13 vòng Swiss</li>
+              <li><Check size={15} color="var(--amber-600)" /> Vượt qua 5 phút vấn đáp kỹ thuật Hội đồng</li>
+              <li><Check size={15} color="var(--amber-600)" /> Nâng cấp Bot v2 thích ứng ô chướng ngại vật</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Tournament Schedule Section */}
+      <section className="timeline-section">
+        <div className="section-header">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <Calendar size={18} color="var(--primary-600)" />
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary-700)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Lịch Trình Chi Tiết
+            </span>
+          </div>
+          <h2 className="section-title">Lộ Trình Giải Đấu 2 Ngày Tập Trung</h2>
+          <p className="section-subtitle">Kế hoạch thi đấu và vận hành tinh gọn, chính xác từng vòng đấu</p>
+        </div>
+
+        <div className="timeline-track-grid">
+          <div className="timeline-step-card glass-card">
+            <div className="timeline-step-header">
+              <span className="timeline-step-num">Giai Đoạn 1</span>
+              <div className="timeline-step-icon">
+                <FileCode size={18} color="var(--primary-600)" />
+              </div>
+            </div>
+            <h3 className="timeline-step-title">Chuẩn Bị &amp; Nộp Link Repo</h3>
+            <p className="timeline-step-desc">
+              Sinh viên tải Starter Kit, viết Bot bằng Python, kiểm tra cục bộ qua script test. Đẩy code lên GitHub và nộp link repository qua Google Form trước hạn chót.
+            </p>
+          </div>
+
+          <div className="timeline-step-card glass-card">
+            <div className="timeline-step-header">
+              <span className="timeline-step-num">Ngày 1 (Sáng &amp; Chiều)</span>
+              <div className="timeline-step-icon">
+                <Swords size={18} color="var(--primary-600)" />
+              </div>
+            </div>
+            <h3 className="timeline-step-title">Vòng Loại Swiss: Vòng 1 – 8</h3>
+            <p className="timeline-step-desc">
+              Khởi tranh 8 vòng Thụy Sĩ. 1.000 trận đấu mỗi vòng được chia nhỏ sang cụm 10 laptop chấm thi. Cập nhật kết quả và ghép cặp vòng tiếp theo sau mỗi 45 phút.
+            </p>
+          </div>
+
+          <div className="timeline-step-card glass-card">
+            <div className="timeline-step-header">
+              <span className="timeline-step-num">Ngày 2 (Sáng)</span>
+              <div className="timeline-step-icon">
+                <Target size={18} color="var(--primary-600)" />
+              </div>
+            </div>
+            <h3 className="timeline-step-title">Vòng Loại Swiss: Vòng 9 – 13</h3>
+            <p className="timeline-step-desc">
+              5 vòng đấu quyết định tranh chấp các tấm vé vào vòng chung kết. Chốt bảng xếp hạng 2.000 thí sinh và công bố danh sách chính thức Top 32 hạt giống.
+            </p>
+          </div>
+
+          <div className="timeline-step-card glass-card">
+            <div className="timeline-step-header">
+              <span className="timeline-step-num">Ngày 2 (Chiều)</span>
+              <div className="timeline-step-icon">
+                <Trophy size={18} color="var(--amber-600)" />
+              </div>
+            </div>
+            <h3 className="timeline-step-title">Chung Kết Top 32 &amp; Trao Giải</h3>
+            <p className="timeline-step-desc">
+              Top 32 nộp Bot v2 thích ứng bản đồ chướng ngại vật mới (công bố trước 24h). Thi đấu Knockout trực tiếp tại Hội trường, phỏng vấn vấn đáp và trao cúp vô địch.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Feature Highlights Grid */}
       <section className="features-showcase-section">
         <div className="section-header">
-          <h2 className="section-title">Hệ Sinh Thái Thi Đấu Hiện Đại</h2>
-          <p className="section-subtitle">Được thiết kế chuẩn mực dành cho sinh viên công nghệ thông tin UET</p>
+          <h2 className="section-title">Hạ Tầng Vận Hành Giải Đấu 0 Đồng</h2>
+          <p className="section-subtitle">Giải pháp phân tán thông minh giải quyết trọn vẹn bài toán 2.000 thí sinh</p>
         </div>
 
         <div className="features-grid">
           <div className="feature-card glass-card">
             <div className="feature-icon-wrap icon-cyan">
-              <Cpu size={24} />
+              <Laptop size={24} />
             </div>
-            <h3>Sandbox Cô Lập 100%</h3>
+            <h3>Cụm Máy Chấm 10 Laptop</h3>
             <p>
-              Mỗi bot chạy trong môi trường Sandbox cô lập không thể truy cập Internet, ngăn chặn rò rỉ mã nguồn và tài nguyên hệ thống.
+              Cắt 1.000 trận đấu mỗi vòng thành 10 phần độc lập, xử lý song song trên 10 máy laptop sinh viên. Mỗi vòng hoàn tất chỉ trong 2–3 phút chấm thi.
             </p>
           </div>
 
           <div className="feature-card glass-card">
             <div className="feature-icon-wrap icon-purple">
-              <Swords size={24} />
+              <Cpu size={24} />
             </div>
-            <h3>Vòng Tròn Round-Robin</h3>
+            <h3>Sandbox Subprocess Cô Lập</h3>
             <p>
-              Tự động ghép cặp thi đấu 2 lượt đổi phe (Trắng - Đen và Đen - Trắng), đảm bảo tính công bằng và khách quan tối đa.
+              Mỗi bot chạy trong một tiến trình riêng biệt không mạng, tước bỏ biến môi trường nhạy cảm, dập tắt vòng lặp vô tận bằng <code>proc.kill()</code> dứt điểm.
             </p>
           </div>
 
@@ -385,184 +695,19 @@ export function HomePage() {
             <div className="feature-icon-wrap icon-rose">
               <Radio size={24} />
             </div>
-            <h3>WebSocket Trực Tiếp & Replay</h3>
+            <h3>Xuất Bản Tĩnh Jamstack CDN</h3>
             <p>
-              Theo dõi trực tiếp từng mili-giây nước cờ hoặc xem lại toàn bộ lịch sử ván đấu với bảng phân tích quân số trực quan.
+              Bảng xếp hạng và kết quả xuất thành các file JSON tĩnh đẩy lên Cloudflare Pages. 2.000 sinh viên F5 cùng lúc mượt mà với độ trễ dưới 50ms, chi phí 0đ.
             </p>
           </div>
 
           <div className="feature-card glass-card">
             <div className="feature-icon-wrap icon-amber">
-              <ShieldCheck size={24} />
+              <GitBranch size={24} />
             </div>
-            <h3>Bảo Mật T08 & T09</h3>
+            <h3>GitHub + Google Form</h3>
             <p>
-              Kiểm tra hồ sơ Prompt Engineering và quét tự động rò rỉ API key (OpenAI/Anthropic/Google) trước khi kích hoạt bài thi.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Tiers Classification Section */}
-      <section>
-        <div className="section-header">
-          <h2 className="section-title">3 Bảng Thi Đấu Công Bằng</h2>
-          <p className="section-subtitle">Phù hợp với mọi mức độ từ người mới bắt đầu đến lập trình nâng cao</p>
-        </div>
-
-        <div className="tiers-grid">
-          {/* Tier A */}
-          <div className="tier-card glass-card">
-            <div>
-              <div className="tier-header">
-                <span className="tier-badge-large tier-A">BẢNG A</span>
-                <span className="tier-score-range">0 – 39 Điểm Test</span>
-              </div>
-              <h3 className="tier-name">Bảng Khởi Động</h3>
-              <p className="tier-desc">
-                Dành cho sinh viên mới tiếp cận Python. Tập trung hiểu cấu trúc dữ liệu, vòng lặp và mở rộng từ RandomBot có sẵn trong Starter Kit.
-              </p>
-            </div>
-            <ul className="tier-features">
-              <li><CheckCircle2 size={16} color="var(--cyan-400)" /> Có sẵn Starter Kit & RandomBot</li>
-              <li><CheckCircle2 size={16} color="var(--cyan-400)" /> Thời gian 2.0 giây / nước đi</li>
-              <li><CheckCircle2 size={16} color="var(--cyan-400)" /> Trọng số cao ở nhật ký học tập (PROMPTS.md)</li>
-            </ul>
-            <div style={{ marginTop: '1.25rem' }}>
-              <button
-                className="btn btn-outline btn-sm"
-                style={{ width: '100%', justifyContent: 'center' }}
-                onClick={() => setIsStarterKitOpen(true)}
-              >
-                <span>Tải Starter Kit Bảng A</span>
-                <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-
-          {/* Tier B */}
-          <div className="tier-card glass-card">
-            <div>
-              <div className="tier-header">
-                <span className="tier-badge-large tier-B">BẢNG B</span>
-                <span className="tier-score-range">40 – 74 Điểm Test</span>
-              </div>
-              <h3 className="tier-name">Bảng Tiến Phát</h3>
-              <p className="tier-desc">
-                Đã nắm vững nền tảng cơ bản. Sinh viên tự xây dựng hàm đánh giá thế cờ (heuristic) và nhìn trước 1–2 nước cờ đối kháng.
-              </p>
-            </div>
-            <ul className="tier-features">
-              <li><CheckCircle2 size={16} color="var(--violet-500)" /> Cung cấp Engine luật & Khung bot</li>
-              <li><CheckCircle2 size={16} color="var(--violet-500)" /> Thời gian 1.0 giây / nước đi</li>
-              <li><CheckCircle2 size={16} color="var(--violet-500)" /> Chiến thuật Greedy hoặc Heuristic search</li>
-            </ul>
-            <div style={{ marginTop: '1.25rem' }}>
-              <Link
-                to="/submit"
-                className="btn btn-outline btn-sm"
-                style={{ width: '100%', justifyContent: 'center' }}
-              >
-                <span>Nộp Bot Bảng B</span>
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-          </div>
-
-          {/* Tier C */}
-          <div className="tier-card glass-card">
-            <div>
-              <div className="tier-header">
-                <span className="tier-badge-large tier-C">BẢNG C</span>
-                <span className="tier-score-range">75 – 100 Điểm Test</span>
-              </div>
-              <h3 className="tier-name">Bảng Thử Thách</h3>
-              <p className="tier-desc">
-                Dành cho thí sinh xuất sắc. Tự do cài đặt thuật toán Minimax, Alpha-Beta Pruning hoặc tối ưu tốc độ tính toán ma trận.
-              </p>
-            </div>
-            <ul className="tier-features">
-              <li><CheckCircle2 size={16} color="var(--amber-400)" /> Bắt buộc có lịch sử Git commit (T08)</li>
-              <li><CheckCircle2 size={16} color="var(--amber-400)" /> Thời gian 0.5 giây / nước đi</li>
-              <li><CheckCircle2 size={16} color="var(--amber-400)" /> Tỉ trọng điểm trận đấu cao nhất (50%)</li>
-            </ul>
-            <div style={{ marginTop: '1.25rem' }}>
-              <Link
-                to="/submit"
-                className="btn btn-primary btn-sm"
-                style={{ width: '100%', justifyContent: 'center' }}
-              >
-                <span>Thách Thức Bảng C</span>
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 12-Week Tournament Timeline */}
-      <section className="timeline-section">
-        <div className="section-header">
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <Calendar size={18} color="var(--primary-400)" />
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Lộ Trình Học Phần
-            </span>
-          </div>
-          <h2 className="section-title">Timeline 12 Tuần Triển Khai</h2>
-          <p className="section-subtitle">Theo dõi sát sao từng cột mốc phát triển bot và đánh giá đồ án môn học</p>
-        </div>
-
-        <div className="timeline-track-grid">
-          <div className="timeline-step-card glass-card">
-            <div className="timeline-step-header">
-              <span className="timeline-step-num">Tuần 1 – 4</span>
-              <div className="timeline-step-icon">
-                <FileCode size={18} color="var(--cyan-400)" />
-              </div>
-            </div>
-            <h3 className="timeline-step-title">Khởi Động & Luật Cờ</h3>
-            <p className="timeline-step-desc">
-              Khảo sát tài liệu luật OTTv2 9×9, cài đặt môi trường Python & Git. Nghiên cứu RandomBot từ Starter Kit và bắt đầu ghi nhật ký PROMPTS.md.
-            </p>
-          </div>
-
-          <div className="timeline-step-card glass-card">
-            <div className="timeline-step-header">
-              <span className="timeline-step-num">Tuần 5 – 8</span>
-              <div className="timeline-step-icon">
-                <Target size={18} color="var(--violet-400)" />
-              </div>
-            </div>
-            <h3 className="timeline-step-title">Thuật Toán & Heuristic</h3>
-            <p className="timeline-step-desc">
-              Phát triển chiến thuật ăn quân và đánh giá thế cờ (Heuristic, Minimax). Nộp bot chạy thử trên Sandbox tự động để sửa lỗi timeout và vi phạm luật.
-            </p>
-          </div>
-
-          <div className="timeline-step-card glass-card">
-            <div className="timeline-step-header">
-              <span className="timeline-step-num">Tuần 9 – 10</span>
-              <div className="timeline-step-icon">
-                <Flame size={18} color="var(--rose-400)" />
-              </div>
-            </div>
-            <h3 className="timeline-step-title">Đóng Cổng & Thi Đấu</h3>
-            <p className="timeline-step-desc">
-              Hạn chót chốt phiên bản bot chính thức (20/11). Hệ thống tự động bốc thăm Round-Robin đôi, tính điểm ELO và phát trực tiếp các trận đấu đỉnh cao.
-            </p>
-          </div>
-
-          <div className="timeline-step-card glass-card">
-            <div className="timeline-step-header">
-              <span className="timeline-step-num">Tuần 11 – 12</span>
-              <div className="timeline-step-icon">
-                <Award size={18} color="var(--amber-400)" />
-              </div>
-            </div>
-            <h3 className="timeline-step-title">Vấn Đáp & Trao Giải</h3>
-            <p className="timeline-step-desc">
-              Phỏng vấn bảo vệ mã nguồn, thẩm định hồ sơ AI Profile và báo cáo kỹ thuật. Công bố bảng xếp hạng chung cuộc và trao giải thưởng danh dự.
+              Sinh viên nộp link kho mã nguồn cá nhân qua biểu mẫu. Không tốn dung lượng lưu trữ Drive, bảo toàn toàn bộ lịch sử commit phục vụ chấm điểm.
             </p>
           </div>
         </div>
@@ -572,49 +717,49 @@ export function HomePage() {
       <section className="prizes-section">
         <div className="section-header">
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <Award size={18} color="var(--amber-400)" />
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--amber-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Vinh Danh & Phần Thưởng
+            <Award size={18} color="var(--amber-600)" />
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--amber-700)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Vinh Danh &amp; Phần Thưởng
             </span>
           </div>
-          <h2 className="section-title">Cơ Cấu Giải Thưởng</h2>
-          <p className="section-subtitle">Ghi nhận xứng đáng nỗ lực và tài năng lập trình chiến thuật của các đội thi</p>
+          <h2 className="section-title">Cơ Cấu Giải Thưởng Danh Dự</h2>
+          <p className="section-subtitle">Ghi nhận xứng đáng tài năng và nỗ lực sáng tạo của những cờ thủ xuất sắc nhất</p>
         </div>
 
         <div className="prizes-grid">
           <div className="prize-card gold glass-card">
             <div className="prize-badge-icon">🥇</div>
-            <span className="prize-tier-tag">Top 1 Mỗi Bảng</span>
+            <span className="prize-tier-tag">Vô Địch Giải Đấu</span>
             <h3 className="prize-title">Giải Nhất (Gold)</h3>
             <p className="prize-reward">
-              Kỷ niệm chương mạ vàng, Giấy chứng nhận OTTv2 Champion và điểm A+ tuyệt đối học phần.
+              Cúp OTTv2 Champion mạ vàng, Giấy khen của Khoa CNTT và điểm 10.0 A+ tuyệt đối học phần.
             </p>
           </div>
 
           <div className="prize-card silver glass-card">
             <div className="prize-badge-icon">🥈</div>
-            <span className="prize-tier-tag">Top 2 Mỗi Bảng</span>
+            <span className="prize-tier-tag">Á Quân Toàn Giải</span>
             <h3 className="prize-title">Giải Nhì (Silver)</h3>
             <p className="prize-reward">
-              Kỷ niệm chương mạ bạc, Giấy chứng nhận Á quân và điểm tổng kết 9.5 học phần.
+              Kỷ niệm chương mạ bạc, Giấy khen Á quân và điểm 10.0 A+ học phần.
             </p>
           </div>
 
           <div className="prize-card bronze glass-card">
             <div className="prize-badge-icon">🥉</div>
-            <span className="prize-tier-tag">Top 3 Mỗi Bảng</span>
+            <span className="prize-tier-tag">Top 3 &amp; Top 4</span>
             <h3 className="prize-title">Giải Ba (Bronze)</h3>
             <p className="prize-reward">
-              Kỷ niệm chương đồng danh dự, Giấy chứng nhận và quà lưu niệm công nghệ độc quyền.
+              Kỷ niệm chương đồng danh dự, Giấy khen và điểm 10.0 A+ học phần.
             </p>
           </div>
 
           <div className="prize-card special glass-card">
             <div className="prize-badge-icon">⭐</div>
-            <span className="prize-tier-tag">Giải Đặc Biệt T08</span>
-            <h3 className="prize-title">Best AI Profile</h3>
+            <span className="prize-tier-tag">Giải Kỹ Thuật Độc Quyền</span>
+            <h3 className="prize-title">Best Algorithm</h3>
             <p className="prize-reward">
-              Vinh danh thí sinh có hồ sơ nhật ký Prompt Engineering (PROMPTS.md) xuất sắc và bài bản nhất.
+              Vinh danh thuật toán heuristic / minimax độc đáo nhất cùng lịch sử Git commit chuẩn mực kỹ sư phần mềm.
             </p>
           </div>
         </div>
@@ -624,41 +769,41 @@ export function HomePage() {
       <section className="faq-section">
         <div className="section-header">
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <HelpCircle size={18} color="var(--primary-400)" />
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <HelpCircle size={18} color="var(--primary-600)" />
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary-700)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Giải Đáp Thắc Mắc
             </span>
           </div>
           <h2 className="section-title">Câu Hỏi Thường Gặp (FAQ)</h2>
-          <p className="section-subtitle">Những điều thí sinh cần nắm vững trước khi tham gia giải đấu OTTv2</p>
+          <p className="section-subtitle">Những điều thí sinh cần nắm vững trước khi bước vào 13 vòng đấu Swiss</p>
         </div>
 
         <div className="faq-list">
           {[
             {
               id: 0,
-              q: 'Tôi có bắt buộc phải sử dụng thuật toán Minimax hay Deep Learning không?',
-              a: 'Không bắt buộc. Bảng A và B chỉ yêu cầu bot hoạt động ổn định, tuân thủ nghiêm ngặt luật cờ hợp lệ và có thể mở rộng từ chiến lược Heuristic hoặc Greedy đơn giản. Bảng C mới khuyến khích sinh viên tự cài đặt Minimax, Alpha-Beta Pruning hoặc tối ưu bitboard.',
+              q: 'Thể thức Thụy Sĩ (Swiss System) 13 vòng hoạt động như thế nào? Thua có bị loại ngay không?',
+              a: 'Không! Thể thức Thụy Sĩ đảm bảo mọi thí sinh đều được thi đấu trọn vẹn cả 13 vòng đấu mà không bao giờ bị loại sớm. Sau mỗi vòng, hệ thống sẽ tự động ghép cặp các bot có cùng điểm số với nhau (người thắng gặp người thắng, người thua gặp người thua). Điều này giúp các trận đấu luôn cân tài cân sức và phản ánh chính xác trình độ.',
             },
             {
               id: 1,
-              q: 'Quy chuẩn nộp bài T08 và kiểm tra bảo mật T09 bao gồm những gì?',
-              a: 'Theo tiêu chuẩn T08, file .zip nộp bài bắt buộc phải có bot.py (chứa hàm get_move), tài liệu PROMPTS.md ghi chép quá trình sử dụng AI, và thư mục .git chứa tối thiểu 3 commits. Hệ thống T09 sẽ quét cô lập tự động: cấm gọi socket/file nguy hiểm, cấm truy cập Internet và loại bỏ mọi API key bị rò rỉ.',
+              q: 'Nộp bài qua GitHub và Google Form có yêu cầu gì về quyền truy cập và Git commit?',
+              a: 'Sinh viên cần fork hoặc tạo repository từ template mẫu, bắt buộc để chế độ Public để máy chấm tự động tải mã nguồn. Trong repo bắt buộc phải có tối thiểu 4–5 commits thể hiện tiến trình làm bài qua các ngày. Không chấp nhận repo chỉ có 1 commit duy nhất.',
             },
             {
               id: 2,
-              q: 'Hệ thống tính điểm xếp hạng thi đấu và điểm học phần như thế nào?',
-              a: 'Điểm giải đấu tính theo cơ chế: Thắng +3 điểm, Hòa +1 điểm, Thua 0 điểm. Điểm tổng kết cuối cùng của học phần được tính theo công thức trọng số chuẩn theo từng Bảng: Điểm Bot thi đấu (30-50%), Điểm hồ sơ AI Profile (15-25%), Phỏng vấn vấn đáp (20-30%) và Báo cáo đồ án (15%).',
+              q: 'Tôi có thể sử dụng AI (ChatGPT, Claude, Copilot) khi làm bài thi không?',
+              a: 'Bạn được phép sử dụng AI để giải thích lý thuyết giải thuật, tìm hiểu cú pháp Python hoặc gợi ý cách debug lỗi. Tuy nhiên, toàn bộ logic thuật toán Heuristic hoặc Minimax phải do bạn tự hiểu và làm chủ. Mọi bài thi đều được quét cây cú pháp AST qua hệ thống MOSS Stanford và Top 32 phải trải qua 5 phút phỏng vấn trực tiếp trước Hội đồng.',
             },
             {
               id: 3,
-              q: 'Làm thế nào để theo dõi trực tiếp các trận đấu diễn ra?',
-              a: 'Bạn có thể truy cập trang /live hoặc /matches trên thanh điều hướng. Tại đây bạn có thể xem các trận đấu đang phát sóng trực tiếp từng nước đi theo thời gian thực qua giao thức WebSocket hoặc mở lại lịch sử các ván cờ đã hoàn tất để phân tích diễn biến.',
+              q: 'Thời gian giới hạn cho mỗi nước đi (timeout) là bao nhiêu? Nếu bot bị crash thì sao?',
+              a: 'Thời gian tối đa cho mỗi nước đi là 2.0 giây. Nếu bot của bạn chạy quá thời gian (timeout) hoặc sinh ngoại lệ lỗi (crash), tiến trình con sẽ bị Sandbox dập tắt ngay lập tức và bị xử thua ván đấu đó. Hãy dùng script test cục bộ đi kèm trong Starter Kit để đảm bảo bot chạy ổn định.',
             },
             {
               id: 4,
-              q: 'Làm thế nào để tải bộ Starter Kit để bắt đầu viết bot?',
-              a: 'Bạn chỉ cần nhấp vào nút "Tải Starter Kit (.ZIP)" ngay trên Hero trang chủ hoặc tại bảng thông tin Bảng A. Gói ZIP bao gồm file luật ottv2_rules.py, RandomBot mẫu, file hướng dẫn PROMPTS.md mẫu và script kiểm tra cục bộ.',
+              q: 'Vòng Chung Kết Top 32 có gì đặc biệt so với 13 vòng Swiss?',
+              a: 'Trước vòng Chung kết 24 giờ, Ban Tổ Chức sẽ công bố một bản đồ bàn cờ 9×9 mới có bổ sung các ô chướng ngại vật cố định (quân cờ không thể đi vào). 32 thí sinh sẽ có 24 giờ để nâng cấp thuật toán của mình thích ứng với địa hình mới (Bot v2) và thi đấu Knockout trực tiếp tại Hội trường.',
             },
           ].map((faq) => {
             const isOpen = openFaqId === faq.id;
@@ -671,7 +816,7 @@ export function HomePage() {
                   aria-expanded={isOpen}
                 >
                   <span>{faq.q}</span>
-                  {isOpen ? <ChevronUp size={18} color="var(--primary-400)" /> : <ChevronDown size={18} />}
+                  {isOpen ? <ChevronUp size={18} color="var(--primary-600)" /> : <ChevronDown size={18} />}
                 </button>
                 {isOpen && (
                   <div className="faq-answer-content">
@@ -689,3 +834,5 @@ export function HomePage() {
     </div>
   );
 }
+
+export default HomePage;

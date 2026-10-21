@@ -14,10 +14,12 @@ htmlcov/
 *.db
 *.sqlite3
 backend/.env
+storage/
 backend/storage/submissions/*
 !backend/storage/submissions/.gitkeep
 backend/storage/replays/*
 !backend/storage/replays/.gitkeep
+backend/storage/tournament/
 
 # Node & Frontend
 node_modules/

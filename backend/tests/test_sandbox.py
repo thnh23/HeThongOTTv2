@@ -57,3 +57,35 @@ class TestSandboxExecution:
         assert result.is_success is False
         assert result.error_code == "SECURITY_VIOLATION"
         assert "T10" in result.error_message
+
+    def test_infinite_loop_bot_killed_cleanly(self):
+        """Kiểm tra bot bị vòng lặp vô tận (while True) bị kill dứt điểm đúng thời gian timeout."""
+        def infinite_loop_bot(state):
+            while True:
+                pass
+
+        state = create_initial_board()
+        result = execute_bot_move(infinite_loop_bot, state, timeout_sec=0.2)
+        assert result.is_success is False
+        assert result.error_code == "TIMEOUT"
+        assert "quá giờ" in result.error_message
+
+    def test_clean_env_strips_secrets(self):
+        """Kiểm tra biến môi trường nhạy cảm bị tước bỏ hoàn toàn khỏi bot."""
+        import os
+        os.environ["SECRET_KEY"] = "super-secret-key-12345"
+        os.environ["DATABASE_URL"] = "postgresql://user:pass@localhost/db"
+
+        def secret_stealer_bot(state):
+            import os
+            secret = os.environ.get("SECRET_KEY")
+            db_url = os.environ.get("DATABASE_URL")
+            if secret is not None or db_url is not None:
+                raise RuntimeError("LEAKED_SECRET")
+            return ("a1", "a2")
+
+        state = create_initial_board()
+        result = execute_bot_move(secret_stealer_bot, state, timeout_sec=1.0)
+        assert result.is_success is True
+        assert result.move == ("a1", "a2")
+

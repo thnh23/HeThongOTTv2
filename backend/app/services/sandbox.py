@@ -1,20 +1,27 @@
 """
-Bot Sandbox Execution Environment
-=================================
+Bot Sandbox Execution Environment (Subprocess Isolated)
+========================================================
 Môi trường cô lập thực thi bot:
   1. Giới hạn thời gian (Timeout per move: Bảng A=2s, B=1s, C=0.5s)
   2. Bắt toàn bộ lỗi (Crash, Exception, Return type sai)
   3. Ngăn chặn phá hoại (Chặn kết nối mạng / socket, bảo vệ file hệ thống - T10)
   4. Trả về BotExecutionResult chuẩn hóa cho Trọng tài
+  5. Chạy trên tiến trình con độc lập (Subprocess), ngắt dứt điểm bằng proc.kill(),
+     không để lại zombie thread và dọn sạch biến môi trường (.env).
 """
 
-import time
-import importlib.util
 import sys
-import socket
+import os
+import ast
+import time
+import json
+import base64
+import pickle
+import subprocess
+import importlib.util
 from typing import Callable, Tuple, Optional
 from dataclasses import dataclass
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
+
 from app.services.engine.board import BoardState
 
 
@@ -33,31 +40,63 @@ class SecurityViolationError(Exception):
     pass
 
 
-def _patched_socket_create_connection(*args, **kwargs):
-    raise SecurityViolationError("T10: Bot bị chặn kết nối mạng (Network access blocked by sandbox).")
-
-
-def _patched_socket_connect(*args, **kwargs):
-    raise SecurityViolationError("T10: Bot bị chặn kết nối mạng (Socket connect blocked by sandbox).")
+def _get_clean_env() -> dict[str, str]:
+    """
+    Tạo môi trường thực thi sạch cho tiến trình con.
+    Loại bỏ toàn bộ biến môi trường nhạy cảm (.env, SECRET_KEY, DATABASE_URL).
+    Chỉ giữ lại các biến tối thiểu của hệ điều hành để chạy Python.
+    """
+    allowed_keys = {
+        "SYSTEMROOT", "WINDIR", "PATH", "PATHEXT", "TEMP", "TMP",
+        "LOCALAPPDATA", "APPDATA", "USERPROFILE", "HOMEPATH", "HOMEDRIVE",
+        "LANG", "LC_ALL", "TZ"
+    }
+    clean_env = {k: v for k, v in os.environ.items() if k.upper() in allowed_keys}
+    backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+    clean_env["PYTHONPATH"] = backend_dir
+    clean_env["PYTHONUNBUFFERED"] = "1"
+    clean_env["PYTHONIOENCODING"] = "utf-8"
+    return clean_env
 
 
 def load_bot_from_file(file_path: str) -> Callable[[BoardState], Tuple[str, str]]:
     """
     Load động hàm choose_move từ file bot.py của thí sinh.
+    Kiểm tra cú pháp và cấu trúc hàm bằng AST trước khi khởi tạo wrapper.
     """
-    module_name = f"bot_module_{abs(hash(file_path))}"
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Không thể load spec từ file {file_path}")
-    
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
+    abs_path = os.path.abspath(file_path)
+    if not os.path.isfile(abs_path):
+        raise FileNotFoundError(f"Không tìm thấy file bot tại {file_path}")
 
-    if not hasattr(module, "choose_move"):
+    # 1. Parse AST để kiểm tra tính hợp lệ về cú pháp mà không chạy code độc
+    with open(abs_path, "r", encoding="utf-8", errors="replace") as f:
+        source_code = f.read()
+
+    try:
+        tree = ast.parse(source_code, filename=abs_path)
+    except SyntaxError as e:
+        raise SyntaxError(f"File bot.py bị lỗi cú pháp: {e}")
+
+    has_choose_move = any(
+        isinstance(node, ast.FunctionDef) and node.name == "choose_move"
+        for node in ast.walk(tree)
+    )
+    if not has_choose_move:
         raise AttributeError("File bot.py không có hàm 'choose_move(state)'.")
 
-    return getattr(module, "choose_move")
+    # Tạo bot callable mang thuộc tính _bot_file_path để execute_bot_move nhận diện
+    def bot_fn(state: BoardState) -> Tuple[str, str]:
+        module_name = f"bot_module_{abs(hash(abs_path))}"
+        spec = importlib.util.spec_from_file_location(module_name, abs_path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Không thể load spec từ file {abs_path}")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return getattr(module, "choose_move")(state)
+
+    bot_fn._bot_file_path = abs_path
+    bot_fn.__name__ = "choose_move"
+    return bot_fn
 
 
 def execute_bot_move(
@@ -67,68 +106,140 @@ def execute_bot_move(
     block_network: bool = True,
 ) -> BotExecutionResult:
     """
-    Thực thi 1 nước đi của bot trong sandbox an toàn.
+    Thực thi 1 nước đi của bot trong subprocess độc lập an toàn.
     """
     start_time = time.perf_counter()
 
-    # Lưu trữ socket methods ban đầu để patch nếu bật block_network
-    orig_create_connection = socket.create_connection
-    orig_connect = socket.socket.connect
-
-    def runner():
-        if block_network:
-            socket.create_connection = _patched_socket_create_connection
-            socket.socket.connect = _patched_socket_connect
+    # 1. Định danh target thực thi
+    if hasattr(bot_fn, "_bot_file_path"):
+        target_info = {"type": "file", "path": bot_fn._bot_file_path}
+    elif (
+        hasattr(bot_fn, "__module__")
+        and hasattr(bot_fn, "__name__")
+        and bot_fn.__module__ != "__main__"
+        and bot_fn.__module__ in sys.modules
+        and getattr(sys.modules[bot_fn.__module__], bot_fn.__name__, None) is bot_fn
+    ):
+        target_info = {
+            "type": "module",
+            "module": bot_fn.__module__,
+            "name": bot_fn.__name__,
+        }
+    elif hasattr(bot_fn, "__code__"):
+        import marshal
+        code_b64 = base64.b64encode(marshal.dumps(bot_fn.__code__)).decode("ascii")
+        target_info = {"type": "code", "data": code_b64}
+    else:
         try:
-            return bot_fn(state)
-        finally:
-            if block_network:
-                socket.create_connection = orig_create_connection
-                socket.socket.connect = orig_connect
-
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(runner)
-        try:
-            raw_move = future.result(timeout=timeout_sec)
-            elapsed_ms = int((time.perf_counter() - start_time) * 1000)
-
-            # Kiểm tra định dạng dữ liệu trả về
-            if not isinstance(raw_move, (tuple, list)) or len(raw_move) != 2:
-                return BotExecutionResult(
-                    is_success=False,
-                    duration_ms=elapsed_ms,
-                    error_code="INVALID_FORMAT",
-                    error_message=f"Bot trả về dữ liệu sai định dạng: {raw_move!r}. Kỳ vọng tuple (from_sq, to_sq).",
-                )
-
-            from_sq, to_sq = str(raw_move[0]).strip().lower(), str(raw_move[1]).strip().lower()
-            return BotExecutionResult(
-                move=(from_sq, to_sq),
-                duration_ms=elapsed_ms,
-                is_success=True,
-            )
-
-        except FutureTimeoutError:
-            elapsed_ms = int((time.perf_counter() - start_time) * 1000)
-            return BotExecutionResult(
-                is_success=False,
-                duration_ms=elapsed_ms,
-                error_code="TIMEOUT",
-                error_message=f"Bot tính toán quá giờ ({timeout_sec}s timeout).",
-            )
-        except SecurityViolationError as sec_err:
-            elapsed_ms = int((time.perf_counter() - start_time) * 1000)
-            return BotExecutionResult(
-                is_success=False,
-                duration_ms=elapsed_ms,
-                error_code="SECURITY_VIOLATION",
-                error_message=str(sec_err),
-            )
-        except Exception as exc:
+            pickled = base64.b64encode(pickle.dumps(bot_fn)).decode("ascii")
+            target_info = {"type": "pickle", "data": pickled}
+        except Exception as e:
             elapsed_ms = int((time.perf_counter() - start_time) * 1000)
             return BotExecutionResult(
                 is_success=False,
                 duration_ms=elapsed_ms,
                 error_code="CRASH",
-                error_message=f"Bot bị crash / ném ngoại lệ: {type(exc).__name__}: {str(exc)}",
+                error_message=f"Không thể serialize bot function: {e}",
             )
+
+    # 2. Serialize trạng thái bàn cờ
+    state_b64 = base64.b64encode(pickle.dumps(state)).decode("ascii")
+    payload = {
+        "target": target_info,
+        "state_b64": state_b64,
+        "block_network": block_network,
+    }
+    payload_json = json.dumps(payload)
+
+    runner_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "sandbox_runner.py"))
+    cmd = [sys.executable, runner_path]
+    clean_env = _get_clean_env()
+
+    # 3. Khởi tạo Subprocess
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            env=clean_env,
+        )
+    except Exception as e:
+        elapsed_ms = int((time.perf_counter() - start_time) * 1000)
+        return BotExecutionResult(
+            is_success=False,
+            duration_ms=elapsed_ms,
+            error_code="CRASH",
+            error_message=f"Không thể khởi chạy sandbox process: {e}",
+        )
+
+    # 4. Giao tiếp và xử lý Timeout
+    try:
+        stdout_data, stderr_data = proc.communicate(input=payload_json, timeout=timeout_sec)
+    except subprocess.TimeoutExpired:
+        # DỨT ĐIỂM TIMEOUT: Kill tiến trình con ngay lập tức
+        try:
+            proc.kill()
+            proc.wait(timeout=1.0)
+        except Exception:
+            pass
+        elapsed_ms = int((time.perf_counter() - start_time) * 1000)
+        return BotExecutionResult(
+            is_success=False,
+            duration_ms=elapsed_ms,
+            error_code="TIMEOUT",
+            error_message=f"Bot tính toán quá giờ ({timeout_sec}s timeout).",
+        )
+    except Exception as e:
+        try:
+            proc.kill()
+            proc.wait(timeout=1.0)
+        except Exception:
+            pass
+        elapsed_ms = int((time.perf_counter() - start_time) * 1000)
+        return BotExecutionResult(
+            is_success=False,
+            duration_ms=elapsed_ms,
+            error_code="CRASH",
+            error_message=f"Lỗi ngoại lệ trong sandbox: {e}",
+        )
+
+    elapsed_ms = int((time.perf_counter() - start_time) * 1000)
+
+    # 5. Phân tích kết quả từ Delimiter
+    if "__SANDBOX_START__" in stdout_data and "__SANDBOX_END__" in stdout_data:
+        try:
+            json_str = stdout_data.split("__SANDBOX_START__")[1].split("__SANDBOX_END__")[0].strip()
+            res_dict = json.loads(json_str)
+
+            if res_dict.get("is_success", False):
+                move_list = res_dict["move"]
+                return BotExecutionResult(
+                    move=(move_list[0], move_list[1]),
+                    duration_ms=elapsed_ms,
+                    is_success=True,
+                )
+            else:
+                return BotExecutionResult(
+                    is_success=False,
+                    duration_ms=elapsed_ms,
+                    error_code=res_dict.get("error_code", "CRASH"),
+                    error_message=res_dict.get("error_message", "Unknown error"),
+                )
+        except Exception as e:
+            return BotExecutionResult(
+                is_success=False,
+                duration_ms=elapsed_ms,
+                error_code="CRASH",
+                error_message=f"Không thể parse kết quả JSON từ sandbox runner: {e}",
+            )
+    else:
+        err_msg = stderr_data.strip() or stdout_data.strip() or "Tiến trình sandbox bị đóng bất thường."
+        return BotExecutionResult(
+            is_success=False,
+            duration_ms=elapsed_ms,
+            error_code="CRASH",
+            error_message=f"Sandbox crash: {err_msg}",
+        )
