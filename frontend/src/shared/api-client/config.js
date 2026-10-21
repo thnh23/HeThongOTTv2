@@ -31,7 +31,7 @@ export function getWebSocketUrl(path) {
     }
   }
 
-  // 3. Fallback cho Localhost / Same-Origin / Nginx reverse proxy
+  // 3. Fallback cho Localhost / Same-Origin reverse proxy
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${protocol}//${window.location.host}${cleanPath}`;
 }

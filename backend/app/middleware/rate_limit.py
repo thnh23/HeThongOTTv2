@@ -34,7 +34,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self._last_cleanup = time.time()
 
     def _get_client_ip(self, request: Request) -> str:
-        # Check forwarded headers first if behind reverse proxy / nginx
+        # Check forwarded headers first if behind reverse proxy
         forwarded = request.headers.get("X-Forwarded-For")
         if forwarded:
             return forwarded.split(",")[0].strip()

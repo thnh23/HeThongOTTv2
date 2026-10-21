@@ -69,8 +69,7 @@ ottv2-tournament/
 │   │   │   ├── auth/               # Đăng nhập & Đăng ký
 │   │   │   └── admin/              # Trung tâm điều hành & chấm điểm Hội đồng
 │   │   └── shared/                 # Thành phần dùng chung (BoardSVG, Navbar, ErrorBoundary)
-│   ├── nginx.conf                  # Reverse Proxy Nginx cho production
-│   └── Dockerfile                  # Multi-stage Docker build cho Frontend
+│   └── Dockerfile                  # Multi-stage Docker build cho Frontend (Node Serve)
 ├── docker-compose.yml              # Khởi chạy toàn bộ hệ thống bằng Docker
 ├── render.yaml                     # Cấu hình Blueprint deploy 1-click lên Render
 ├── rules.json                      # Đặc tả luật máy đọc công khai
