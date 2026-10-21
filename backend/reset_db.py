@@ -32,19 +32,37 @@ if venv_python and os.path.normcase(sys.executable) != os.path.normcase(venv_pyt
         res = subprocess.run([venv_python] + sys.argv, cwd=BASE_DIR)
         sys.exit(res.returncode)
 
+from sqlalchemy import text
 from app.database import Base, engine, create_all_tables
 from seed_demo_data import seed_data
 
 
-def reset_database():
+def reset_database(seed: bool = True):
     print("Đang xóa tất cả các bảng trong database...")
-    Base.metadata.drop_all(bind=engine)
+    is_postgres = "postgres" in str(engine.url).lower()
+
+    if is_postgres:
+        with engine.connect() as conn:
+            conn.execute(text("DROP SCHEMA public CASCADE;"))
+            conn.execute(text("CREATE SCHEMA public;"))
+            conn.execute(text("GRANT ALL ON SCHEMA public TO public;"))
+            conn.commit()
+        print("✓ Đã drop sạch schema public trên PostgreSQL thành công!")
+    else:
+        Base.metadata.drop_all(bind=engine)
+        print("✓ Đã drop tất cả các bảng SQLite thành công!")
+
     print("Đang khởi tạo lại cấu trúc bảng mới...")
     create_all_tables()
-    print("Đang nạp dữ liệu mẫu ban đầu...")
-    seed_data()
-    print("Đã reset database thành công về trạng thái ban đầu!")
+
+    if seed:
+        print("Đang nạp dữ liệu mẫu ban đầu...")
+        seed_data()
+        print("✅ Đã reset database và nạp dữ liệu mẫu thành công!")
+    else:
+        print("✅ Đã reset database về trạng thái TRẮNG (không nạp dữ liệu mẫu)!")
 
 
 if __name__ == "__main__":
-    reset_database()
+    should_seed = "--no-seed" not in sys.argv
+    reset_database(seed=should_seed)
