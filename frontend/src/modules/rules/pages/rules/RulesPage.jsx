@@ -191,7 +191,7 @@ export function RulesPage() {
 
             {/* Black Team Starting Position */}
             <div className="board-info-block">
-              <h4 style={{ color: '#38BDF8' }}>
+              <h4 style={{ color: '#BE123C' }}>
                 🔴 Phe Đen (Black) — Hàng 8 &amp; 9 (18 Quân)
               </h4>
               <p>• <strong>Hàng 9:</strong> P – S – R – P – S – R – P – S – R (Bao, Kéo, Búa xen kẽ)</p>
@@ -200,9 +200,9 @@ export function RulesPage() {
 
             {/* White Team Starting Position */}
             <div className="board-info-block">
-              <h4 style={{ color: '#F8FAFC' }}>
+              <h4 style={{ color: '#1E3A8A' }}>
                 ⚪ Phe Trắng (White) — Hàng 1 &amp; 2 (18 Quân)
-                <span style={{ fontSize: '0.75rem', color: 'var(--emerald-400)', marginLeft: 'auto', fontWeight: 'bold' }}>
+                <span style={{ fontSize: '0.75rem', color: '#047857', marginLeft: 'auto', fontWeight: 'bold' }}>
                   ● ĐI TRƯỚC
                 </span>
               </h4>

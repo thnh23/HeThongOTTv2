@@ -261,12 +261,21 @@ kbd {
 /* Code Snippets */
 code {
   font-family: var(--font-mono);
-  background: #F1F5F9;
+  background: #E2E8F0;
   padding: 0.15rem 0.4rem;
   border-radius: var(--radius-xs);
   font-size: 0.88em;
   color: var(--primary-600);
   border: 1px solid var(--border-subtle);
+}
+
+pre code {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  color: inherit !important;
+  font-size: inherit !important;
+  box-shadow: none !important;
 }
 
 /* Responsive Media Queries */
