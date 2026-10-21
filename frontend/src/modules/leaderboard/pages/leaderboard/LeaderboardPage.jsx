@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   Trophy,
   RefreshCw,
@@ -7,16 +7,8 @@ import {
   Search,
   Medal,
   Crown,
-  HelpCircle,
   TrendingUp,
   User,
-  ArrowUpDown,
-  Award,
-  ShieldCheck,
-  CheckCircle2,
-  Calendar,
-  Sparkles,
-  ExternalLink,
 } from 'lucide-react';
 import { apiClient, getWebSocketUrl } from '@/shared/api-client/index.js';
 import { useAuth } from '@/shared/context/AuthContext.jsx';
@@ -103,7 +95,6 @@ export function LeaderboardPage() {
 
   // Active view: 'SWISS' (All 2,000 Swiss), or 'A', 'B', 'C'
   const [activeTier, setActiveTier] = useState('SWISS');
-  const [selectedRound, setSelectedRound] = useState('all'); // 'all' or 1..13
   const [standings, setStandings] = useState([]);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [sortBy, setSortBy] = useState('rank'); // 'rank', 'points', 'wins', 'buchholz', 'sb'
@@ -166,7 +157,7 @@ export function LeaderboardPage() {
           'success'
         );
       }
-    } catch (err) {
+    } catch {
       // Fallback to mock data so UI remains fully functional even offline
       setStandings(SWISS_MOCK_DATA);
       if (isManual) {
@@ -505,7 +496,7 @@ export function LeaderboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStandings.map((entry, index) => {
+                  {filteredStandings.map((entry) => {
                     const isCurrentUser = user && (entry.user_id === user.id || entry.user_id === user.student_id);
                     const isTop32 = entry.rank <= 32;
                     const showCutoffLine = !searchQuery && entry.rank === 32 && filteredStandings.length > 32;

@@ -97,7 +97,7 @@ def get_leaderboard(
                     "name": u.name if u else "Unknown",
                     "student_id": getattr(u, "student_id", None) if u else uid[:8],
                     "bot_name": f"Bot_{u.name.replace(' ', '_')}" if u else f"Bot_{uid[:6]}",
-                    "tier": (u.tier if u else None) or ("A" if not is_all_swiss else "SWISS"),
+                    "tier": (u.tier if u else None) or "SWISS",
                     "matches_played": 0,
                     "wins": 0,
                     "draws": 0,

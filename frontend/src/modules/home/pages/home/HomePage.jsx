@@ -7,13 +7,10 @@ import {
   Sparkles,
   CheckCircle2,
   ArrowRight,
-  Download,
   BookOpen,
-  Cpu,
   ShieldCheck,
   Radio,
   FileCode,
-  Flame,
   Target,
   Zap,
   RotateCcw,
@@ -25,9 +22,7 @@ import {
   Search,
   GraduationCap,
   GitBranch,
-  Laptop,
   Check,
-  AlertTriangle,
 } from 'lucide-react';
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
 import { Countdown } from '@/shared/components/Countdown/Countdown.jsx';

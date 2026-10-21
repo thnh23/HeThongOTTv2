@@ -5,13 +5,10 @@ import {
   Radio,
   Clock,
   Trophy,
-  AlertCircle,
   Wifi,
   WifiOff,
-  Sparkles,
   ExternalLink,
   ChevronRight,
-  ShieldAlert,
   Volume2,
   VolumeX,
   Maximize2,
@@ -23,7 +20,6 @@ import {
   Play,
 } from 'lucide-react';
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
-import { StatusBadge } from '@/shared/components/StatusBadge/StatusBadge.jsx';
 import { useToast } from '@/shared/context/ToastContext.jsx';
 import { apiClient, getWebSocketUrl } from '@/shared/api-client/index.js';
 import { soundFx } from '@/shared/services/soundFx.js';

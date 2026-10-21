@@ -3,17 +3,14 @@ import {
   X,
   FileCode,
   FileText,
-  MessageSquare,
   Sparkles,
   Save,
-  CheckCircle2,
   AlertTriangle,
   RefreshCw,
   Award,
   Zap,
   GitBranch,
   ShieldAlert,
-  GraduationCap,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useToast } from '@/shared/context/ToastContext.jsx';
@@ -69,6 +66,19 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
 
   const letterInfo = getLetterGrade(score10);
 
+  const loadFiles = async (targetUser) => {
+    setIsLoadingFiles(true);
+    try {
+      const targetId = targetUser.submission_id || targetUser.id;
+      const data = await apiClient.get(`/admin/submissions/${targetId}/files`);
+      setSubmissionFiles(data?.files || null);
+    } catch {
+      setSubmissionFiles(null);
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
+
   // Load files when modal opens
   useEffect(() => {
     if (!isOpen || !user) return;
@@ -81,32 +91,6 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
 
     loadFiles(user);
   }, [isOpen, user]);
-
-  const loadFiles = async (targetUser) => {
-    setIsLoadingFiles(true);
-    try {
-      let data = null;
-      if (targetUser.submission_id) {
-        data = await apiClient.get(`/admin/submissions/${targetUser.submission_id}/files`);
-      } else if (targetUser.id) {
-        data = await apiClient.get(`/admin/users/${targetUser.id}/submission-files`);
-      }
-      setSubmissionFiles(data?.files || null);
-    } catch {
-      try {
-        if (targetUser?.id) {
-          const fallbackData = await apiClient.get(`/admin/users/${targetUser.id}/submission-files`);
-          setSubmissionFiles(fallbackData?.files || null);
-        } else {
-          setSubmissionFiles(null);
-        }
-      } catch {
-        setSubmissionFiles(null);
-      }
-    } finally {
-      setIsLoadingFiles(false);
-    }
-  };
 
   // Tự động điền điểm theo bậc thang Swiss 13 Vòng
   const handleApplySwissSuggestion = () => {

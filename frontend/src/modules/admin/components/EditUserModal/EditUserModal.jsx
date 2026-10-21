@@ -10,8 +10,6 @@ import {
   Shield,
   Save,
   Trash2,
-  AlertTriangle,
-  CheckCircle2,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useToast } from '@/shared/context/ToastContext.jsx';

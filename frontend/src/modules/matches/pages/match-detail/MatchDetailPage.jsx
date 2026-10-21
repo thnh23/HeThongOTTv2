@@ -51,6 +51,8 @@ const PIECE_EMOJIS = {
   P: '✋',
 };
 
+const EMPTY_STATE = {};
+
 export function MatchDetailPage() {
   const { id } = useParams();
   const { showToast } = useToast();
@@ -205,7 +207,7 @@ export function MatchDetailPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [replay, currentStep]);
 
-  const currentBoardState = replay?.states?.[currentStep] || {};
+  const currentBoardState = replay?.states?.[currentStep] || EMPTY_STATE;
   const currentMove = currentStep > 0 ? replay?.moves?.[currentStep - 1] : null;
   const totalMoves = replay?.moves?.length || 0;
 

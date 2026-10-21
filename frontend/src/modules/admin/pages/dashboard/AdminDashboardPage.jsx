@@ -1,25 +1,17 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ShieldCheck,
   Users,
   Trophy,
-  Upload,
-  Play,
   RotateCcw,
   Search,
   CheckCircle2,
-  AlertCircle,
   RefreshCw,
   Award,
-  Radio,
-  FileCode,
-  LogIn,
-  Sliders,
   Laptop,
   Check,
   Zap,
-  ArrowRight,
   ExternalLink,
   Download,
   Edit2,
@@ -28,27 +20,19 @@ import {
   FileSpreadsheet,
   UploadCloud,
   FolderArchive,
-  Layers,
-  Settings2,
-  FileText,
-  Copy,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
-import { useAuth } from '@/shared/context/AuthContext.jsx';
 import { useToast } from '@/shared/context/ToastContext.jsx';
-import { StatusBadge } from '@/shared/components/StatusBadge/StatusBadge.jsx';
 import { GradeReviewModal } from '../../components/GradeReviewModal/GradeReviewModal.jsx';
 import { EditUserModal } from '../../components/EditUserModal/index.js';
 import './AdminDashboardPage.css';
 
 export function AdminDashboardPage() {
-  const { user, isAuthenticated } = useAuth();
   const { showToast } = useToast();
 
   // Active Admin Tab: 'tournament' | 'import' | 'students' | 'top32'
   const [activeAdminTab, setActiveAdminTab] = useState('tournament');
 
-  const [stats, setStats] = useState(null);
   const [swissStatus, setSwissStatus] = useState(null);
   const [usersList, setUsersList] = useState([]);
   const [submissionFilter, setSubmissionFilter] = useState('');
@@ -62,12 +46,8 @@ export function AdminDashboardPage() {
   const [isSyncingData, setIsSyncingData] = useState(false);
 
   // Chunks & Machine Results State
-  const [chunksInfo, setChunksInfo] = useState([]);
   const [resultsStatus, setResultsStatus] = useState(null);
   const [isUploadingResult, setIsUploadingResult] = useState(false);
-  const [activeUploadChunkId, setActiveUploadChunkId] = useState(null);
-  const singleResultInputRef = useRef(null);
-  const batchResultInputRef = useRef(null);
 
   // Google Form Import State
   const [csvFile, setCsvFile] = useState(null);
@@ -148,12 +128,10 @@ export function AdminDashboardPage() {
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
-      const [statsRes, swissRes, usersRes] = await Promise.all([
-        apiClient.get('/admin/stats').catch(() => null),
+      const [swissRes, usersRes] = await Promise.all([
         apiClient.get('/admin/swiss/status').catch(() => null),
         apiClient.get('/admin/users').catch(() => []),
       ]);
-      setStats(statsRes);
       setSwissStatus(swissRes);
       setUsersList(usersRes || []);
     } catch {
@@ -165,11 +143,7 @@ export function AdminDashboardPage() {
 
   const fetchChunksAndResults = async (roundNum) => {
     try {
-      const [chunksRes, resultsRes] = await Promise.all([
-        apiClient.get(`/admin/swiss/chunks/${roundNum}`).catch(() => null),
-        apiClient.get(`/admin/swiss/results-status/${roundNum}`).catch(() => null),
-      ]);
-      if (chunksRes?.chunks) setChunksInfo(chunksRes.chunks);
+      const resultsRes = await apiClient.get(`/admin/swiss/results-status/${roundNum}`).catch(() => null);
       if (resultsRes) setResultsStatus(resultsRes);
     } catch {
       // ignore
@@ -267,7 +241,7 @@ export function AdminDashboardPage() {
   };
 
   // 5. Handle Upload Machine Result File (JSON or ZIP)
-  const handleUploadResultFile = async (file, chunkId = null) => {
+  const handleUploadResultFile = async (file) => {
     if (!file) return;
     setIsUploadingResult(true);
     try {
@@ -286,7 +260,6 @@ export function AdminDashboardPage() {
       showToast(err.message || 'Lỗi khi nộp file kết quả', 'error');
     } finally {
       setIsUploadingResult(false);
-      setActiveUploadChunkId(null);
     }
   };
 

@@ -25,7 +25,7 @@ import { StarterKitModal } from '@/shared/components/StarterKitModal/index.js';
 import './SubmitPage.css';
 
 export function SubmitPage() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { showToast } = useToast();
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -370,7 +370,7 @@ export function SubmitPage() {
                 <StatusBadge status={latestSubmission.status} />
               </div>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                Mã bài nộp: <code>{latestSubmission.id}</code> • Nộp lúc: {new Date(latestSubmission.submitted_at || Date.now()).toLocaleTimeString('vi-VN')}
+                Mã bài nộp: <code>{latestSubmission.id}</code>{latestSubmission.submitted_at ? ` • Nộp lúc: ${new Date(latestSubmission.submitted_at).toLocaleTimeString('vi-VN')}` : ''}
               </p>
             </div>
 

@@ -4,13 +4,10 @@ import {
   Swords,
   Clock,
   PlayCircle,
-  Filter,
   RefreshCw,
   AlertCircle,
   Radio,
-  Sparkles,
   Search,
-  Trophy,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useToast } from '@/shared/context/ToastContext.jsx';
