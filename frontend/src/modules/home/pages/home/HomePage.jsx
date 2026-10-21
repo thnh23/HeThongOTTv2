@@ -218,7 +218,7 @@ export function HomePage() {
       <section className="home-hero">
         <div className="hero-ticker">
           <span className="ticker-badge">UET 2026</span>
-          <span className="ticker-text">Giải Đấu Thuật Toán & Game Chiến Thuật OTTv2 • 2.000 Sinh Viên • 13 Vòng Swiss</span>
+          <span className="ticker-text">Đấu Trường Thuật Toán &amp; Game Chiến Thuật OTTv2 • Khoa CNTT - VNU-UET • 13 Vòng Swiss</span>
         </div>
 
         <h1 className="hero-title">
@@ -227,7 +227,7 @@ export function HomePage() {
         </h1>
 
         <p className="hero-subtitle">
-          Sân chơi lập trình trí tuệ nhân tạo đối kháng 9×9 dành cho 2.000 sinh viên UET. Chấm thi tự động
+          Sân chơi lập trình trí tuệ nhân tạo đối kháng 9×9 dành cho sinh viên Khoa CNTT - VNU-UET. Chấm thi tự động
           trên Sandbox cô lập an toàn, phân hạng công bằng qua 13 Vòng Thụy Sĩ (Swiss System) và Vòng Chung Kết Top 32 Knockout.
         </p>
 
@@ -254,12 +254,12 @@ export function HomePage() {
           </Link>
         </div>
 
-        {/* Hero Search Widget for 2,000 Students */}
+        {/* Hero Search Widget */}
         <div className="hero-search-container glass-card">
           <div className="hero-search-header">
             <Search size={18} className="search-header-icon" />
             <span className="search-header-title">Tra Cứu Nhanh Thí Sinh &amp; Kết Quả Thi Đấu</span>
-            <span className="search-header-badge">2.000 Thí Sinh</span>
+            <span className="search-header-badge">Trực Tuyến</span>
           </div>
 
           <form className="hero-search-form" onSubmit={handleHeroSearch}>
@@ -330,19 +330,19 @@ export function HomePage() {
         {/* 4 Stats Summary Cards */}
         <div className="hero-stats">
           <div className="stat-card glass-card">
-            <span className="stat-value gradient-text">2.000</span>
-            <span className="stat-label">Thí Sinh Tranh Tài</span>
-            <span className="stat-sublabel">Toàn thể sinh viên CNTT</span>
+            <span className="stat-value gradient-text">9 × 9</span>
+            <span className="stat-label">Bàn Cờ Chiến Thuật</span>
+            <span className="stat-sublabel">36 quân cờ đối kháng</span>
           </div>
           <div className="stat-card glass-card">
             <span className="stat-value gradient-blue">13 Vòng</span>
             <span className="stat-label">Hệ Thống Thụy Sĩ</span>
-            <span className="stat-sublabel">Swiss System (3-1-0)</span>
+            <span className="stat-sublabel">Ghép cặp cân bằng (3-1-0)</span>
           </div>
           <div className="stat-card glass-card">
             <span className="stat-value" style={{ color: 'var(--amber-600)' }}>Top 32</span>
             <span className="stat-label">Vòng Chung Kết</span>
-            <span className="stat-sublabel">Knockout &amp; Ô Cản</span>
+            <span className="stat-sublabel">Knockout &amp; Ô Chướng Ngại</span>
           </div>
           <div className="stat-card glass-card">
             <span className="stat-value" style={{ color: 'var(--emerald-600)' }}>10.0</span>
@@ -556,7 +556,7 @@ export function HomePage() {
             <div className="grading-score-badge high-badge">9.0 ĐIỂM</div>
             <h3 className="grading-title">Mức Giỏi</h3>
             <p className="grading-desc">
-              Thứ hạng cao trong Top 20% toàn giải đấu quy mô 2.000 sinh viên.
+              Thứ hạng cao trong Top 20% toàn giải đấu.
             </p>
             <ul className="grading-reqs">
               <li><Check size={15} color="var(--primary-600)" /> Đạt từ <strong>8 – 9 trận thắng</strong> trong 13 vòng</li>
@@ -631,7 +631,7 @@ export function HomePage() {
             </div>
             <h3 className="timeline-step-title">Vòng Loại Swiss: Vòng 1 – 8</h3>
             <p className="timeline-step-desc">
-              Khởi tranh 8 vòng Thụy Sĩ. 1.000 trận đấu mỗi vòng được chia nhỏ sang cụm 10 laptop chấm thi. Cập nhật kết quả và ghép cặp vòng tiếp theo sau mỗi 45 phút.
+              Khởi tranh 8 vòng Thụy Sĩ đầu tiên. Toàn bộ các trận đấu được chấm song song tự động trên cụm máy tính độc lập. Cập nhật kết quả và bảng xếp hạng sau mỗi vòng đấu.
             </p>
           </div>
 
@@ -644,7 +644,7 @@ export function HomePage() {
             </div>
             <h3 className="timeline-step-title">Vòng Loại Swiss: Vòng 9 – 13</h3>
             <p className="timeline-step-desc">
-              5 vòng đấu quyết định tranh chấp các tấm vé vào vòng chung kết. Chốt bảng xếp hạng 2.000 thí sinh và công bố danh sách chính thức Top 32 hạt giống.
+              5 vòng đấu quyết định tranh chấp các tấm vé vào vòng chung kết. Chốt bảng xếp hạng chung cuộc 13 vòng và công bố danh sách chính thức Top 32 hạt giống.
             </p>
           </div>
 
@@ -666,28 +666,28 @@ export function HomePage() {
       {/* Feature Highlights Grid */}
       <section className="features-showcase-section">
         <div className="section-header">
-          <h2 className="section-title">Hạ Tầng Vận Hành Giải Đấu 0 Đồng</h2>
-          <p className="section-subtitle">Giải pháp phân tán thông minh giải quyết trọn vẹn bài toán 2.000 thí sinh</p>
+          <h2 className="section-title">Đặc Điểm Nổi Bật Của Hệ Thống</h2>
+          <p className="section-subtitle">Nền tảng thi đấu cờ thuật toán tự động, công bằng và bảo mật tuyệt đối</p>
         </div>
 
         <div className="features-grid">
           <div className="feature-card glass-card">
             <div className="feature-icon-wrap icon-cyan">
-              <Laptop size={24} />
+              <ShieldCheck size={24} />
             </div>
-            <h3>Cụm Máy Chấm 10 Laptop</h3>
+            <h3>Sandbox Cô Lập An Toàn</h3>
             <p>
-              Cắt 1.000 trận đấu mỗi vòng thành 10 phần độc lập, xử lý song song trên 10 máy laptop sinh viên. Mỗi vòng hoàn tất chỉ trong 2–3 phút chấm thi.
+              Mỗi bot chạy trong một tiến trình riêng biệt không mạng, tước bỏ biến môi trường nhạy cảm, dập tắt timeout 2.0s bằng <code>proc.kill()</code> dứt điểm.
             </p>
           </div>
 
           <div className="feature-card glass-card">
             <div className="feature-icon-wrap icon-purple">
-              <Cpu size={24} />
+              <Swords size={24} />
             </div>
-            <h3>Sandbox Subprocess Cô Lập</h3>
+            <h3>Hệ Thống Thụy Sĩ 13 Vòng</h3>
             <p>
-              Mỗi bot chạy trong một tiến trình riêng biệt không mạng, tước bỏ biến môi trường nhạy cảm, dập tắt vòng lặp vô tận bằng <code>proc.kill()</code> dứt điểm.
+              Thuật toán ghép cặp Swiss System chuẩn FIDE. Thí sinh thi đấu đủ 13 vòng gặp đối thủ cùng trình độ, không bị loại sớm, phản ánh trung thực thực lực.
             </p>
           </div>
 
@@ -695,9 +695,9 @@ export function HomePage() {
             <div className="feature-icon-wrap icon-rose">
               <Radio size={24} />
             </div>
-            <h3>Xuất Bản Tĩnh Jamstack CDN</h3>
+            <h3>Trực Tiếp &amp; Replay Tương Tác</h3>
             <p>
-              Bảng xếp hạng và kết quả xuất thành các file JSON tĩnh đẩy lên Cloudflare Pages. 2.000 sinh viên F5 cùng lúc mượt mà với độ trễ dưới 50ms, chi phí 0đ.
+              Tường thuật trực tiếp các bàn đấu tâm điểm theo thời gian thực và xem lại chi tiết từng nước cờ với bàn cờ đồ họa SVG tương tác cao.
             </p>
           </div>
 
@@ -705,9 +705,9 @@ export function HomePage() {
             <div className="feature-icon-wrap icon-amber">
               <GitBranch size={24} />
             </div>
-            <h3>GitHub + Google Form</h3>
+            <h3>Liêm Chính Học Thuật Tự Động</h3>
             <p>
-              Sinh viên nộp link kho mã nguồn cá nhân qua biểu mẫu. Không tốn dung lượng lưu trữ Drive, bảo toàn toàn bộ lịch sử commit phục vụ chấm điểm.
+              Tự động đối chiếu cây cú pháp trừu tượng AST qua MOSS Stanford, kiểm tra lịch sử Git commit minh bạch và phỏng vấn kỹ thuật Top 32.
             </p>
           </div>
         </div>
