@@ -21,7 +21,7 @@ import io
 import shutil
 from typing import List, Optional, Dict, Any, Callable, Tuple
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form, BackgroundTasks, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -35,6 +35,7 @@ from app.services.sandbox import load_bot_from_file
 from app.services.live_runner import run_live_match_async
 from app.services.starter_bots.greedy_bot import choose_move as greedy_choose_move
 from app.services.starter_bots.random_bot import choose_move as random_choose_move
+from app.services.pipeline_service import global_pipeline_progress, run_batch_import_pipeline
 from app.websocket.manager import ws_manager
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -1208,8 +1209,120 @@ def trigger_swiss_publish(req: SwissPublishRequest):
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# ── MỤC 1: IMPORT & THU THẬP BÀI THI TỪ GOOGLE FORM CSV ─────────────────────
+# ── MỤC 1: PIPELINE TIẾP NHẬN & THẨM ĐỊNH BÀI THI BẤT ĐỒNG BỘ ─────────────────
 # ════════════════════════════════════════════════════════════════════════════
+
+@router.post("/pipeline/start")
+async def start_batch_import_pipeline(
+    background_tasks: BackgroundTasks,
+    file: Optional[UploadFile] = File(None),
+    csv_text: Optional[str] = Form(None),
+    deadline: Optional[str] = Form(None),
+):
+    """
+    Khởi động pipeline bất đồng bộ tiếp nhận bài nộp từ Google Form:
+      1. Đọc CSV Google Form.
+      2. Khử trùng lặp theo MSSV, chỉ giữ bản ghi cuối cùng <= deadline.
+      3. Clone song song đa luồng và checkout commit trước deadline.
+      4. Thẩm định 4 tiêu chí cốt lõi và chạy thử Sandbox.
+      5. Cập nhật User & Submission vào DB.
+    """
+    raw_content = ""
+    if file:
+        file_bytes = await file.read()
+        raw_content = file_bytes.decode("utf-8-sig", errors="ignore")
+    elif csv_text:
+        raw_content = csv_text.strip()
+    else:
+        raise HTTPException(status_code=400, detail="Vui lòng tải lên file CSV hoặc dán nội dung CSV từ Google Form!")
+
+    if not raw_content.strip():
+        raise HTTPException(status_code=400, detail="Nội dung CSV rỗng!")
+
+    task_id = str(uuid.uuid4())
+    background_tasks.add_task(
+        run_batch_import_pipeline,
+        raw_csv=raw_content,
+        deadline_str=deadline,
+        task_id=task_id,
+    )
+
+    return {
+        "success": True,
+        "task_id": task_id,
+        "deadline": deadline,
+        "message": "Đã khởi động tiến trình tải và thẩm định bài thi bất đồng bộ thành công!",
+    }
+
+
+@router.get("/pipeline/status")
+def get_batch_pipeline_status():
+    """Lấy tiến độ thời gian thực của pipeline tải và thẩm định hàng loạt."""
+    return global_pipeline_progress.get_status()
+
+
+@router.get("/pipeline/export-report")
+def export_pipeline_validation_report(db: Session = Depends(get_db)):
+    """
+    Xuất file CSV báo cáo đối soát tổng thể toàn bộ thí sinh:
+    MSSV, Họ tên, Email, Lớp, Link Repo, Trạng thái, Commit Hash, Số Commit, Chi tiết Lỗi.
+    """
+    users = db.query(User).filter(User.is_admin == False).order_by(User.student_id).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "MSSV",
+        "Họ và Tên",
+        "Email",
+        "Lớp",
+        "Tên Bot",
+        "Link GitHub Repository",
+        "Trạng Thái Thẩm Định",
+        "Hợp Lệ",
+        "Mã Commit Chốt",
+        "Thời Gian Commit",
+        "Số Lượng Commit",
+        "Chi Tiết Lỗi / Cảnh Báo"
+    ])
+
+    for u in users:
+        sub = db.query(Submission).filter(Submission.user_id == u.id).order_by(Submission.submitted_at.desc()).first()
+        status_str = sub.status if sub else "not_submitted"
+        is_valid_str = "HỢP LỆ" if (sub and sub.status == "valid") else "LỖI" if sub else "CHƯA NỘP"
+        test_run = sub.test_run_result if sub else {}
+        commit_hash = test_run.get("checked_out_commit", "") if test_run else ""
+        commit_date = test_run.get("commit_date", "") if test_run else ""
+        commit_count = sub.commit_count if sub else u.commit_count
+        val = sub.validation if sub else {}
+        errors = "; ".join(val.get("errors", [])) if val else ""
+        warnings = "; ".join(val.get("warnings", [])) if val else ""
+        err_full = f"Lỗi: {errors}" if errors else ""
+        if warnings:
+            err_full += f" | Cảnh báo: {warnings}"
+
+        writer.writerow([
+            u.student_id or "",
+            u.name or "",
+            u.email or "",
+            u.class_name or "",
+            u.bot_name or "",
+            (sub.github_repo_url if sub else u.github_repo_url) or "",
+            status_str,
+            is_valid_str,
+            commit_hash,
+            commit_date,
+            commit_count,
+            err_full,
+        ])
+
+    csv_data = "\ufeff" + output.getvalue()
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=bao_cao_doi_soat_thi_sinh_ottv2.csv"}
+    )
+
 
 @router.post("/import/google-form")
 async def import_google_form_csv(

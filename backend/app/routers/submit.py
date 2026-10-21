@@ -304,3 +304,84 @@ def test_run_submission(
         duration_ms=match_res.duration_ms,
         reason=match_res.reason,
     )
+
+
+# ── Public Student Submission Lookup ─────────────
+
+@router.get("/lookup")
+def lookup_student_submission(student_id: str, db: Session = Depends(get_db)):
+    """
+    Cổng tra cứu công khai bài thi dành cho thí sinh:
+    Nhập Mã Sinh Viên (MSSV) để xem tình trạng thẩm định bài nộp,
+    mã commit hash chốt, thời gian commit, và hướng dẫn sửa lỗi nếu có.
+    """
+    s_clean = student_id.strip()
+    if not s_clean:
+        raise HTTPException(status_code=400, detail="Vui lòng cung cấp Mã Sinh Viên để tra cứu")
+
+    # Tìm user theo student_id hoặc email
+    user = (
+        db.query(User)
+        .filter((User.student_id == s_clean) | (User.email == s_clean))
+        .first()
+    )
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Chưa tìm thấy thông tin thí sinh với MSSV '{s_clean}'. Hãy kiểm tra lại MSSV hoặc biểu mẫu Google Form bạn đã nộp."
+        )
+
+    # Tìm submission active của user
+    sub = (
+        db.query(Submission)
+        .filter(Submission.user_id == user.id)
+        .order_by(Submission.submitted_at.desc())
+        .first()
+    )
+
+    if not sub:
+        return {
+            "found": True,
+            "has_submission": False,
+            "student_id": user.student_id,
+            "name": user.name,
+            "class_name": user.class_name,
+            "github_repo_url": user.github_repo_url,
+            "status": "not_submitted",
+            "message": "Thí sinh có tên trong danh sách nhưng chưa ghi nhận bài nộp hoặc link repo.",
+        }
+
+    val = sub.validation or {}
+    test_run = sub.test_run_result or {}
+
+    # Che bớt email để bảo vệ thông tin riêng tư
+    masked_email = user.email
+    if "@" in user.email:
+        u_part, domain = user.email.split("@", 1)
+        if len(u_part) > 3:
+            masked_email = u_part[:2] + "***" + u_part[-1:] + "@" + domain
+
+    return {
+        "found": True,
+        "has_submission": True,
+        "student_id": user.student_id,
+        "name": user.name,
+        "masked_email": masked_email,
+        "class_name": user.class_name,
+        "bot_name": user.bot_name or "OTT_Bot",
+        "github_repo_url": sub.github_repo_url or user.github_repo_url,
+        "status": sub.status,
+        "is_valid": sub.status == "valid",
+        "commit_hash": test_run.get("checked_out_commit"),
+        "commit_date": test_run.get("commit_date"),
+        "commit_count": sub.commit_count,
+        "validation_details": val.get("details", {
+            "bot_py": False,
+            "choose_move_fn": False,
+            "report_md": False,
+            "git_log": False,
+        }),
+        "errors": val.get("errors", []),
+        "warnings": val.get("warnings", []),
+        "submitted_at": sub.submitted_at,
+    }

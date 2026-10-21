@@ -76,6 +76,65 @@ export function AdminDashboardPage() {
   const [importResult, setImportResult] = useState(null);
   const fileInputRef = useRef(null);
 
+  // Pipeline Ingestion & Time Freeze State
+  const [deadlineInput, setDeadlineInput] = useState('');
+  const [pipelineStatus, setPipelineStatus] = useState(null);
+  const [isPipelineRunning, setIsPipelineRunning] = useState(false);
+
+  // Polling pipeline status when on import tab
+  useEffect(() => {
+    let timer = null;
+    if (activeAdminTab === 'import') {
+      const checkStatus = async () => {
+        try {
+          const st = await apiClient.get('/admin/pipeline/status');
+          setPipelineStatus(st);
+          if (st.status === 'running') {
+            setIsPipelineRunning(true);
+          } else {
+            setIsPipelineRunning(false);
+          }
+        } catch {
+          // ignore
+        }
+      };
+
+      checkStatus();
+      timer = setInterval(checkStatus, 2500);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [activeAdminTab, isPipelineRunning]);
+
+  const handleStartPipeline = async () => {
+    if (!csvFile && !csvText.trim()) {
+      showToast('Vui lòng chọn file CSV hoặc dán nội dung CSV từ Google Form!', 'error');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      if (csvFile) formData.append('file', csvFile);
+      if (csvText.trim()) formData.append('csv_text', csvText.trim());
+      if (deadlineInput) formData.append('deadline', deadlineInput);
+
+      showToast('Đang khởi động Pipeline: Khử trùng lặp, Clone song song & Khóa commit...', 'info');
+      const res = await apiClient.post('/admin/pipeline/start', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      setIsPipelineRunning(true);
+      showToast(res.message || 'Pipeline đang chạy bất đồng bộ trong nền!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi khởi động Pipeline', 'error');
+    }
+  };
+
+  const handleExportValidationReport = () => {
+    window.open('/api/admin/pipeline/export-report', '_blank');
+  };
+
   // Top 32 Obstacles Config State
   const [top32Obstacles, setTop32Obstacles] = useState(['d4', 'd6', 'f4', 'f6', 'e5']);
   const [top32Announcement, setTop32Announcement] = useState('');
@@ -689,20 +748,90 @@ export function AdminDashboardPage() {
               />
             </div>
 
+            <div style={{ marginTop: '1.25rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+              <div>
+                <label htmlFor="pipeline-deadline-input" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.35rem' }}>
+                  ⏰ Hạn Chót Nộp Bài (Deadline Freeze):
+                </label>
+                <input
+                  id="pipeline-deadline-input"
+                  type="datetime-local"
+                  className="form-control"
+                  style={{ fontSize: '0.85rem' }}
+                  value={deadlineInput}
+                  onChange={(e) => setDeadlineInput(e.target.value)}
+                />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                  Hệ thống tự động lọc bản nộp cuối trước giờ này và <code>git checkout</code> commit hợp lệ trước deadline.
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={handleExportValidationReport}
+                  title="Xuất danh sách thí sinh, mã commit chốt và tình trạng hợp lệ ra file CSV"
+                  style={{ width: '100%', fontSize: '0.85rem' }}
+                >
+                  <Download size={15} />
+                  <span>Xuất Báo Cáo Đối Soát (.CSV)</span>
+                </button>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                💡 Gợi ý: Bạn có thể chạy script <code>python scripts/tournament/1_clone_from_sheets.py --csv data.csv</code> để tải toàn bộ mã nguồn về máy.
-              </span>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleStartPipeline}
+                disabled={isPipelineRunning}
+                style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)', border: 'none' }}
+              >
+                <Zap size={16} className={isPipelineRunning ? 'animate-spin' : ''} />
+                <span>{isPipelineRunning ? 'Pipeline Đang Chạy Nền...' : '⚡ Khởi Động Pipeline Toàn Diện (Clone & Freeze)'}</span>
+              </button>
+
               <button
                 type="submit"
-                className="btn btn-primary"
-                disabled={isImporting}
+                className="btn btn-outline"
+                disabled={isImporting || isPipelineRunning}
               >
                 <CheckCircle2 size={16} className={isImporting ? 'animate-spin' : ''} />
-                <span>{isImporting ? 'Đang Phân Tích & Nạp...' : 'Xác Nhận Nạp Thí Sinh Vào Hệ Thống'}</span>
+                <span>{isImporting ? 'Đang Nạp...' : 'Nạp Nhanh Vào CSDL (Sync)'}</span>
               </button>
             </div>
           </form>
+
+          {/* Pipeline Live Progress Box */}
+          {pipelineStatus && pipelineStatus.status !== 'idle' && (
+            <div style={{ marginTop: '1.5rem', padding: '1.25rem', background: 'rgba(15, 23, 42, 0.65)', border: '1px solid var(--border-subtle)', borderRadius: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <RefreshCw size={16} className={pipelineStatus.status === 'running' ? 'animate-spin' : ''} color="var(--primary-400)" />
+                  <strong>Tiến Trình Pipeline Thẩm Định Hàng Loạt</strong>
+                </div>
+                <span style={{ fontSize: '0.8rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: pipelineStatus.status === 'completed' ? 'rgba(16,185,129,0.15)' : 'rgba(99,102,241,0.15)', color: pipelineStatus.status === 'completed' ? '#10b981' : '#818cf8', fontWeight: 600 }}>
+                  {pipelineStatus.status === 'running' ? 'ĐANG CHẠY BẤT ĐỒNG BỘ' : pipelineStatus.status === 'completed' ? 'ĐÃ HOÀN THÀNH' : 'THẤT BẠI'}
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', overflow: 'hidden', margin: '0.75rem 0' }}>
+                <div style={{ width: `${pipelineStatus.percentage || 0}%`, height: '100%', background: 'linear-gradient(90deg, #4f46e5, #06b6d4)', transition: 'width 0.3s ease' }} />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                <span>Đã xử lý: <strong>{pipelineStatus.processed} / {pipelineStatus.total}</strong> ({pipelineStatus.percentage}%)</span>
+                <span>Hợp lệ: <strong style={{ color: '#10b981' }}>{pipelineStatus.valid_count}</strong> • Lỗi: <strong style={{ color: '#ef4444' }}>{pipelineStatus.invalid_count}</strong></span>
+              </div>
+
+              {pipelineStatus.current_student && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Đang xử lý sinh viên: <code>{pipelineStatus.current_student}</code>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Import Preview Table */}
           {importResult && (

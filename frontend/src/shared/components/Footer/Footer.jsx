@@ -76,6 +76,9 @@ export function Footer() {
             <li>
               <Link to="/submit">Cổng Nộp Bot &amp; Kiểm Thử</Link>
             </li>
+            <li>
+              <Link to="/lookup">Tra Cứu Gói Bài Thi (MSSV)</Link>
+            </li>
           </ul>
         </div>
 

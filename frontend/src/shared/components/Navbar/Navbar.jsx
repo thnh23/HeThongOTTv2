@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Volume2,
   VolumeX,
+  Search,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StarterKitModal } from '../StarterKitModal/index.js';
@@ -90,6 +91,12 @@ export function Navbar() {
                 <NavLink to="/submit" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                   <Upload size={16} />
                   <span>Cổng Nộp Bài</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/lookup" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                  <Search size={16} />
+                  <span>Tra Cứu</span>
                 </NavLink>
               </li>
               {user?.is_admin && (
@@ -203,6 +210,10 @@ export function Navbar() {
               <NavLink to="/submit" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>
                 <Upload size={18} />
                 <span>Cổng Nộp Bài (Submission Portal)</span>
+              </NavLink>
+              <NavLink to="/lookup" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>
+                <Search size={18} />
+                <span>Tra Cứu Bài Thi (Lookup)</span>
               </NavLink>
               {isAuthenticated && (
                 <NavLink to="/profile" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>

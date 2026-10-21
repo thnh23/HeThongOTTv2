@@ -1,0 +1,482 @@
+/* LookupPage CSS — Trang Tra Cứu Tình Trạng Bài Thi OTTv2 */
+
+.lookup-page {
+  padding: 2.5rem 1rem 4rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Header Banner */
+.lookup-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.lookup-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary-300, #a5b4fc);
+  margin-bottom: 1rem;
+}
+
+.lookup-title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.lookup-subtitle {
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 640px;
+  margin: 0 auto 1.75rem;
+}
+
+/* Search Bar */
+.lookup-search-form {
+  display: flex;
+  gap: 0.75rem;
+  max-width: 580px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+.lookup-input-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.lookup-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted, #64748b);
+  pointer-events: none;
+}
+
+.lookup-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+  color: var(--text-primary, #f8fafc);
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.lookup-input:focus {
+  border-color: var(--primary-500, #6366f1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.lookup-submit-btn {
+  padding: 0.75rem 1.4rem;
+  font-weight: 600;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+/* Loading Box */
+.lookup-loading-box {
+  padding: 3rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--text-secondary);
+}
+
+/* Not Found Box */
+.lookup-notfound-box {
+  padding: 2.5rem 2rem;
+  text-align: center;
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  background: rgba(244, 63, 94, 0.04);
+}
+
+.lookup-notfound-box h3 {
+  font-size: 1.3rem;
+  margin: 1rem 0 0.5rem;
+  color: var(--text-primary);
+}
+
+.notfound-desc {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.notfound-guide {
+  text-align: left;
+  max-width: 520px;
+  margin: 0 auto;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.notfound-guide strong {
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.notfound-guide ul {
+  padding-left: 1.2rem;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Result Card */
+.lookup-card {
+  padding: 2rem;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+}
+
+/* Status Banner */
+.lookup-status-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.75rem;
+}
+
+.banner-valid {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.banner-invalid {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.banner-icon {
+  margin-top: 0.15rem;
+}
+
+.banner-text h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.banner-valid .banner-text h3 {
+  color: #10b981;
+}
+
+.banner-invalid .banner-text h3 {
+  color: #f59e0b;
+}
+
+.banner-text p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Candidate Info Grid */
+.candidate-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.bot-tag {
+  display: inline-block;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary-300);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  width: fit-content;
+}
+
+/* Commit Lock Box */
+.commit-lock-box {
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  margin-bottom: 1.75rem;
+}
+
+.commit-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.repo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--primary-400);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.repo-link:hover {
+  color: var(--primary-300);
+  text-decoration: underline;
+}
+
+.commit-details-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  font-size: 0.85rem;
+}
+
+.commit-metric {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.metric-title {
+  color: var(--text-secondary);
+}
+
+.commit-hash-code {
+  padding: 0.2rem 0.45rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+  color: var(--emerald-400, #34d399);
+  font-weight: 600;
+}
+
+.commit-badge {
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-green {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-yellow {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Criteria Cards */
+.criteria-checklist-section {
+  margin-bottom: 1.75rem;
+}
+
+.checklist-heading {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  color: var(--text-primary);
+}
+
+.criteria-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.criteria-card {
+  padding: 1.1rem;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: transform 0.15s ease;
+}
+
+.criteria-card:hover {
+  transform: translateY(-2px);
+}
+
+.criteria-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.3rem;
+}
+
+.card-pass {
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: var(--text-primary);
+}
+
+.card-pass .criteria-card-top {
+  color: #10b981;
+}
+
+.card-pass span {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.card-fail {
+  background: rgba(244, 63, 94, 0.06);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  color: var(--text-primary);
+}
+
+.card-fail .criteria-card-top {
+  color: #f43f5e;
+}
+
+.card-fail span {
+  font-size: 0.8rem;
+  color: #f43f5e;
+}
+
+/* Errors Box */
+.lookup-errors-box {
+  padding: 1.25rem;
+  background: rgba(244, 63, 94, 0.06);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
+}
+
+.box-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--rose-400);
+}
+
+.errors-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.errors-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+.how-to-fix {
+  padding: 0.85rem 1rem;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.how-to-fix ol {
+  padding-left: 1.2rem;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.how-to-fix ol li {
+  margin-bottom: 0.3rem;
+}
+
+/* Warnings Box */
+.lookup-warnings-box {
+  padding: 1rem 1.25rem;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.lookup-warnings-box .box-title {
+  color: var(--amber-400);
+}
+
+.warnings-list {
+  padding-left: 1.2rem;
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .lookup-search-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lookup-title {
+    font-size: 1.5rem;
+  }
+
+  .candidate-info-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .criteria-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
