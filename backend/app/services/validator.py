@@ -240,6 +240,8 @@ def validate_submission_zip(
             break
 
     details["git_log"] = git_found
+    if tier and str(tier).upper() == "C" and not git_found:
+        errors.append("Bảng C yêu cầu bắt buộc phải có git_log.txt hoặc thư mục .git để xác thực tiến trình code.")
 
     # 8. Quét bảo mật API Key (T09)
     for k, path in files_map.items():

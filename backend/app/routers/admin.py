@@ -46,12 +46,32 @@ class ReviewGradeRequest(BaseModel):
     notes: Optional[str] = Field(None, description="Nhận xét của giảng viên")
 
 
+class UpdateUserAdminRequest(BaseModel):
+    name: Optional[str] = Field(None, description="Họ và tên thí sinh")
+    student_id: Optional[str] = Field(None, description="Mã sinh viên UET")
+    email: Optional[str] = Field(None, description="Email VNU / cá nhân")
+    class_name: Optional[str] = Field(None, description="Lớp khóa học")
+    github_repo_url: Optional[str] = Field(None, description="URL Repository GitHub")
+    bot_name: Optional[str] = Field(None, description="Tên định danh Bot")
+    is_top32: Optional[bool] = Field(None, description="Xác nhận Top 32 hạt giống vòng Chung Kết")
+    is_active: Optional[bool] = Field(None, description="Trạng thái kích hoạt tài khoản")
+    is_admin: Optional[bool] = Field(None, description="Quyền quản trị viên")
+    score_bot: Optional[float] = Field(None, ge=0, le=100, description="Điểm hiệu quả bot (0-100)")
+    score_ai_profile: Optional[float] = Field(None, ge=0, le=100, description="Điểm hồ sơ AI (0-100)")
+    score_interview: Optional[float] = Field(None, ge=0, le=100, description="Điểm vấn đáp (0-100)")
+    score_report: Optional[float] = Field(None, ge=0, le=100, description="Điểm báo cáo (0-100)")
+    test_score: Optional[float] = Field(None, description="Điểm test đầu vào")
+    commit_count: Optional[int] = Field(None, description="Số lượng Git commits")
+    moss_similarity: Optional[float] = Field(None, description="Tỉ lệ trùng lặp MOSS AST (%)")
+    notes: Optional[str] = Field(None, description="Ghi chú đánh giá của Hội đồng")
+
+
 class ChangeTierRequest(BaseModel):
-    tier: str = Field(..., description="Bảng thi đấu mới: 'A', 'B', 'C'")
+    tier: str = Field(..., description="Bảng thi đấu mới: 'A', 'B', 'C' hoặc 'SWISS'")
 
 
 class TournamentStartRequest(BaseModel):
-    tier: str = Field(..., description="Bảng thi đấu cần khởi chạy: 'A', 'B', 'C'")
+    tier: str = Field(..., description="Bảng thi đấu cần khởi chạy: 'A', 'B', 'C' hoặc 'SWISS'")
     move_delay_sec: float = Field(0.5, ge=0.05, le=3.0, description="Độ trễ mỗi nước đi cho WebSocket live")
 
 
@@ -78,11 +98,7 @@ def calculate_final_score(user: User) -> float:
 def get_admin_stats(db: Session = Depends(get_db)):
     """Thống kê tổng quan cho Admin Dashboard."""
     total_users = db.query(User).count()
-    tier_counts = {
-        "A": db.query(User).filter(User.tier == "A").count(),
-        "B": db.query(User).filter(User.tier == "B").count(),
-        "C": db.query(User).filter(User.tier == "C").count(),
-    }
+    top32_count = db.query(User).filter(User.is_top32 == True).count()
 
     total_submissions = db.query(Submission).count()
     valid_submissions = db.query(Submission).filter(Submission.status == "valid").count()
@@ -97,7 +113,7 @@ def get_admin_stats(db: Session = Depends(get_db)):
     return {
         "users": {
             "total": total_users,
-            "tier_counts": tier_counts,
+            "top32_count": top32_count,
             "reviewed_count": reviewed_users,
         },
         "submissions": {
@@ -115,19 +131,13 @@ def get_admin_stats(db: Session = Depends(get_db)):
 
 @router.get("/users")
 def get_admin_users(
-    tier: Optional[str] = Query(None, description="Lọc theo bảng"),
     db: Session = Depends(get_db),
 ):
-    """Lấy danh sách toàn bộ thí sinh cùng bảng điểm chi tiết."""
-    query = db.query(User)
-    if tier:
-        query = query.filter(User.tier == tier.upper())
-    
-    users = query.order_by(User.registered_at.desc()).all()
+    """Lấy danh sách toàn bộ thí sinh cùng bảng điểm và thông tin chi tiết."""
+    users = db.query(User).order_by(User.registered_at.desc()).all()
 
     result = []
     for u in users:
-        # Lấy submission active nếu có
         active_sub = (
             db.query(Submission)
             .filter(Submission.user_id == u.id, Submission.is_active == True)
@@ -138,14 +148,28 @@ def get_admin_users(
             "id": u.id,
             "name": u.name,
             "email": u.email,
-            "tier": u.tier,
+            "student_id": u.student_id or (u.email.split("@")[0] if "@" in u.email else u.id[:8]),
+            "class_name": u.class_name or "QH-2022-I/CQ",
+            "github_repo_url": u.github_repo_url,
+            "bot_name": u.bot_name or f"Bot_{u.name.replace(' ', '_')}",
+            "tier": u.tier or "SWISS",
+            "is_top32": u.is_top32,
+            "swiss_wins": u.swiss_wins,
+            "swiss_points": u.swiss_points,
+            "buchholz": u.buchholz,
+            "sonneborn_berger": u.sonneborn_berger,
+            "commit_count": u.commit_count,
+            "moss_similarity": u.moss_similarity,
+            "notes": u.notes,
             "test_score": u.test_score,
             "score_bot": u.score_bot,
             "score_ai_profile": u.score_ai_profile,
             "score_interview": u.score_interview,
             "score_report": u.score_report,
             "final_score": calculate_final_score(u),
+            "projected_grade_10": getattr(u, "projected_grade_10", "7.0"),
             "is_admin": u.is_admin,
+            "is_active": u.is_active,
             "has_submission": active_sub is not None,
             "submission_id": active_sub.id if active_sub else None,
             "submission_status": active_sub.status if active_sub else "none",
@@ -155,22 +179,107 @@ def get_admin_users(
     return result
 
 
+@router.put("/users/{user_id}")
+def update_user_info_admin(
+    user_id: str,
+    req: UpdateUserAdminRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Cải tiến quản lý User: Cho phép Admin chỉnh sửa toàn diện thông tin thí sinh:
+    Họ tên, MSV, Email, Lớp, GitHub repo, Tên bot, Điểm số, Trạng thái Top 32, Nhận xét.
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Không tìm thấy thí sinh")
+
+    if req.name is not None:
+        user.name = req.name.strip()
+    if req.student_id is not None:
+        user.student_id = req.student_id.strip()
+    if req.email is not None:
+        user.email = req.email.strip()
+    if req.class_name is not None:
+        user.class_name = req.class_name.strip()
+    if req.github_repo_url is not None:
+        user.github_repo_url = req.github_repo_url.strip()
+    if req.bot_name is not None:
+        user.bot_name = req.bot_name.strip()
+    if req.is_top32 is not None:
+        user.is_top32 = req.is_top32
+    if req.is_active is not None:
+        user.is_active = req.is_active
+    if req.is_admin is not None:
+        user.is_admin = req.is_admin
+    if req.score_bot is not None:
+        user.score_bot = req.score_bot
+    if req.score_ai_profile is not None:
+        user.score_ai_profile = req.score_ai_profile
+    if req.score_interview is not None:
+        user.score_interview = req.score_interview
+    if req.score_report is not None:
+        user.score_report = req.score_report
+    if req.test_score is not None:
+        user.test_score = req.test_score
+    if req.commit_count is not None:
+        user.commit_count = req.commit_count
+    if req.moss_similarity is not None:
+        user.moss_similarity = req.moss_similarity
+    if req.notes is not None:
+        user.notes = req.notes.strip()
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "success": True,
+        "message": f"Đã cập nhật thông tin thí sinh {user.name} ({user.student_id or user.email}) thành công!",
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "student_id": user.student_id,
+            "email": user.email,
+            "class_name": user.class_name,
+            "github_repo_url": user.github_repo_url,
+            "bot_name": user.bot_name,
+            "is_top32": user.is_top32,
+            "final_score": calculate_final_score(user),
+            "projected_grade_10": getattr(user, "projected_grade_10", "7.0"),
+            "notes": user.notes,
+        }
+    }
+
+
+@router.delete("/users/{user_id}")
+def delete_user_admin(
+    user_id: str,
+    db: Session = Depends(get_db),
+):
+    """Xóa thí sinh khỏi hệ thống quản lý."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Không tìm thấy thí sinh")
+
+    # Xóa các submission liên quan
+    db.query(Submission).filter(Submission.user_id == user_id).delete()
+    db.delete(user)
+    db.commit()
+
+    return {"success": True, "message": f"Đã xóa thành công thí sinh {user.name} ({user_id})"}
+
+
 @router.put("/users/{user_id}/tier")
 def update_user_tier(
     user_id: str,
     req: ChangeTierRequest,
     db: Session = Depends(get_db),
 ):
-    """Điều chỉnh phân bảng thí sinh (A/B/C)."""
+    """Endpoint tương thích ngược."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Không tìm thấy thí sinh")
 
-    new_tier = req.tier.upper()
-    if new_tier not in ["A", "B", "C"]:
-        raise HTTPException(status_code=400, detail="Bảng thi đấu phải là A, B hoặc C")
-
-    user.tier = new_tier
+    user.tier = req.tier.upper()
     db.commit()
     db.refresh(user)
 
@@ -190,12 +299,13 @@ def grade_user_review(
     db: Session = Depends(get_db),
 ):
     """
-    Ghi nhận điểm thi của thí sinh:
+    Cải tiến chức năng chấm điểm Hội đồng Giảng viên:
       - Hồ sơ AI (Prompt log) (0-100)
-      - Vấn đáp hiểu code (0-100)
+      - Vấn đáp hiểu code Top 32 (0-100)
       - Báo cáo thuật toán (0-100)
-      - Điểm hiệu quả bot (nếu chấm thủ công)
-    Tự động tính điểm tổng kết có trọng số theo bảng.
+      - Điểm hiệu quả bot
+      - Ghi chú nhận xét của Hội đồng
+    Tự động tính điểm tổng kết học phần và điểm chữ đề xuất.
     """
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -206,6 +316,8 @@ def grade_user_review(
     user.score_report = req.score_report
     if req.score_bot is not None:
         user.score_bot = req.score_bot
+    if req.notes is not None:
+        user.notes = req.notes.strip()
 
     db.commit()
     db.refresh(user)
@@ -216,15 +328,17 @@ def grade_user_review(
         "success": True,
         "user_id": user.id,
         "name": user.name,
-        "tier": user.tier,
+        "student_id": user.student_id,
         "scores": {
             "score_bot": user.score_bot,
             "score_ai_profile": user.score_ai_profile,
             "score_interview": user.score_interview,
             "score_report": user.score_report,
             "final_score": final_score,
+            "projected_grade_10": getattr(user, "projected_grade_10", "7.0"),
         },
-        "weights": TIER_WEIGHTS.get(user.tier, TIER_WEIGHTS['A']),
+        "notes": user.notes,
+        "weights": TOURNAMENT_WEIGHTS,
     }
 
 

@@ -22,12 +22,16 @@ import {
   ArrowRight,
   ExternalLink,
   Download,
+  Edit2,
+  GitBranch,
+  Bot,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useAuth } from '@/shared/context/AuthContext.jsx';
 import { useToast } from '@/shared/context/ToastContext.jsx';
 import { StatusBadge } from '@/shared/components/StatusBadge/StatusBadge.jsx';
 import { GradeReviewModal } from '../../components/GradeReviewModal/GradeReviewModal.jsx';
+import { EditUserModal } from '../../components/EditUserModal/index.js';
 import './AdminDashboardPage.css';
 
 export function AdminDashboardPage() {
@@ -47,8 +51,9 @@ export function AdminDashboardPage() {
   const [isPairingSwiss, setIsPairingSwiss] = useState(false);
   const [isPublishingSwiss, setIsPublishingSwiss] = useState(false);
 
-  // Modal review state
+  // Modals state
   const [selectedUserForReview, setSelectedUserForReview] = useState(null);
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState(null);
   const [isSyncingData, setIsSyncingData] = useState(false);
 
   const fetchDashboardData = async () => {
@@ -79,10 +84,14 @@ export function AdminDashboardPage() {
       const matchSubmission =
         !submissionFilter ||
         (submissionFilter === 'submitted' ? u.has_submission : !u.has_submission);
+      const query = searchQuery.toLowerCase().trim();
       const matchSearch =
-        !searchQuery ||
-        u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.email?.toLowerCase().includes(searchQuery.toLowerCase());
+        !query ||
+        u.name?.toLowerCase().includes(query) ||
+        u.email?.toLowerCase().includes(query) ||
+        u.student_id?.toLowerCase().includes(query) ||
+        u.bot_name?.toLowerCase().includes(query) ||
+        u.class_name?.toLowerCase().includes(query);
       return matchSubmission && matchSearch;
     });
   }, [usersList, submissionFilter, searchQuery]);
@@ -394,13 +403,12 @@ export function AdminDashboardPage() {
           <table className="styled-table" aria-label="Bảng quản lý thí sinh">
             <thead>
               <tr>
-                <th>Thí Sinh / Email</th>
-                <th style={{ textAlign: 'center' }}>Trạng Thái</th>
+                <th>Thí Sinh / MSSV / Lớp</th>
+                <th>Bot &amp; GitHub</th>
                 <th style={{ textAlign: 'center' }}>Bài Nộp</th>
-                <th style={{ textAlign: 'center' }}>Bot</th>
-                <th style={{ textAlign: 'center' }}>Hồ Sơ AI</th>
-                <th style={{ textAlign: 'center' }}>Vấn Đáp</th>
-                <th style={{ textAlign: 'center' }}>Báo Cáo</th>
+                <th style={{ textAlign: 'center' }}>Swiss 13 Vòng</th>
+                <th style={{ textAlign: 'center' }}>Điểm HP Đề Xuất</th>
+                <th style={{ textAlign: 'center' }}>Hội Đồng Chấm (Bot / AI / VD / BC)</th>
                 <th style={{ textAlign: 'center' }}>Điểm Tổng</th>
                 <th style={{ textAlign: 'center' }}>Thao Tác</th>
               </tr>
@@ -408,7 +416,7 @@ export function AdminDashboardPage() {
             <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
                     Không tìm thấy thí sinh phù hợp
                   </td>
                 </tr>
@@ -417,43 +425,110 @@ export function AdminDashboardPage() {
                   <tr key={u.id}>
                     <td>
                       <div>
-                        <strong>{u.name}</strong>
-                        {u.is_admin && <span className="admin-tag">Admin</span>}
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{u.email}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                          <strong style={{ fontSize: '0.92rem' }}>{u.name}</strong>
+                          {u.is_top32 && (
+                            <span className="swiss-hub-badge" style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
+                              ★ TOP 32
+                            </span>
+                          )}
+                          {u.is_admin && <span className="admin-tag">Admin</span>}
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                          {u.student_id ? <code>MSSV: {u.student_id}</code> : <span style={{ color: 'var(--text-muted)' }}>Chưa có MSSV</span>}
+                          {u.class_name && <span> • {u.class_name}</span>}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{u.email}</div>
                       </div>
                     </td>
+
+                    <td>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600, color: 'var(--primary-700)' }}>
+                          <Bot size={13} />
+                          <span>{u.bot_name || 'Chưa đặt tên'}</span>
+                        </div>
+                        {u.github_repo_url ? (
+                          <a
+                            href={u.github_repo_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--cyan-400)', marginTop: '2px' }}
+                          >
+                            <GitBranch size={11} />
+                            <span>GitHub Repo</span>
+                            <ExternalLink size={10} />
+                          </a>
+                        ) : (
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Chưa liên kết</span>
+                        )}
+                      </div>
+                    </td>
+
                     <td style={{ textAlign: 'center' }}>
                       <span className={`submission-status-badge ${u.has_submission ? 'valid' : 'none'}`}>
-                        {u.has_submission ? '✓ Đủ ĐK' : 'Chờ Nộp'}
+                        {u.has_submission ? '✓ Đã Nộp' : 'Chưa Nộp'}
                       </span>
                     </td>
+
                     <td style={{ textAlign: 'center' }}>
-                      {u.has_submission ? (
-                        <span className="submission-status-badge valid">✓ Đã nộp</span>
-                      ) : (
-                        <span className="submission-status-badge none">Chưa nộp</span>
-                      )}
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                        {u.swiss_wins || 0} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>/ 13 thắng</span>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        {u.swiss_points || 0} pts
+                      </div>
                     </td>
-                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{u.score_bot || 0}</td>
-                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{u.score_ai_profile || 0}</td>
-                    <td style={{ textAlign: 'center', fontWeight: 600, color: 'var(--primary-700)' }}>
-                      {u.score_interview || 0}
+
+                    <td style={{ textAlign: 'center' }}>
+                      <span
+                        className="admin-final-score-pill"
+                        style={{
+                          background: u.projected_grade_10 >= 8.5 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(59, 130, 246, 0.12)',
+                          borderColor: u.projected_grade_10 >= 8.5 ? 'rgba(16, 185, 129, 0.35)' : 'rgba(59, 130, 246, 0.35)',
+                          color: u.projected_grade_10 >= 8.5 ? '#10b981' : '#3b82f6',
+                          fontWeight: 700,
+                        }}
+                      >
+                        {u.projected_grade_10 !== undefined && u.projected_grade_10 !== null
+                          ? `${Number(u.projected_grade_10).toFixed(1)} / 10`
+                          : '—'}
+                      </span>
                     </td>
-                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{u.score_report || 0}</td>
+
+                    <td style={{ textAlign: 'center', fontSize: '0.85rem' }}>
+                      <span style={{ color: 'var(--text-secondary)' }}>
+                        {u.score_bot || 0} • {u.score_ai_profile || 0} • {u.score_interview || 0} • {u.score_report || 0}
+                      </span>
+                    </td>
+
                     <td style={{ textAlign: 'center' }}>
                       <span className="admin-final-score-pill">
                         {u.final_score !== undefined ? u.final_score : '—'}
                       </span>
                     </td>
+
                     <td style={{ textAlign: 'center' }}>
-                      <button
-                        type="button"
-                        className="btn btn-outline btn-xs btn-review-action"
-                        onClick={() => setSelectedUserForReview(u)}
-                      >
-                        <Award size={13} />
-                        <span>Chấm Điểm</span>
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-xs"
+                          onClick={() => setSelectedUserForEdit(u)}
+                          title="Chỉnh sửa thông tin thí sinh"
+                        >
+                          <Edit2 size={12} />
+                          <span>Sửa</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-xs btn-review-action"
+                          onClick={() => setSelectedUserForReview(u)}
+                          title="Hội đồng chấm điểm và đánh giá"
+                        >
+                          <Award size={12} />
+                          <span>Chấm</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -469,9 +544,26 @@ export function AdminDashboardPage() {
           user={selectedUserForReview}
           isOpen={!!selectedUserForReview}
           onClose={() => setSelectedUserForReview(null)}
-          onSuccess={() => {
+          onGraded={() => {
             fetchDashboardData();
             setSelectedUserForReview(null);
+          }}
+        />
+      )}
+
+      {/* Edit User Modal */}
+      {selectedUserForEdit && (
+        <EditUserModal
+          user={selectedUserForEdit}
+          isOpen={!!selectedUserForEdit}
+          onClose={() => setSelectedUserForEdit(null)}
+          onUpdated={() => {
+            fetchDashboardData();
+            setSelectedUserForEdit(null);
+          }}
+          onDeleted={() => {
+            fetchDashboardData();
+            setSelectedUserForEdit(null);
           }}
         />
       )}

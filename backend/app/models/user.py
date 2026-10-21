@@ -1,10 +1,11 @@
 """
-User Model — SQLAlchemy ORM
+User Model — SQLAlchemy ORM (Swiss Tournament Standard)
 """
 
 import uuid
+from typing import Optional
 from datetime import datetime
-from sqlalchemy import String, Integer, Float, DateTime, Boolean, Enum as SAEnum
+from sqlalchemy import String, Integer, Float, DateTime, Boolean, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
@@ -19,19 +20,35 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(256), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(256), nullable=False)
 
-    # Phân bảng
-    tier: Mapped[str] = mapped_column(
-        SAEnum("A", "B", "C", name="tier_enum"), nullable=True
-    )
-    test_score: Mapped[float] = mapped_column(Float, nullable=True)
+    # Thông tin sinh viên & đề án giải đấu
+    student_id: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, index=True)
+    class_name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    github_repo_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    bot_name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
 
-    # Điểm thành phần
+    # Trường tương thích ngược
+    tier: Mapped[Optional[str]] = mapped_column(String(16), nullable=True, default="SWISS")
+    test_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+    # Thống kê giải đấu Thụy Sĩ (Swiss Tournament 13 Vòng)
+    is_top32: Mapped[bool] = mapped_column(Boolean, default=False)
+    swiss_wins: Mapped[int] = mapped_column(Integer, default=0)
+    swiss_points: Mapped[int] = mapped_column(Integer, default=0)
+    buchholz: Mapped[float] = mapped_column(Float, default=0.0)
+    sonneborn_berger: Mapped[float] = mapped_column(Float, default=0.0)
+
+    # Giám sát Liêm chính học thuật & AI (MOSS + Git commits)
+    commit_count: Mapped[int] = mapped_column(Integer, default=0)
+    moss_similarity: Mapped[float] = mapped_column(Float, default=0.0)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Điểm thành phần môn học (Thang điểm 100)
     score_bot: Mapped[float] = mapped_column(Float, default=0.0)
     score_ai_profile: Mapped[float] = mapped_column(Float, default=0.0)
     score_interview: Mapped[float] = mapped_column(Float, default=0.0)
     score_report: Mapped[float] = mapped_column(Float, default=0.0)
 
-    # Quyền
+    # Quyền & Trạng thái
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -41,13 +58,8 @@ class User(Base):
 
     @property
     def final_score(self) -> float:
-        """Tính điểm tổng kết theo trọng số từng bảng."""
-        tier = self.tier or "A"
-        weights = {
-            "A": {"bot": 0.30, "ai": 0.25, "interview": 0.30, "report": 0.15},
-            "B": {"bot": 0.40, "ai": 0.20, "interview": 0.25, "report": 0.15},
-            "C": {"bot": 0.50, "ai": 0.15, "interview": 0.20, "report": 0.15},
-        }.get(tier, {"bot": 0.30, "ai": 0.25, "interview": 0.30, "report": 0.15})
+        """Tính điểm tổng kết học phần theo trọng số chuẩn (Thang 100)."""
+        weights = {"bot": 0.40, "ai": 0.20, "interview": 0.25, "report": 0.15}
         total = (
             (self.score_bot or 0.0) * weights["bot"] +
             (self.score_ai_profile or 0.0) * weights["ai"] +
@@ -56,5 +68,21 @@ class User(Base):
         )
         return round(total, 2)
 
+    @property
+    def projected_grade_10(self) -> str:
+        """Điểm học phần đề xuất theo lũy tiến số trận thắng 13 vòng Swiss (Thang 10)."""
+        if self.is_top32:
+            return "10.0 (A+)"
+        wins = self.swiss_wins or 0
+        if wins >= 10:
+            return "9.5"
+        elif wins >= 8:
+            return "9.0"
+        elif wins >= 6:
+            return "8.5"
+        elif wins >= 4:
+            return "7.5"
+        return "6.5 – 7.0"
+
     def __repr__(self):
-        return f"<User {self.email} tier={self.tier}>"
+        return f"<User {self.email} student_id={self.student_id}>"

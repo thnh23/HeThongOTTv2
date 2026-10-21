@@ -10,15 +10,21 @@ import {
   AlertTriangle,
   RefreshCw,
   Award,
+  Zap,
+  GitBranch,
+  ShieldAlert,
+  GraduationCap,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useToast } from '@/shared/context/ToastContext.jsx';
 import './GradeReviewModal.css';
 
-const TIER_WEIGHTS = {
-  A: { bot: 30, ai: 25, interview: 30, report: 15 },
-  B: { bot: 40, ai: 20, interview: 25, report: 15 },
-  C: { bot: 50, ai: 15, interview: 20, report: 15 },
+// Trọng số học phần chuẩn hóa theo Kế hoạch Giải đấu Swiss 13 Vòng & Top 32
+const TOURNAMENT_WEIGHTS = {
+  bot: 40,       // 40% Hiệu quả thi đấu trong giải (Swiss 13 Vòng & Top 32)
+  ai: 20,        // 20% Quy trình AI & Hồ sơ Prompt (PROMPTS.md T08, Git commits, MOSS)
+  interview: 25, // 25% Vấn đáp bảo vệ thuật toán & hiểu code (5-10 phút)
+  report: 15,    // 15% Báo cáo kỹ thuật phân tích chiến thuật (REPORT.md)
 };
 
 export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
@@ -30,32 +36,48 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
   const [isSaving, setIsSaving] = useState(false);
 
   // Form scores (0 - 100)
+  const [scoreBot, setScoreBot] = useState(user?.score_bot || 0);
   const [scoreAi, setScoreAi] = useState(user?.score_ai_profile || 0);
   const [scoreInterview, setScoreInterview] = useState(user?.score_interview || 0);
   const [scoreReport, setScoreReport] = useState(user?.score_report || 0);
-  const [scoreBot, setScoreBot] = useState(user?.score_bot || 0);
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState(user?.notes || '');
 
-  const tier = user?.tier || 'A';
-  const weights = TIER_WEIGHTS[tier] || TIER_WEIGHTS.A;
-
-  // Calculate live weighted final score
+  // Calculate live weighted final score (thang 100)
   const liveFinalScore = (
-    (scoreBot * weights.bot +
-      scoreAi * weights.ai +
-      scoreInterview * weights.interview +
-      scoreReport * weights.report) /
+    (scoreBot * TOURNAMENT_WEIGHTS.bot +
+      scoreAi * TOURNAMENT_WEIGHTS.ai +
+      scoreInterview * TOURNAMENT_WEIGHTS.interview +
+      scoreReport * TOURNAMENT_WEIGHTS.report) /
     100
   ).toFixed(2);
+
+  // Điểm học phần hệ 10 quy đổi
+  const score10 = (Number(liveFinalScore) / 10).toFixed(2);
+
+  // Chuyển sang điểm chữ UET
+  const getLetterGrade = (val10) => {
+    const s = Number(val10);
+    if (s >= 9.0) return { letter: 'A+', desc: 'Xuất Sắc', color: '#10b981' };
+    if (s >= 8.5) return { letter: 'A', desc: 'Giỏi', color: '#059669' };
+    if (s >= 8.0) return { letter: 'B+', desc: 'Khá Giỏi', color: '#3b82f6' };
+    if (s >= 7.0) return { letter: 'B', desc: 'Khá', color: '#6366f1' };
+    if (s >= 6.5) return { letter: 'C+', desc: 'Trung Bình Khá', color: '#f59e0b' };
+    if (s >= 5.5) return { letter: 'C', desc: 'Trung Bình', color: '#d97706' };
+    if (s >= 4.0) return { letter: 'D', desc: 'Đạt', color: '#ef4444' };
+    return { letter: 'F', desc: 'Không Đạt', color: '#dc2626' };
+  };
+
+  const letterInfo = getLetterGrade(score10);
 
   // Load files when modal opens
   useEffect(() => {
     if (!isOpen || !user) return;
 
+    setScoreBot(user.score_bot || 0);
     setScoreAi(user.score_ai_profile || 0);
     setScoreInterview(user.score_interview || 0);
     setScoreReport(user.score_report || 0);
-    setScoreBot(user.score_bot || 0);
+    setNotes(user.notes || '');
 
     loadFiles(user);
   }, [isOpen, user]);
@@ -71,7 +93,6 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
       }
       setSubmissionFiles(data?.files || null);
     } catch {
-      // Fallback: Thử tải theo user id nếu sub id trước đó bị lỗi
       try {
         if (targetUser?.id) {
           const fallbackData = await apiClient.get(`/admin/users/${targetUser.id}/submission-files`);
@@ -87,15 +108,43 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
     }
   };
 
+  // Tự động điền điểm theo bậc thang Swiss 13 Vòng
+  const handleApplySwissSuggestion = () => {
+    const wins = user.swiss_wins || 0;
+    const isTop32 = Boolean(user.is_top32);
+
+    let baseScore = 70;
+    if (isTop32) {
+      baseScore = 100;
+    } else if (wins >= 10) {
+      baseScore = 95;
+    } else if (wins >= 8) {
+      baseScore = 90;
+    } else if (wins >= 6) {
+      baseScore = 85;
+    } else if (wins >= 4) {
+      baseScore = 75;
+    } else {
+      baseScore = 70;
+    }
+
+    setScoreBot(baseScore);
+    setScoreAi(Math.min(100, baseScore + (user.commit_count > 10 ? 5 : 0)));
+    setScoreInterview(baseScore);
+    setScoreReport(baseScore);
+
+    showToast(`Đã áp dụng thang điểm đề xuất cho ${wins} trận thắng Swiss (${baseScore}/100)!`, 'info');
+  };
+
   const handleSaveGrades = async (e) => {
     e.preventDefault();
     setIsSaving(true);
     try {
       await apiClient.post(`/admin/review/${user.id}`, {
+        score_bot: parseFloat(scoreBot) || 0,
         score_ai_profile: parseFloat(scoreAi) || 0,
         score_interview: parseFloat(scoreInterview) || 0,
         score_report: parseFloat(scoreReport) || 0,
-        score_bot: parseFloat(scoreBot) || 0,
         notes,
       });
 
@@ -112,18 +161,29 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
   if (!isOpen || !user) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
+    <div className="modal-backdrop animate-fade-in" onClick={onClose} role="dialog" aria-modal="true">
       <div className="review-modal-container" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="review-modal-header">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <h2 className="review-modal-title">Hội Đồng Chấm Điểm & Đánh Giá Thí Sinh</h2>
-              <span className={`tier-pill tier-${user.tier}`}>Bảng {user.tier}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <h2 className="review-modal-title">Hội Đồng Chấm Điểm &amp; Đánh Giá Học Phần</h2>
+              {user.is_top32 ? (
+                <span className="top32-pill" style={{ background: '#f59e0b', color: '#000', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem' }}>
+                  ★ TOP 32 CHUNG KẾT
+                </span>
+              ) : (
+                <span className="swiss-hub-badge" style={{ fontSize: '0.75rem' }}>
+                  SWISS 13 VÒNG ({user.swiss_wins || 0}W - {user.swiss_points || 0} pts)
+                </span>
+              )}
             </div>
-            <p className="review-modal-subtitle">
-              Thí sinh: <strong>{user.name}</strong> • Email: <code>{user.email}</code>
-            </p>
+            <div className="review-modal-subtitle" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.35rem' }}>
+              <span>Thí sinh: <strong>{user.name}</strong></span>
+              {user.student_id && <span>MSSV: <code>{user.student_id}</code></span>}
+              {user.class_name && <span>Lớp: <code>{user.class_name}</code></span>}
+              <span>Email: <code>{user.email}</code></span>
+            </div>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Đóng">
             <X size={20} />
@@ -169,14 +229,14 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
               {isLoadingFiles ? (
                 <div className="file-loading-state">
                   <RefreshCw className="animate-spin" size={24} />
-                  <span>Đang giải nén và tải file bài làm...</span>
+                  <span>Đang giải nén và tải bài làm của thí sinh...</span>
                 </div>
               ) : !submissionFiles ? (
                 <div className="file-empty-state">
                   <AlertTriangle size={32} color="var(--amber-400)" />
                   <p>Thí sinh chưa nộp bài hoặc file nén đang được xử lý.</p>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    Bạn vẫn có thể chấm điểm vấn đáp và lưu kết quả bên phải.
+                    Bạn vẫn có thể chấm điểm vấn đáp và lưu kết quả đánh giá ở cột bên phải.
                   </span>
                 </div>
               ) : (
@@ -201,94 +261,57 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
             <div className="grading-panel-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Award size={18} color="var(--amber-400)" />
-                <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Bảng Điểm Bảng {user.tier}</h3>
+                <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Bảng Điểm Học Phần</h3>
               </div>
               <div className="live-score-pill">
-                <span>Tổng Kết: </span>
-                <strong>{liveFinalScore} / 100</strong>
+                <span>Hệ 10: </span>
+                <strong style={{ color: letterInfo.color }}>{score10} / 10</strong>
+                <span style={{ marginLeft: '4px', fontSize: '0.85rem' }}>({letterInfo.letter})</span>
               </div>
             </div>
 
-            {/* Weights Breakdown Badge */}
-            <div className="weights-pill-banner">
-              <span>Trọng số Bảng {user.tier}: </span>
-              <span>Bot: {weights.bot}% • AI: {weights.ai}% • Vấn đáp: {weights.interview}% • Báo cáo: {weights.report}%</span>
+            {/* Weights Breakdown Banner */}
+            <div className="weights-pill-banner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div>
+                <strong>Trọng số: </strong>
+                <span>Bot: {TOURNAMENT_WEIGHTS.bot}% • AI: {TOURNAMENT_WEIGHTS.ai}% • Vấn đáp: {TOURNAMENT_WEIGHTS.interview}% • Báo cáo: {TOURNAMENT_WEIGHTS.report}%</span>
+              </div>
+              <button
+                type="button"
+                className="btn btn-outline btn-xs"
+                onClick={handleApplySwissSuggestion}
+                title="Tự động áp dụng mức điểm theo số trận thắng Swiss"
+                style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+              >
+                <Zap size={12} color="var(--amber-400)" />
+                <span>Gợi Ý Điểm Swiss</span>
+              </button>
             </div>
+
+            {/* Swiss Integrity Metrics Pill */}
+            {(user.commit_count > 0 || user.moss_similarity > 0) && (
+              <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.8rem', background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                {user.commit_count > 0 && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-secondary)' }}>
+                    <GitBranch size={13} />
+                    <span>Lịch sử: <strong>{user.commit_count} commits</strong></span>
+                  </span>
+                )}
+                {user.moss_similarity > 0 && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: user.moss_similarity > 40 ? '#ef4444' : 'var(--text-secondary)' }}>
+                    <ShieldAlert size={13} />
+                    <span>Quét MOSS: <strong>{user.moss_similarity}%</strong></span>
+                  </span>
+                )}
+              </div>
+            )}
 
             <div className="grade-inputs-list">
-              {/* Score AI Profile */}
-              <div className="grade-field">
-                <div className="grade-field-label">
-                  <label htmlFor="score-ai">1. Hồ Sơ AI (Prompt log - T08)</label>
-                  <span className="field-weight">Trọng số {weights.ai}%</span>
-                </div>
-                <div className="grade-input-wrap">
-                  <input
-                    id="score-ai"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.5"
-                    className="form-input grade-input"
-                    value={scoreAi}
-                    onChange={(e) => setScoreAi(e.target.value)}
-                    required
-                  />
-                  <span className="unit-label">/ 100</span>
-                </div>
-                <span className="grade-hint">Thang Bảng 6: Xuất sắc (90-100), Tốt (70-89), Đạt (50-69)</span>
-              </div>
-
-              {/* Score Interview */}
-              <div className="grade-field">
-                <div className="grade-field-label">
-                  <label htmlFor="score-interview">2. Vấn Đáp Hiểu Code (10 phút)</label>
-                  <span className="field-weight">Trọng số {weights.interview}%</span>
-                </div>
-                <div className="grade-input-wrap">
-                  <input
-                    id="score-interview"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.5"
-                    className="form-input grade-input"
-                    value={scoreInterview}
-                    onChange={(e) => setScoreInterview(e.target.value)}
-                    required
-                  />
-                  <span className="unit-label">/ 100</span>
-                </div>
-                <span className="grade-hint">Quy trình Bảng 7: Giải thích code, hỏi nếu đổi X, sửa nhỏ</span>
-              </div>
-
-              {/* Score Report */}
-              <div className="grade-field">
-                <div className="grade-field-label">
-                  <label htmlFor="score-report">3. Báo Cáo Tự Đánh Giá (REPORT.md)</label>
-                  <span className="field-weight">Trọng số {weights.report}%</span>
-                </div>
-                <div className="grade-input-wrap">
-                  <input
-                    id="score-report"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.5"
-                    className="form-input grade-input"
-                    value={scoreReport}
-                    onChange={(e) => setScoreReport(e.target.value)}
-                    required
-                  />
-                  <span className="unit-label">/ 100</span>
-                </div>
-              </div>
-
               {/* Score Bot */}
               <div className="grade-field">
                 <div className="grade-field-label">
-                  <label htmlFor="score-bot">4. Hiệu Quả Bot Trong Giải Đấu</label>
-                  <span className="field-weight">Trọng số {weights.bot}%</span>
+                  <label htmlFor="score-bot">1. Hiệu Quả Thi Đấu (Swiss &amp; Top 32)</label>
+                  <span className="field-weight">Trọng số {TOURNAMENT_WEIGHTS.bot}%</span>
                 </div>
                 <div className="grade-input-wrap">
                   <input
@@ -297,26 +320,98 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
                     min="0"
                     max="100"
                     step="0.5"
-                    className="form-input grade-input"
+                    className="form-control grade-input"
                     value={scoreBot}
                     onChange={(e) => setScoreBot(e.target.value)}
+                    required
                   />
                   <span className="unit-label">/ 100</span>
                 </div>
-                <span className="grade-hint">Tự động theo xếp hạng vòng tròn hoặc nhập trực tiếp</span>
+                <span className="grade-hint">
+                  {user.swiss_wins || 0} trận thắng Swiss • Điểm đề xuất lũy tiến: {user.projected_grade_10 ? `${user.projected_grade_10 * 10} điểm` : 'Chưa thi đấu'}
+                </span>
+              </div>
+
+              {/* Score AI Profile */}
+              <div className="grade-field">
+                <div className="grade-field-label">
+                  <label htmlFor="score-ai">2. Hồ Sơ Prompt &amp; Quy Trình AI (T08)</label>
+                  <span className="field-weight">Trọng số {TOURNAMENT_WEIGHTS.ai}%</span>
+                </div>
+                <div className="grade-input-wrap">
+                  <input
+                    id="score-ai"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    className="form-control grade-input"
+                    value={scoreAi}
+                    onChange={(e) => setScoreAi(e.target.value)}
+                    required
+                  />
+                  <span className="unit-label">/ 100</span>
+                </div>
+                <span className="grade-hint">Đánh giá PROMPTS.md, chat_history, quy trình phát triển và kiểm soát mã AI</span>
+              </div>
+
+              {/* Score Interview */}
+              <div className="grade-field">
+                <div className="grade-field-label">
+                  <label htmlFor="score-interview">3. Vấn Đáp Hiểu Code (5 - 10 phút)</label>
+                  <span className="field-weight">Trọng số {TOURNAMENT_WEIGHTS.interview}%</span>
+                </div>
+                <div className="grade-input-wrap">
+                  <input
+                    id="score-interview"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    className="form-control grade-input"
+                    value={scoreInterview}
+                    onChange={(e) => setScoreInterview(e.target.value)}
+                    required
+                  />
+                  <span className="unit-label">/ 100</span>
+                </div>
+                <span className="grade-hint">Giải thích thuật toán Heuristic / Minimax, thử đổi tham số hoặc sửa lỗi trực tiếp</span>
+              </div>
+
+              {/* Score Report */}
+              <div className="grade-field">
+                <div className="grade-field-label">
+                  <label htmlFor="score-report">4. Báo Cáo Kỹ Thuật (REPORT.md)</label>
+                  <span className="field-weight">Trọng số {TOURNAMENT_WEIGHTS.report}%</span>
+                </div>
+                <div className="grade-input-wrap">
+                  <input
+                    id="score-report"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    className="form-control grade-input"
+                    value={scoreReport}
+                    onChange={(e) => setScoreReport(e.target.value)}
+                    required
+                  />
+                  <span className="unit-label">/ 100</span>
+                </div>
+                <span className="grade-hint">Báo cáo kiến trúc, độ phức tạp thời gian/không gian và phân tích các ván đấu thực tế</span>
               </div>
 
               {/* Notes */}
               <div className="grade-field">
                 <label htmlFor="grade-notes" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                  Nhận xét của Giám khảo / Hội đồng:
+                  Ghi chú nhận xét của Hội đồng / Giảng viên:
                 </label>
                 <textarea
                   id="grade-notes"
-                  rows="3"
-                  className="form-input"
+                  rows={3}
+                  className="form-control"
                   style={{ width: '100%', resize: 'vertical' }}
-                  placeholder="Ghi chú đánh giá điểm mạnh, phần sửa code, thái độ trả lời..."
+                  placeholder="Ghi chú đánh giá điểm mạnh, phần phản biện, câu hỏi phỏng vấn..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
@@ -341,7 +436,7 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
                 ) : (
                   <>
                     <Save size={15} />
-                    <span>Lưu & Hoàn Tất Chấm</span>
+                    <span>Lưu Kết Quả Chấm</span>
                   </>
                 )}
               </button>
@@ -352,3 +447,5 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
     </div>
   );
 }
+
+export default GradeReviewModal;

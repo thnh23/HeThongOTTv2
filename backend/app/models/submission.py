@@ -6,7 +6,7 @@ import uuid
 import json
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import String, DateTime, Text, ForeignKey, Boolean, Enum as SAEnum
+from sqlalchemy import String, DateTime, Text, ForeignKey, Boolean, Integer, Float, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
@@ -27,8 +27,17 @@ class Submission(Base):
         default="pending",
     )
 
-    # Đường dẫn file zip
-    zip_path: Mapped[str] = mapped_column(String(512), nullable=True)
+    # Đường dẫn file zip hoặc link GitHub repo
+    zip_path: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    github_repo_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+
+    # Phiên bản Bot ('v1': Swiss 13 Vòng | 'v2': Chung kết Top 32 ô cản)
+    bot_version: Mapped[str] = mapped_column(String(16), default="v1")
+    obstacle_support: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # Liêm chính học thuật (Git commits + MOSS similarity)
+    commit_count: Mapped[int] = mapped_column(Integer, default=0)
+    moss_score: Mapped[float] = mapped_column(Float, default=0.0)
 
     # Kết quả kiểm tra cấu trúc gói nộp (JSON)
     # {bot_py, choose_move_fn, prompts_md, chat_history, report_md, git_log}
