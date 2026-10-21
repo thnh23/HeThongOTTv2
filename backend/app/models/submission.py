@@ -40,7 +40,7 @@ class Submission(Base):
     moss_score: Mapped[float] = mapped_column(Float, default=0.0)
 
     # Kết quả kiểm tra cấu trúc gói nộp (JSON)
-    # {bot_py, choose_move_fn, prompts_md, chat_history, report_md, git_log}
+    # {bot_py, choose_move_fn, report_md, git_log}
     validation_json: Mapped[str] = mapped_column(Text, default="{}")
 
     # Kết quả chạy thử bot (JSON)

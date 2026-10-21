@@ -431,70 +431,29 @@ def choose_move(state) -> Tuple[str, str]:
     return ("e2", "e3")
 '''
 
-        prompts_md = f'''# Nhật Ký Prompt Kỹ Thuật (Hồ Sơ AI — T08)
-**Thí sinh:** {student_name}  
-**Bảng đấu:** Bảng {tier}  
-**Công cụ sử dụng:** ChatGPT-4o / Claude 3.5 Sonnet
-
----
-
-### Danh sách Prompt tiêu biểu trong quá trình phát triển Bot:
-
-| STT | Thời gian | Mục tiêu kỹ thuật | Prompt gửi AI | Đánh giá kết quả từ AI | Điều chỉnh thực tế |
-| :---: | :---: | :--- | :--- | :--- | :--- |
-| **01** | 2026-10-02 | Khởi tạo cấu trúc hàm | *"Trong giải đấu cờ OTTv2 9x9, cấu trúc hàm choose_move(state) nhận vào state như thế nào và trả về format gì?"* | AI giải thích rõ đối tượng state.board và yêu cầu trả về tuple tọa độ chữ thường `("e2", "e3")`. | Áp dụng chuẩn tuple theo quy định giải. |
-| **02** | 2026-10-05 | Xử lý quy tắc ăn quân | *"Viết hàm kiểm tra quy luật Oẳn Tù Tì (Búa ăn Kéo, Kéo ăn Bao, Bao ăn Búa) và kiểm tra không đi vào ô quân mình."* | AI gợi ý dictionary ánh xạ `BEATS = {{'R': 'S', 'S': 'P', 'P': 'R'}}`. | Kiểm tra thêm điều kiện chặn khi 2 quân cùng loại. |
-| **03** | 2026-10-08 | Tối ưu chiến thuật ô đích W2 | *"Làm sao để bot nhận biết cơ hội thắng ngay khi có quân gần ô đích i9/a1?"* | AI đề xuất phân chia danh sách nước đi theo trọng số ưu tiên: Winning > Capture > Advance. | Thêm kiểm tra điều kiện ăn quân trấn giữ ô đích. |
-| **04** | 2026-10-11 | Kiểm thử và tối ưu thời gian | *"Bot bị chạy chậm khi duyệt bàn cờ, làm sao giảm thời gian dưới 200ms?"* | AI gợi ý duyệt trực tiếp qua `state.board.items()` thay vì lặp qua 81 ô. | Thời gian phản hồi giảm từ 85ms xuống còn 1.4ms. |
-'''
-
-        report_md = f'''# Báo Cáo Quá Trình Phát Triển & Tự Đánh Giá Chiến Thuật
+        report_md = f'''# Báo Cáo Phân Tích Chiến Thuật & Cấu Trúc Giải Thuật
 **Thí sinh:** {student_name}  
 **Bảng đấu:** Bảng {tier}  
 **Giải đấu:** OTTv2 Tournament 2026
 
 ---
 
-### 1. Phân tích bài toán & Ý tưởng chiến thuật
+### 1. Ý tưởng chiến thuật cốt lõi
 - Bàn cờ 9×9 với 18 quân mỗi bên (6 Búa, 6 Kéo, 6 Bao) tạo ra không gian trạng thái chiến thuật rộng lớn.
 - Chiến thuật chủ đạo của em tại Bảng {tier}:
-  1. **Tấn công chủ động & Bảo toàn lực lượng:** Tận dụng tối đa ưu thế khắc chế loại quân để tiêu diệt quân địch yếu hơn, mở đường tới điều kiện thắng W1.
-  2. **Chiến thuật đe dọa ô đích (Corner Pressure - W2):** Luôn bố trí ít nhất 1 mũi tấn công hướng về ô góc đích đối phương (`i9` cho Trắng, `a1` cho Đen).
-  3. **Kiểm soát khu vực trung tâm:** Chiếm giữ các hàng 4, 5, 6 để hạn chế tầm cơ động của đối thủ.
+  1. **Tấn công chủ động & Bảo toàn lực lượng:** Tận dụng tối đa ưu thế khắc chế loại quân (Búa ăn Kéo, Kéo ăn Bao, Bao ăn Búa) để chiếm ưu thế quân số, hướng đến điều kiện thắng W1.
+  2. **Chiến thuật kiểm soát ô góc đích (Corner Target - W2):** Thiết lập mũi tiến công đe dọa ô đích đối phương (`i9` cho Trắng, `a1` cho Đen), buộc đối thủ phải lùi quân phòng thủ.
+  3. **Kiểm soát trung lộ:** Chiếm giữ các hàng 4, 5, 6 để gia tăng tính cơ động của quân nhà và hạn chế vùng di chuyển của đối phương.
 
-### 2. Đánh giá việc ứng dụng Công cụ Trí tuệ Nhân tạo (AI)
-- **Điểm mạnh:** AI giúp đẩy nhanh quá trình sinh mã hàm kiểm tra tọa độ, hỗ trợ gỡ lỗi ngoại lệ biên (out of bounds) rất hiệu quả.
-- **Điểm cần tự khắc phục:** AI ban đầu hay nhầm lẫn luật cờ vua (cho quân nhảy nhiều ô), em đã phải liên tục đối chiếu `rules.json` để hiệu chỉnh lại logic chỉ đi 1 ô 8 hướng.
+### 2. Thiết kế thuật toán & Đánh giá hàm Heuristic
+- **Hàm đánh giá trạng thái:** Kết hợp điểm quân số (Piece Value), khoảng cách Manhattan tới ô đích của các quân tiên phong, và số lượng nước đi hợp lệ (Mobility).
+- **Thuật toán tìm kiếm:** Áp dụng Minimax với cắt tỉa Alpha-Beta độ sâu 3 (cho Bảng B/C) kết hợp cơ chế sắp xếp nước đi ưu tiên (Move Ordering: ăn quân & tiến gần ô đích duyệt trước).
+- **Kiểm soát thời gian:** Giới hạn thời gian tính toán trung bình ~2-5ms / nước đi, luôn dự phòng nước đi an toàn nếu sắp chạm ngưỡng timeout.
 
 ### 3. Kết quả thử nghiệm nội bộ
 - Thử nghiệm 30 trận với Starter Bots (RandomBot, GreedyBot): Tỷ lệ thắng đạt 86.7%.
-- Thời gian tính toán trung bình: ~2.5ms / nước đi (hoàn toàn an toàn so với giới hạn timeout).
+- Thời gian tính toán trung bình: ~2.5ms / nước đi (hoàn toàn an toàn so với giới hạn timeout 200ms).
 '''
-
-        chat_history_json = f'''{{
-  "session_id": "session-ottv2-01",
-  "topic": "Thiết kế thuật toán bot OTTv2",
-  "student": "{student_name}",
-  "tier": "{tier}",
-  "messages": [
-    {{
-      "role": "user",
-      "content": "Chào bạn, mình đang tham gia giải đấu bot OTTv2 bàn cờ 9x9. Hãy giúp mình phân tích chiến thuật ăn quân và kiểm tra nước đi hợp lệ trong Python."
-    }},
-    {{
-      "role": "assistant",
-      "content": "Chào bạn! Trong cờ OTTv2, quy tắc cốt lõi là Búa (R) ăn Kéo (S), Kéo ăn Bao (P), Bao ăn Búa (R). Quân cùng loại chặn đường nhau và không thể đi vào ô có quân cùng phe. Bạn nên sử dụng một dictionary BEATS = {{'R': 'S', 'S': 'P', 'P': 'R'}} để kiểm tra nhanh trong O(1)."
-    }},
-    {{
-      "role": "user",
-      "content": "Làm thế nào để ưu tiên nước đi vào ô góc đích i9 và a1?"
-    }},
-    {{
-      "role": "assistant",
-      "content": "Bạn hãy định nghĩa WHITE_GOAL = 'i9' và BLACK_GOAL = 'a1'. Ở mỗi lượt đi, lọc ra các nước đi hợp lệ có to_sq trùng với ô đích. Nếu có, hãy ưu tiên thực hiện ngay vì đây là điều kiện thắng lập tức mã W2!"
-    }}
-  ]
-}}'''
 
         git_log_txt = f"""commit 7f3b891e4a2c9d081f23456789abcdef01234567
 Author: {user.name} <{user.email}>
@@ -615,8 +574,8 @@ def view_user_submission_files(user_id: str, db: Session = Depends(get_db)):
 def view_submission_files(submission_id: str, db: Session = Depends(get_db)):
     """
     Trích xuất và đọc nội dung các file trong gói bài làm của sinh viên:
-    bot.py, PROMPTS.md, REPORT.md và danh sách file trong chat_history/.
-    Giúp giám khảo chấm hồ sơ AI và vấn đáp trực tiếp trên web mà không cần tải thủ công.
+    bot.py (mã nguồn), REPORT.md (ý tưởng chiến thuật) và git_log.txt (lịch sử commit).
+    Giúp giám khảo chấm điểm và vấn đáp trực tiếp trên web mà không cần tải thủ công.
     Tự phục hồi nếu file trên đĩa bị thiếu. Chấp nhận cả submission_id lẫn user_id.
     """
     sub = db.query(Submission).filter(Submission.id == submission_id).first()

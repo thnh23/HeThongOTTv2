@@ -289,7 +289,7 @@ export function ProfilePage() {
 
             <div className="sub-score-item">
               <div className="sub-score-info">
-                <span>2. Hồ sơ Prompt AI (T08) ({weights.ai}%)</span>
+                <span>2. Tiến Trình Code &amp; Lịch Sử Git ({weights.ai}%)</span>
                 <strong>{user?.score_ai_profile || 0} / 100</strong>
               </div>
               <div className="progress-track">

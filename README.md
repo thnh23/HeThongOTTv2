@@ -52,7 +52,7 @@ ottv2-tournament/
 │   │   │   ├── validator.py        # Thẩm định gói nộp T08 & Scanner T09
 │   │   │   └── starter_bots/       # Bot mẫu: RandomBot, GreedyBot, FaultyBots
 │   │   └── websocket/              # Quản lý kết nối WebSocket thời gian thực
-│   ├── tests/                      # Bộ kiểm thử 73 unit tests (T01–T10)
+│   ├── tests/                      # Bộ kiểm thử 85 unit tests (T01–T10, API, Pipeline Swiss)
 │   ├── scripts/                    # Kịch bản load test 50-100 bot
 │   ├── seed_demo_data.py           # Khởi tạo tài khoản và ván đấu mẫu
 │   ├── requirements.txt            # Thư viện Python
@@ -155,7 +155,7 @@ Dự án hỗ trợ triển khai hoàn chỉnh lên **Render Cloud** với CSDL 
 
 ## 🧪 7. Kiểm Thử & Đảm Bảo Chất Lượng
 
-### Chạy Unit Tests Engine & Referee (73/73 Tests Passed):
+### Chạy Unit Tests Engine & Referee (85/85 Tests Passed):
 ```bash
 cd backend
 pytest -v

@@ -1,15 +1,14 @@
 """
 Submission Validator & Security Scanner
 =======================================
-Kiểm tra tính hợp lệ của gói nộp bài (.zip):
-  1. Kiểm tra cấu trúc file (Bảng 4 spec):
-     - bot.py: có hàm choose_move(state)
-     - PROMPTS.md: tồn tại và không rỗng (T08)
-     - chat_history/: thư mục có ít nhất 1 file
-     - REPORT.md: tồn tại và không rỗng
-     - git log: bắt buộc với Bảng C
+Kiểm tra tính hợp lệ của gói nộp bài (.zip) theo thể lệ mới:
+  1. Kiểm tra cấu trúc file:
+     - bot.py: có hàm choose_move(state) tuân thủ luật OTTv2
+     - REPORT.md: báo cáo ý tưởng chiến thuật & thuật toán tự phát triển
+     - git_log.txt hoặc thư mục .git: minh chứng quá trình tự lập trình (>= 4 commits)
+     (Loại bỏ hoàn toàn yêu cầu PROMPTS.md và chat_history để khuyến khích sinh viên tự code)
   2. Quét bảo mật tự động (T09):
-     - Phát hiện API key chưa che trong code hoặc chat_history
+     - Phát hiện API key chưa che trong code và tài liệu
        (OpenAI sk-..., Google AIzaSy..., Anthropic sk-ant-..., HuggingFace hf_...)
 """
 

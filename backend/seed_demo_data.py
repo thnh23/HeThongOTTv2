@@ -230,10 +230,8 @@ submissions_data = [
             "details": {
                 "bot_py": True,
                 "choose_move_fn": True,
-                "prompts_md": True,
-                "chat_history": True,
                 "report_md": True,
-                "git_log": False,
+                "git_log": True,
             },
             "errors": [],
             "warnings": [],
@@ -259,10 +257,8 @@ submissions_data = [
             "details": {
                 "bot_py": True,
                 "choose_move_fn": True,
-                "prompts_md": True,
-                "chat_history": True,
                 "report_md": True,
-                "git_log": False,
+                "git_log": True,
             },
             "errors": [],
             "warnings": [],
@@ -288,10 +284,8 @@ submissions_data = [
             "details": {
                 "bot_py": True,
                 "choose_move_fn": True,
-                "prompts_md": True,
-                "chat_history": True,
                 "report_md": True,
-                "git_log": False,
+                "git_log": True,
             },
             "errors": [],
             "warnings": [],
@@ -317,10 +311,8 @@ submissions_data = [
             "details": {
                 "bot_py": True,
                 "choose_move_fn": True,
-                "prompts_md": True,
-                "chat_history": True,
                 "report_md": True,
-                "git_log": False,
+                "git_log": True,
             },
             "errors": [],
             "warnings": [],
@@ -346,8 +338,6 @@ submissions_data = [
             "details": {
                 "bot_py": True,
                 "choose_move_fn": True,
-                "prompts_md": True,
-                "chat_history": True,
                 "report_md": True,
                 "git_log": True,
             },
@@ -375,8 +365,6 @@ submissions_data = [
             "details": {
                 "bot_py": True,
                 "choose_move_fn": True,
-                "prompts_md": True,
-                "chat_history": True,
                 "report_md": True,
                 "git_log": True,
             },
@@ -404,8 +392,6 @@ submissions_data = [
             "details": {
                 "bot_py": True,
                 "choose_move_fn": True,
-                "prompts_md": True,
-                "chat_history": True,
                 "report_md": True,
                 "git_log": True,
             },
@@ -433,10 +419,8 @@ submissions_data = [
             "details": {
                 "bot_py": True,
                 "choose_move_fn": True,
-                "prompts_md": True,
-                "chat_history": True,
                 "report_md": True,
-                "git_log": False,
+                "git_log": True,
             },
             "errors": [],
             "warnings": [],
@@ -462,8 +446,6 @@ submissions_data = [
             "details": {
                 "bot_py": True,
                 "choose_move_fn": True,
-                "prompts_md": True,
-                "chat_history": True,
                 "report_md": True,
                 "git_log": True,
             },
@@ -492,8 +474,6 @@ submissions_data = [
             "details": {
                 "bot_py": True,
                 "choose_move_fn": False,
-                "prompts_md": True,
-                "chat_history": False,
                 "report_md": False,
                 "git_log": False,
             },
@@ -521,8 +501,6 @@ submissions_data = [
             "details": {
                 "bot_py": True,
                 "choose_move_fn": True,
-                "prompts_md": True,
-                "chat_history": True,
                 "report_md": True,
                 "git_log": False,
             },
@@ -650,4 +628,5 @@ def seed_data():
 
 if __name__ == "__main__":
     seed_data()
+
 

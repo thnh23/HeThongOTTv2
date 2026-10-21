@@ -22,7 +22,7 @@ import './GradeReviewModal.css';
 // Trọng số học phần chuẩn hóa theo Kế hoạch Giải đấu Swiss 13 Vòng & Top 32
 const TOURNAMENT_WEIGHTS = {
   bot: 40,       // 40% Hiệu quả thi đấu trong giải (Swiss 13 Vòng & Top 32)
-  ai: 20,        // 20% Quy trình AI & Hồ sơ Prompt (PROMPTS.md T08, Git commits, MOSS)
+  ai: 20,        // 20% Tiến trình Code & Lịch sử Git (git_log.txt, >= 4 commits, MOSS)
   interview: 25, // 25% Vấn đáp bảo vệ thuật toán & hiểu code (5-10 phút)
   report: 15,    // 15% Báo cáo kỹ thuật phân tích chiến thuật (REPORT.md)
 };
