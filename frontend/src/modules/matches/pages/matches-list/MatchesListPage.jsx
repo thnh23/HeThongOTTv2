@@ -19,7 +19,7 @@ import './MatchesListPage.css';
 
 export function MatchesListPage() {
   const [matches, setMatches] = useState([]);
-  const [tierFilter, setTierFilter] = useState('');
+  const [roundFilter, setRoundFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +34,7 @@ export function MatchesListPage() {
     setError(null);
     try {
       let path = '/matches?page=1&page_size=50';
-      if (tierFilter) path += `&tier=${tierFilter}`;
+      if (roundFilter) path += `&round_num=${roundFilter}`;
       if (statusFilter) path += `&status=${statusFilter}`;
 
       const res = await apiClient.get(path);
@@ -53,7 +53,7 @@ export function MatchesListPage() {
 
   useEffect(() => {
     fetchMatches();
-  }, [tierFilter, statusFilter]);
+  }, [roundFilter, statusFilter]);
 
   // Filter matches by search query
   const filteredMatches = useMemo(() => {
@@ -151,18 +151,19 @@ export function MatchesListPage() {
 
       {/* Filter Bar with Tabs and Search */}
       <div className="filter-bar">
-        {/* Tier Tabs */}
+        {/* Swiss Tournament Rounds Tabs */}
         <div className="tier-filter-tabs">
           {[
-            { id: '', label: 'Tất cả Bảng' },
-            { id: 'A', label: 'Bảng A' },
-            { id: 'B', label: 'Bảng B' },
-            { id: 'C', label: 'Bảng C' },
+            { id: '', label: 'Tất Cả Vòng' },
+            { id: '1', label: 'Vòng 1' },
+            { id: '8', label: 'Vòng 8 (Ngày 1)' },
+            { id: '13', label: 'Vòng 13 (Ngày 2)' },
+            { id: 'finals', label: 'Chung Kết Top 32' },
           ].map((t) => (
             <button
               key={t.id}
-              className={`filter-tab-btn ${tierFilter === t.id ? 'active' : ''}`}
-              onClick={() => setTierFilter(t.id)}
+              className={`filter-tab-btn ${roundFilter === t.id ? 'active' : ''}`}
+              onClick={() => setRoundFilter(t.id)}
             >
               {t.label}
             </button>
@@ -236,7 +237,9 @@ export function MatchesListPage() {
             <div key={m.id} className="glass-card match-card">
               <div className="match-opponents">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span className={`tier-pill tier-${m.tier}`}>Bảng {m.tier}</span>
+                  <span className="tier-pill" style={{ background: 'var(--primary-50)', color: 'var(--primary-700)', borderColor: 'var(--primary-200)' }}>
+                    {m.round_num ? `Vòng ${m.round_num} Swiss` : 'Trận Đấu'}
+                  </span>
                   {m.status === 'running' && (
                     <span className="live-pill">
                       <span className="live-dot animate-ping"></span> LIVE

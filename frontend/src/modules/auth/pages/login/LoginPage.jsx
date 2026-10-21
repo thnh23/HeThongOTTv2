@@ -18,7 +18,7 @@ export function LoginPage() {
   const handleQuickFill = () => {
     setEmail('studentA@uet.vnu.edu.vn');
     setPassword('pass123');
-    showToast('Đã điền tài khoản mẫu Sinh viên Bảng A!', 'info');
+    showToast('Đã điền tài khoản mẫu Sinh viên UET!', 'info');
   };
 
   const handleSubmit = async (e) => {

@@ -423,7 +423,7 @@ export function SubmitPage() {
             </li>
             <li className={`checklist-item ${latestSubmission.validation?.git_log ? 'passed' : 'failed'}`}>
               {latestSubmission.validation?.git_log ? <CheckCircle2 size={18} /> : <CheckCircle2 size={18} style={{ opacity: 0.5 }} />}
-              <span>Lịch sử Git commit (Bảng C)</span>
+              <span>Lịch sử Git commit (≥ 4 commits)</span>
             </li>
           </ul>
 

@@ -235,6 +235,11 @@ export function LeaderboardPage() {
       );
     }
 
+    // Filter by Top 32 if selected
+    if (activeTier === 'TOP32') {
+      list = list.filter((s) => s.rank <= 32);
+    }
+
     if (sortBy === 'wins') {
       list.sort((a, b) => b.wins - a.wins);
     } else if (sortBy === 'points') {
@@ -250,7 +255,7 @@ export function LeaderboardPage() {
     }
 
     return list;
-  }, [standings, searchQuery, sortBy]);
+  }, [standings, searchQuery, sortBy, activeTier]);
 
   // Podium top 3
   const top1 = standings.find((s) => s.rank === 1);
@@ -270,13 +275,13 @@ export function LeaderboardPage() {
             Bảng Xếp Hạng <span className="gradient-text">OTTv2 Toàn Khóa</span>
           </h1>
           <p className="leaderboard-subtitle">
-            Quy tụ 2.000 sinh viên Khoa CNTT - VNU-UET. Điểm trận đấu: Thắng (+3đ) • Hòa (+1đ) • Thua (0đ).
+            Bảng tổng sắp cờ thuật toán 13 vòng đấu Thụy Sĩ Khoa CNTT - VNU-UET. Điểm trận đấu: Thắng (+3đ) • Hòa (+1đ) • Thua (0đ).
             Hệ số phụ quốc tế: Buchholz Cut-1 &amp; Sonneborn-Berger.
           </p>
         </div>
 
         <div className="leaderboard-controls">
-          <div className="tier-tabs" role="tablist" aria-label="Chọn bảng đấu">
+          <div className="tier-tabs" role="tablist" aria-label="Bộ lọc bảng xếp hạng">
             <button
               id="tab-tier-swiss"
               role="tab"
@@ -284,20 +289,17 @@ export function LeaderboardPage() {
               className={`tier-tab-btn ${activeTier === 'SWISS' ? 'active' : ''}`}
               onClick={() => setActiveTier('SWISS')}
             >
-              Tổng Sắp 13 Vòng
+              Tổng Sắp 13 Vòng Swiss
             </button>
-            {['A', 'B', 'C'].map((tier) => (
-              <button
-                key={tier}
-                id={`tab-tier-${tier.toLowerCase()}`}
-                role="tab"
-                aria-selected={activeTier === tier}
-                className={`tier-tab-btn ${activeTier === tier ? 'active' : ''}`}
-                onClick={() => setActiveTier(tier)}
-              >
-                Bảng {tier}
-              </button>
-            ))}
+            <button
+              id="tab-tier-top32"
+              role="tab"
+              aria-selected={activeTier === 'TOP32'}
+              className={`tier-tab-btn ${activeTier === 'TOP32' ? 'active' : ''}`}
+              onClick={() => setActiveTier('TOP32')}
+            >
+              Top 32 Hạt Giống (Chung Kết)
+            </button>
           </div>
 
           {isWsConnected && (

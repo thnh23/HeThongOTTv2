@@ -2,7 +2,7 @@
 Bot Sandbox Execution Environment (Subprocess Isolated)
 ========================================================
 Môi trường cô lập thực thi bot:
-  1. Giới hạn thời gian (Timeout per move: Bảng A=2s, B=1s, C=0.5s)
+  1. Giới hạn thời gian (Timeout per move: 2.0s tiêu chuẩn toàn giải)
   2. Bắt toàn bộ lỗi (Crash, Exception, Return type sai)
   3. Ngăn chặn phá hoại (Chặn kết nối mạng / socket, bảo vệ file hệ thống - T10)
   4. Trả về BotExecutionResult chuẩn hóa cho Trọng tài

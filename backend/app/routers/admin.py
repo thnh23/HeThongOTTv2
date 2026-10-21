@@ -55,18 +55,13 @@ class TournamentStartRequest(BaseModel):
     move_delay_sec: float = Field(0.5, ge=0.05, le=3.0, description="Độ trễ mỗi nước đi cho WebSocket live")
 
 
-# ── Trọng số điểm theo Bảng 5 (Version 1 Spec) ──
-TIER_WEIGHTS = {
-    'A': {'bot': 0.30, 'ai': 0.25, 'interview': 0.30, 'report': 0.15},
-    'B': {'bot': 0.40, 'ai': 0.20, 'interview': 0.25, 'report': 0.15},
-    'C': {'bot': 0.50, 'ai': 0.15, 'interview': 0.20, 'report': 0.15},
-}
+# ── Trọng số điểm học phần giải đấu Swiss ──
+TOURNAMENT_WEIGHTS = {'bot': 0.40, 'ai': 0.20, 'interview': 0.25, 'report': 0.15}
 
 
 def calculate_final_score(user: User) -> float:
-    """Tính điểm tổng kết theo trọng số từng bảng."""
-    tier = user.tier or 'A'
-    weights = TIER_WEIGHTS.get(tier, TIER_WEIGHTS['A'])
+    """Tính điểm tổng kết học phần theo chuẩn giải đấu Thụy Sĩ."""
+    weights = TOURNAMENT_WEIGHTS
     
     total = (
         (user.score_bot or 0.0) * weights['bot'] +

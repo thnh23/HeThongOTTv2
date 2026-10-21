@@ -68,7 +68,7 @@ class ReplayResponse(BaseModel):
 
 @router.get("", response_model=MatchListResponse)
 def get_matches(
-    tier: Optional[str] = Query(None, description="Lọc theo bảng thi đấu (A, B, C)"),
+    round_num: Optional[int] = Query(None, description="Lọc theo vòng đấu Swiss (1-13)"),
     status_filter: Optional[str] = Query(None, alias="status", description="Lọc theo trạng thái (pending, running, done, error)"),
     page: int = Query(1, ge=1, description="Số trang"),
     page_size: int = Query(20, ge=1, le=100, description="Số trận trên mỗi trang"),
@@ -77,8 +77,9 @@ def get_matches(
     """Lấy danh sách các trận đấu có phân trang và bộ lọc."""
     query = db.query(Match)
 
-    if tier:
-        query = query.filter(Match.tier == tier.upper())
+    if round_num is not None:
+        if hasattr(Match, "round_num"):
+            query = query.filter(Match.round_num == round_num)
     if status_filter:
         query = query.filter(Match.status == status_filter.lower())
 

@@ -38,32 +38,28 @@ export function AdminDashboardPage() {
   const [tournamentStatus, setTournamentStatus] = useState(null);
   const [swissStatus, setSwissStatus] = useState(null);
   const [usersList, setUsersList] = useState([]);
-  const [tierFilter, setTierFilter] = useState('');
+  const [submissionFilter, setSubmissionFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Tournament Controller Tab: 'swiss' (Swiss 13 Vòng) or 'round_robin' (3 Bảng A/B/C)
-  const [activeTourneyTab, setActiveTourneyTab] = useState('swiss');
+  // Tournament Controller: Swiss 13 Vòng
   const [selectedSwissRound, setSelectedSwissRound] = useState(1);
   const [isPairingSwiss, setIsPairingSwiss] = useState(false);
   const [isPublishingSwiss, setIsPublishingSwiss] = useState(false);
 
   // Modal review state
   const [selectedUserForReview, setSelectedUserForReview] = useState(null);
-  const [isStartingTournament, setIsStartingTournament] = useState(null); // 'A', 'B', 'C'
   const [isSyncingData, setIsSyncingData] = useState(false);
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
-      const [statsRes, tourneyRes, swissRes, usersRes] = await Promise.all([
+      const [statsRes, swissRes, usersRes] = await Promise.all([
         apiClient.get('/admin/stats').catch(() => null),
-        apiClient.get('/admin/tournament/status').catch(() => null),
         apiClient.get('/admin/swiss/status').catch(() => null),
         apiClient.get('/admin/users').catch(() => []),
       ]);
       setStats(statsRes);
-      setTournamentStatus(tourneyRes);
       setSwissStatus(swissRes);
       setUsersList(usersRes || []);
     } catch (err) {
@@ -77,47 +73,19 @@ export function AdminDashboardPage() {
     fetchDashboardData();
   }, []);
 
-  // Filter students list
+  // Filter students list by search and submission status
   const filteredUsers = useMemo(() => {
     return usersList.filter((u) => {
-      const matchTier = !tierFilter || u.tier === tierFilter;
+      const matchSubmission =
+        !submissionFilter ||
+        (submissionFilter === 'submitted' ? u.has_submission : !u.has_submission);
       const matchSearch =
         !searchQuery ||
         u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.email?.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchTier && matchSearch;
+      return matchSubmission && matchSearch;
     });
-  }, [usersList, tierFilter, searchQuery]);
-
-  // Handle Tier update directly in table
-  const handleChangeTier = async (userId, newTier) => {
-    try {
-      await apiClient.put(`/admin/users/${userId}/tier`, { tier: newTier });
-      showToast(`Đã chuyển thí sinh sang Bảng ${newTier}!`, 'success');
-      fetchDashboardData();
-    } catch (err) {
-      showToast('Lỗi khi đổi bảng: ' + err.message, 'error');
-    }
-  };
-
-  // Handle start tournament Round-Robin
-  const handleStartTournament = async (tier) => {
-    setIsStartingTournament(tier);
-    try {
-      showToast(`Đang ghép cặp vòng tròn và khởi chạy giải đấu Bảng ${tier}...`, 'info');
-      const res = await apiClient.post('/admin/tournament/start', {
-        tier,
-        move_delay_sec: 0.5,
-      });
-
-      showToast(res.message || `Giải đấu Bảng ${tier} đã khởi chạy!`, 'success');
-      fetchDashboardData();
-    } catch (err) {
-      showToast(err.message || 'Không thể khởi chạy giải đấu', 'error');
-    } finally {
-      setIsStartingTournament(null);
-    }
-  };
+  }, [usersList, submissionFilter, searchQuery]);
 
   // Handle Swiss Pairing
   const handleTriggerSwissPair = async () => {
@@ -260,30 +228,8 @@ export function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Controller Navigation Tabs */}
-      <div className="tourney-controller-tabs">
-        <button
-          type="button"
-          className={`tourney-tab-btn ${activeTourneyTab === 'swiss' ? 'active' : ''}`}
-          onClick={() => setActiveTourneyTab('swiss')}
-        >
-          <Trophy size={16} />
-          <span>Hệ Thống Thụy Sĩ (Swiss 13 Vòng • 2.000 SV)</span>
-          <span className="tourney-tab-badge">Đề Án Mới</span>
-        </button>
-        <button
-          type="button"
-          className={`tourney-tab-btn ${activeTourneyTab === 'round_robin' ? 'active' : ''}`}
-          onClick={() => setActiveTourneyTab('round_robin')}
-        >
-          <Radio size={16} />
-          <span>Vòng Tròn Theo Bảng (Round-Robin A/B/C)</span>
-        </button>
-      </div>
-
-      {/* SWISS TOURNAMENT CONTROLLER TAB */}
-      {activeTourneyTab === 'swiss' && (
-        <div className="glass-card tournament-hub-card" style={{ marginBottom: '2.5rem' }}>
+      {/* SWISS TOURNAMENT CONTROLLER */}
+      <div className="glass-card tournament-hub-card" style={{ marginBottom: '2.5rem' }}>
           <div className="hub-header">
             <div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
@@ -408,80 +354,6 @@ export function AdminDashboardPage() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* ROUND-ROBIN CONTROLLER TAB (Compatible) */}
-      {activeTourneyTab === 'round_robin' && (
-        <div className="glass-card tournament-hub-card" style={{ marginBottom: '2.5rem' }}>
-          <div className="hub-header">
-            <div>
-              <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, fontWeight: 800 }}>
-                <Trophy size={20} color="var(--amber-600)" />
-                <span>Điều Hành Giải Đấu Vòng Tròn (Round-Robin A/B/C)</span>
-              </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.2rem', margin: 0 }}>
-                Mỗi cặp thí sinh thi đấu 2 ván đổi phe (Trắng - Đen, Đen - Trắng). Phù hợp kiểm thử quy mô nhỏ.
-              </p>
-            </div>
-            <Link to="/matches" className="btn btn-outline btn-sm">
-              <Radio size={14} />
-              <span>Mở Bảng Thi Đấu &amp; Live</span>
-            </Link>
-          </div>
-
-          <div className="tournament-tiers-grid">
-            {['A', 'B', 'C'].map((tier) => {
-              const tStatus = tournamentStatus?.[tier] || {
-                total_matches: 0,
-                done_matches: 0,
-                running_matches: 0,
-                progress_percent: 0,
-              };
-
-              const tierUsers = usersList.filter((u) => u.tier === tier && !u.is_admin);
-              const submittedCount = tStatus.submitted_players !== undefined
-                ? tStatus.submitted_players
-                : tierUsers.filter((u) => u.has_submission).length;
-              const canStart = submittedCount >= 2;
-              const isStarting = isStartingTournament === tier;
-
-              return (
-                <div key={tier} className="tournament-tier-box">
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                    <span className={`tier-badge-large tier-${tier}`}>BẢNG {tier}</span>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      Tiến độ: <strong>{tStatus.progress_percent}%</strong>
-                    </span>
-                  </div>
-
-                  <div className="tournament-progress-track">
-                    <div
-                      className="tournament-progress-fill"
-                      style={{ width: `${tStatus.progress_percent}%` }}
-                    />
-                  </div>
-
-                  <div className="tier-match-stats" style={{ marginBottom: '1rem' }}>
-                    <span>Đã xong: {tStatus.done_matches} / {tStatus.total_matches} trận</span>
-                    <span>Đã nộp bot: {submittedCount} thí sinh</span>
-                  </div>
-
-                  <button
-                    id={`btn-start-tier-${tier.toLowerCase()}`}
-                    className={`btn ${canStart ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                    style={{ width: '100%', justifyContent: 'center' }}
-                    onClick={() => handleStartTournament(tier)}
-                    disabled={!canStart || isStarting}
-                  >
-                    <Play size={14} className={isStarting ? 'animate-spin' : ''} />
-                    <span>{isStarting ? 'Đang khởi chạy...' : `Bắt Đầu Bảng ${tier}`}</span>
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Students List & Grading Review Table */}
       <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -507,14 +379,13 @@ export function AdminDashboardPage() {
 
             <select
               className="admin-filter-select"
-              value={tierFilter}
-              onChange={(e) => setTierFilter(e.target.value)}
-              aria-label="Lọc theo bảng"
+              value={submissionFilter}
+              onChange={(e) => setSubmissionFilter(e.target.value)}
+              aria-label="Lọc theo trạng thái nộp bot"
             >
-              <option value="">Tất Cả Bảng</option>
-              <option value="A">Bảng A</option>
-              <option value="B">Bảng B</option>
-              <option value="C">Bảng C</option>
+              <option value="">Tất Cả Thí Sinh</option>
+              <option value="submitted">Đã Nộp Bot (Hợp Lệ)</option>
+              <option value="pending">Chưa Nộp Bot</option>
             </select>
           </div>
         </div>
@@ -524,7 +395,7 @@ export function AdminDashboardPage() {
             <thead>
               <tr>
                 <th>Thí Sinh / Email</th>
-                <th style={{ textAlign: 'center' }}>Bảng</th>
+                <th style={{ textAlign: 'center' }}>Trạng Thái</th>
                 <th style={{ textAlign: 'center' }}>Bài Nộp</th>
                 <th style={{ textAlign: 'center' }}>Bot</th>
                 <th style={{ textAlign: 'center' }}>Hồ Sơ AI</th>
@@ -552,16 +423,9 @@ export function AdminDashboardPage() {
                       </div>
                     </td>
                     <td style={{ textAlign: 'center' }}>
-                      <select
-                        className={`tier-inline-select tier-badge tier-${u.tier || 'A'}`}
-                        value={u.tier || 'A'}
-                        onChange={(e) => handleChangeTier(u.id, e.target.value)}
-                        aria-label={`Đổi bảng cho thí sinh ${u.name}`}
-                      >
-                        <option value="A">Bảng A</option>
-                        <option value="B">Bảng B</option>
-                        <option value="C">Bảng C</option>
-                      </select>
+                      <span className={`submission-status-badge ${u.has_submission ? 'valid' : 'none'}`}>
+                        {u.has_submission ? '✓ Đủ ĐK' : 'Chờ Nộp'}
+                      </span>
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       {u.has_submission ? (

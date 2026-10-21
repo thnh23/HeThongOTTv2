@@ -36,7 +36,7 @@ def choose_move(state) -> Tuple[str, str]:
     
     # Duyệt tìm các quân cờ của phe mình
     # và tìm nước đi 1 ô theo 8 hướng
-    # Gợi ý: Hãy xây dựng hàm minimax với alpha-beta pruning cho Bảng C!
+    # Gợi ý: Hãy xây dựng hàm minimax với alpha-beta pruning để bứt phá Top 32!
     
     # Nước đi mặc định mẫu
     return ("b2", "b3")
@@ -44,7 +44,7 @@ def choose_move(state) -> Tuple[str, str]:
 
 const PROMPTS_TEMPLATE = `# Nhật Ký Prompt Engineering (T08)
 **Sinh viên / Nhóm:** [Điền họ và tên - MSSV]
-**Bảng đấu:** [Bảng A / B / C]
+**Giải đấu:** Giải Đấu Cờ Thuật Toán OTTv2 (13 Vòng Swiss & Top 32)
 **Mô hình AI sử dụng:** Claude 3.5 Sonnet / GPT-4o / Gemini 2.5 Pro
 
 ---
@@ -52,7 +52,7 @@ const PROMPTS_TEMPLATE = `# Nhật Ký Prompt Engineering (T08)
 ## 1. Mục Tiêu Chiến Thuật
 - Xây dựng hàm lượng giá heuristic cân bằng giữa phòng thủ và săn quân trên bàn cờ 9x9.
 - Kiểm soát các ô trung tâm và bảo vệ ô góc đích (i9 đối với Trắng, a1 đối với Đen).
-- Tối ưu thuật toán Minimax kết hợp cắt tỉa Alpha-Beta trong giới hạn thời gian (2.0s / 1.0s / 0.5s theo từng bảng).
+- Tối ưu thuật toán Minimax kết hợp cắt tỉa Alpha-Beta trong giới hạn thời gian (2.0s / nước đi).
 
 ## 2. Lịch Sử Các Phiên Prompting
 

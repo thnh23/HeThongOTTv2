@@ -52,24 +52,18 @@ class UserMatchHistoryItem(BaseModel):
 
 @router.get("", response_model=List[LeaderboardEntry])
 def get_leaderboard(
-    tier: str = Query("ALL", description="Bảng thi đấu (A, B, C, ALL hoặc SWISS)"),
+    top32: bool = Query(False, description="Chỉ lấy Top 32 hạt giống vào vòng Chung Kết"),
     db: Session = Depends(get_db),
 ):
     """
-    Tính toán và trả về Bảng xếp hạng Thụy Sĩ (Swiss System) hoặc theo Bảng:
+    Tính toán và trả về Bảng xếp hạng Thụy Sĩ (Swiss System) toàn giải:
       - Thắng: 3 điểm
       - Hòa:   1 điểm
       - Thua:  0 điểm
       - Hệ số phụ: Buchholz Cut 1 và Sonneborn-Berger (SB)
     """
-    target_tier = tier.upper()
-    is_all_swiss = target_tier in ("ALL", "SWISS")
-
-    # Lấy danh sách user
-    query = db.query(User)
-    if not is_all_swiss:
-        query = query.filter(User.tier == target_tier)
-    users = query.all()
+    # Lấy danh sách toàn bộ thí sinh
+    users = db.query(User).all()
 
     # Khởi tạo bảng thống kê
     stats = {}
@@ -79,7 +73,7 @@ def get_leaderboard(
             "name": u.name,
             "student_id": getattr(u, "student_id", None) or u.email.split("@")[0],
             "bot_name": f"Bot_{u.name.replace(' ', '_')}",
-            "tier": u.tier or ("A" if not is_all_swiss else "SWISS"),
+            "tier": "SWISS",
             "matches_played": 0,
             "wins": 0,
             "draws": 0,
@@ -88,11 +82,8 @@ def get_leaderboard(
             "opponents": [],  # list of (opp_id, result_for_user)
         }
 
-    # Lấy các trận đã hoàn thành
-    match_query = db.query(Match).filter(Match.status == "done")
-    if not is_all_swiss:
-        match_query = match_query.filter(Match.tier == target_tier)
-    matches = match_query.all()
+    # Lấy toàn bộ các trận đã hoàn thành trong giải đấu
+    matches = db.query(Match).filter(Match.status == "done").all()
 
     for m in matches:
         aid, bid = m.bot_a_id, m.bot_b_id
@@ -195,7 +186,8 @@ def get_leaderboard(
                 win_rate=win_rate,
             )
         )
-
+    if top32:
+        return results[:32]
     return results
 
 

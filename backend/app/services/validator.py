@@ -228,7 +228,7 @@ def validate_submission_zip(
     else:
         errors.append("Thiếu thư mục bắt buộc 'chat_history/'.")
 
-    # 7. Kiểm tra git_log (Bắt buộc với Bảng C)
+    # 7. Kiểm tra git_log (Chuẩn Liêm Chính Học Thuật Giải Đấu Swiss)
     git_found = False
     for k, path in files_map.items():
         if os.path.basename(k) in ("git_log.txt", "git.log", "git_log.md"):
@@ -239,13 +239,7 @@ def validate_submission_zip(
             git_found = True
             break
 
-    if git_found:
-        details["git_log"] = True
-    elif tier.upper() == "C":
-        errors.append("Bảng C bắt buộc có lịch sử commit (file 'git_log.txt' hoặc thư mục '.git').")
-    else:
-        # Bảng A, B: khuyến khích
-        details["git_log"] = False
+    details["git_log"] = git_found
 
     # 8. Quét bảo mật API Key (T09)
     for k, path in files_map.items():

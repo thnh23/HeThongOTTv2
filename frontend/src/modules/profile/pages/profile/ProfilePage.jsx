@@ -26,11 +26,7 @@ import { useToast } from '@/shared/context/ToastContext.jsx';
 import { StatusBadge } from '@/shared/components/StatusBadge/StatusBadge.jsx';
 import './ProfilePage.css';
 
-const TIER_WEIGHTS = {
-  A: { bot: 30, ai: 25, interview: 30, report: 15 },
-  B: { bot: 40, ai: 20, interview: 25, report: 15 },
-  C: { bot: 50, ai: 15, interview: 20, report: 15 },
-};
+const TOURNAMENT_WEIGHTS = { bot: 40, ai: 20, interview: 25, report: 15 };
 
 export function ProfilePage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
@@ -43,8 +39,7 @@ export function ProfilePage() {
   const [tierStanding, setTierStanding] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
-  const tier = user?.tier || 'A';
-  const weights = TIER_WEIGHTS[tier] || TIER_WEIGHTS.A;
+  const weights = TOURNAMENT_WEIGHTS;
 
   const loadUserData = async () => {
     if (!user?.id) return;
@@ -53,7 +48,7 @@ export function ProfilePage() {
       const [matchesRes, subsRes, standingsRes] = await Promise.allSettled([
         apiClient.get(`/leaderboard/${user.id}/history`),
         apiClient.get('/submit/history'),
-        apiClient.get(`/leaderboard?tier=${tier}`),
+        apiClient.get('/leaderboard'),
       ]);
 
       if (matchesRes.status === 'fulfilled') {
@@ -155,10 +150,10 @@ export function ProfilePage() {
           <div className="profile-avatar-wrap">
             <div className="profile-avatar-circle">
               <span className="profile-avatar-emoji">
-                {user?.tier === 'C' ? '🚀' : user?.tier === 'B' ? '⚡' : '🌱'}
+                ⚔️
               </span>
             </div>
-            <span className={`profile-tier-badge tier-${tier}`}>Bảng {tier}</span>
+            <span className="profile-tier-badge tier-A">13 Vòng Swiss</span>
           </div>
 
           <div className="profile-identity">
@@ -217,7 +212,7 @@ export function ProfilePage() {
           <div className="metric-panel-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Trophy size={18} color="var(--amber-400)" />
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Thành Tích Bảng {tier}</h3>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Thành Tích 13 Vòng Swiss</h3>
             </div>
             <Link to="/leaderboard" className="view-all-link">
               <span>Xem BXH</span>
@@ -269,14 +264,14 @@ export function ProfilePage() {
 
           <div className="composite-score-row">
             <div>
-              <span className="composite-label">Điểm Tổng Kết Bảng {tier}</span>
+              <span className="composite-label">Điểm Tổng Kết Học Phần</span>
               <div className="composite-number-wrap">
                 <span className="composite-number">{finalScore}</span>
                 <span className="composite-max">/ 100</span>
               </div>
             </div>
             <div className="tier-weights-indicator">
-              <span>Trọng số Bảng {tier}:</span>
+              <span>Trọng số học phần:</span>
               <code>Bot {weights.bot}% • AI {weights.ai}% • Vấn đáp {weights.interview}% • Báo cáo {weights.report}%</code>
             </div>
           </div>
@@ -351,7 +346,7 @@ export function ProfilePage() {
               <Swords size={40} color="var(--text-muted)" style={{ margin: '0 auto 1rem', opacity: 0.6 }} />
               <h4>Chưa có trận đấu nào được ghi nhận</h4>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '480px', margin: '0.5rem auto 1.5rem' }}>
-                Khi Ban tổ chức khởi chạy giải đấu vòng tròn Bảng {tier}, các trận đấu của bot bạn sẽ tự động xuất hiện tại đây.
+                Khi Ban tổ chức khởi chạy các vòng đấu Swiss, các trận đấu của bot bạn sẽ tự động xuất hiện tại đây.
               </p>
               <Link to="/matches" className="btn btn-outline btn-sm">
                 <span>Khám phá các trận đấu khác</span>
@@ -461,11 +456,9 @@ export function ProfilePage() {
                       <span className={`file-chip ${v.report_md ? 'ok' : 'fail'}`}>
                         {v.report_md ? '✓' : '✕'} REPORT.md
                       </span>
-                      {tier === 'C' && (
-                        <span className={`file-chip ${v.git_log ? 'ok' : 'fail'}`}>
-                          {v.git_log ? '✓' : '✕'} git log (Bảng C)
-                        </span>
-                      )}
+                      <span className={`file-chip ${v.git_log ? 'ok' : 'fail'}`}>
+                        {v.git_log ? '✓' : '✕'} Git History (≥4 commits)
+                      </span>
                     </div>
 
                     {/* Test run summary if available */}
