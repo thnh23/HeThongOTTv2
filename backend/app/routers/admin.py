@@ -16,9 +16,13 @@ import os
 import zipfile
 import asyncio
 import uuid
+import csv
+import io
+import shutil
 from typing import List, Optional, Dict, Any, Callable, Tuple
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -26,7 +30,7 @@ from app.database import get_db, SessionLocal
 from app.models.user import User
 from app.models.match import Match, Replay
 from app.models.submission import Submission
-from app.routers.auth import get_current_user, require_admin
+from app.routers.auth import get_current_user, require_admin, hash_password
 from app.services.sandbox import load_bot_from_file
 from app.services.live_runner import run_live_match_async
 from app.services.starter_bots.greedy_bot import choose_move as greedy_choose_move
@@ -1173,6 +1177,486 @@ def trigger_swiss_publish(req: SwissPublishRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi khi xuất bản bảng xếp hạng: {str(e)}")
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# ── MỤC 1: IMPORT & THU THẬP BÀI THI TỪ GOOGLE FORM CSV ─────────────────────
+# ════════════════════════════════════════════════════════════════════════════
+
+@router.post("/import/google-form")
+async def import_google_form_csv(
+    file: Optional[UploadFile] = File(None),
+    csv_text: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+):
+    """
+    Nhận file CSV hoặc text xuất từ Google Form thu thập link repo sinh viên UET.
+    Tự động chuẩn hóa các cột: Họ tên, MSSV, Email, Lớp, Link GitHub Repository, Tên Bot.
+    Cập nhật hoặc thêm mới User và Submission vào cơ sở dữ liệu.
+    """
+    raw_content = ""
+    if file:
+        file_bytes = await file.read()
+        raw_content = file_bytes.decode("utf-8-sig", errors="ignore")
+    elif csv_text:
+        raw_content = csv_text.strip()
+    else:
+        raise HTTPException(status_code=400, detail="Vui lòng tải lên file CSV hoặc dán nội dung CSV Google Form!")
+
+    if not raw_content:
+        raise HTTPException(status_code=400, detail="Nội dung CSV rỗng!")
+
+    try:
+        reader = list(csv.reader(io.StringIO(raw_content)))
+        if not reader or len(reader) < 2:
+            raise HTTPException(status_code=400, detail="File CSV không hợp lệ hoặc chỉ có dòng tiêu đề!")
+
+        headers = reader[0]
+
+        def match_header(keywords: List[str]) -> int:
+            for idx, h in enumerate(headers):
+                clean = h.lower().strip()
+                if any(kw in clean for kw in keywords):
+                    return idx
+            return -1
+
+        email_idx = match_header(["email", "địa chỉ", "mail"])
+        name_idx = match_header(["họ và tên", "họ tên", "tên", "full name", "name"])
+        id_idx = match_header(["mã sinh viên", "mssv", "student id", "student_id", "msv"])
+        class_idx = match_header(["lớp", "class"])
+        repo_idx = match_header(["github", "repo", "link", "repository", "url"])
+        bot_idx = match_header(["tên bot", "bot name", "bot"])
+
+        created_count = 0
+        updated_count = 0
+        preview_list = []
+
+        for row_idx, row in enumerate(reader[1:], start=2):
+            if not row or all(not str(cell).strip() for cell in row):
+                continue
+
+            def get_val(idx: int) -> str:
+                return row[idx].strip() if 0 <= idx < len(row) else ""
+
+            s_email = get_val(email_idx)
+            s_name = get_val(name_idx)
+            s_id = get_val(id_idx)
+            s_class = get_val(class_idx) or "QH-2022-I/CQ"
+            s_repo = get_val(repo_idx)
+            s_bot = get_val(bot_idx) or (f"Bot_{s_id}" if s_id else "OTT_Bot")
+
+            if not s_id and not s_email and not s_name:
+                continue
+
+            if not s_email:
+                s_email = f"{s_id}@vnu.edu.vn" if s_id else f"user_{uuid.uuid4().hex[:8]}@vnu.edu.vn"
+            if not s_name:
+                s_name = f"Sinh Viên {s_id or s_email}"
+
+            # Tìm kiếm user trong DB theo email hoặc student_id
+            existing_user = None
+            if s_email:
+                existing_user = db.query(User).filter(User.email == s_email).first()
+            if not existing_user and s_id:
+                existing_user = db.query(User).filter(User.student_id == s_id).first()
+
+            if existing_user:
+                existing_user.name = s_name
+                if s_id:
+                    existing_user.student_id = s_id
+                if s_class:
+                    existing_user.class_name = s_class
+                if s_repo:
+                    existing_user.github_repo_url = s_repo
+                if s_bot:
+                    existing_user.bot_name = s_bot
+                target_user = existing_user
+                updated_count += 1
+            else:
+                new_user = User(
+                    id=str(uuid.uuid4()),
+                    name=s_name,
+                    email=s_email,
+                    hashed_password=hash_password("student@123"),
+                    student_id=s_id or None,
+                    class_name=s_class,
+                    github_repo_url=s_repo or None,
+                    bot_name=s_bot,
+                    is_admin=False,
+                    is_active=True,
+                )
+                db.add(new_user)
+                target_user = new_user
+                created_count += 1
+
+            # Cập nhật hoặc tạo submission tương ứng nếu có repo
+            if s_repo:
+                db.flush()
+                sub = db.query(Submission).filter(Submission.user_id == target_user.id).first()
+                if not sub:
+                    sub = Submission(
+                        id=str(uuid.uuid4()),
+                        user_id=target_user.id,
+                        github_repo_url=s_repo,
+                        status="valid",
+                        bot_version="v1",
+                    )
+                    db.add(sub)
+                else:
+                    sub.github_repo_url = s_repo
+                    sub.status = "valid"
+
+            if len(preview_list) < 25:
+                preview_list.append({
+                    "name": s_name,
+                    "student_id": s_id,
+                    "email": s_email,
+                    "class_name": s_class,
+                    "github_repo_url": s_repo,
+                    "bot_name": s_bot,
+                })
+
+        db.commit()
+
+        return {
+            "success": True,
+            "total_rows": len(reader) - 1,
+            "created_count": created_count,
+            "updated_count": updated_count,
+            "preview": preview_list,
+            "message": f"Đã nhập thành công từ Google Form: {created_count} thí sinh mới, {updated_count} thí sinh được cập nhật!",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Lỗi khi đọc file CSV Google Form: {str(e)}")
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# ── MỤC 2: PHÂN PHỐI 10 CHUNK CHO CỤM MÁY CHẤM PHÂN TÁN ─────────────────────
+# ════════════════════════════════════════════════════════════════════════════
+
+@router.get("/swiss/chunks/{round_num}")
+def get_round_chunks_list(round_num: int):
+    """Lấy danh sách chi tiết các chunk đã cắt cho Vòng round_num."""
+    round_dir = os.path.join(SWISS_STORAGE_DIR, f"round_{round_num}")
+    chunks_dir = os.path.join(round_dir, "chunks")
+
+    if not os.path.exists(chunks_dir):
+        return {"round": round_num, "total_chunks": 0, "chunks": []}
+
+    pattern = os.path.join(chunks_dir, "chunk_*.json")
+    import glob
+    chunk_files = sorted(glob.glob(pattern))
+
+    results_dir = os.path.join(round_dir, "results")
+
+    chunks_data = []
+    for cf in chunk_files:
+        base_name = os.path.basename(cf)
+        chunk_idx = int(base_name.replace("chunk_", "").replace(".json", ""))
+
+        matches_count = 100
+        try:
+            with open(cf, "r", encoding="utf-8") as f:
+                c_json = json.load(f)
+                matches_count = len(c_json.get("matches", []))
+        except Exception:
+            pass
+
+        # Kiểm tra máy này đã nộp kết quả chưa
+        result_file = os.path.join(results_dir, f"result_{str(chunk_idx).zfill(2)}.json")
+        is_completed = os.path.exists(result_file)
+
+        chunks_data.append({
+            "chunk_id": chunk_idx,
+            "file_name": base_name,
+            "matches_count": matches_count,
+            "file_size_kb": round(os.path.getsize(cf) / 1024, 1),
+            "is_completed": is_completed,
+            "download_url": f"/api/admin/swiss/chunks/{round_num}/{chunk_idx}/download",
+        })
+
+    return {
+        "round": round_num,
+        "total_chunks": len(chunks_data),
+        "chunks": chunks_data,
+    }
+
+
+@router.get("/swiss/chunks/{round_num}/{chunk_id}/download")
+def download_single_chunk(round_num: int, chunk_id: int):
+    """Tải xuống file chunk_XX.json cho máy chấm cụ thể."""
+    chunk_file = os.path.join(SWISS_STORAGE_DIR, f"round_{round_num}", "chunks", f"chunk_{str(chunk_id).zfill(2)}.json")
+    if not os.path.exists(chunk_file):
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy file chunk_{chunk_id} cho Vòng {round_num}!")
+
+    return FileResponse(
+        path=chunk_file,
+        filename=f"chunk_{str(chunk_id).zfill(2)}.json",
+        media_type="application/json",
+    )
+
+
+@router.get("/swiss/chunks/{round_num}/download-zip")
+def download_all_chunks_zip(round_num: int):
+    """Đóng gói tất cả file chunk của Vòng round_num kèm script run_batch.py thành file ZIP."""
+    round_dir = os.path.join(SWISS_STORAGE_DIR, f"round_{round_num}")
+    chunks_dir = os.path.join(round_dir, "chunks")
+
+    if not os.path.exists(chunks_dir):
+        raise HTTPException(status_code=404, detail=f"Chưa có file chunk cho Vòng {round_num}. Vui lòng bấm Bốc Thăm trước!")
+
+    zip_filename = f"swiss_round_{round_num}_chunks.zip"
+    zip_path = os.path.join(round_dir, zip_filename)
+
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        import glob
+        for cf in glob.glob(os.path.join(chunks_dir, "chunk_*.json")):
+            zf.write(cf, arcname=os.path.join("chunks", os.path.basename(cf)))
+
+        # Kèm run_batch.py
+        run_batch_script = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts", "tournament", "run_batch.py")
+        if os.path.exists(run_batch_script):
+            zf.write(run_batch_script, arcname="run_batch.py")
+
+        # Kèm file hướng dẫn
+        instructions = f"""HƯỚNG DẪN CHẠY CHẤM THI CỤM MÁY LAPTOP SINH VIÊN (VÒNG {round_num})
+======================================================================
+1. Máy số X (ví dụ Máy #01) copy file 'chunks/chunk_01.json' vào thư mục làm việc.
+2. Chạy lệnh:
+   python run_batch.py --chunk chunks/chunk_01.json --out result_01.json
+3. Sau khi chạy xong (~2-3 phút cho 100 trận), gửi file 'result_01.json' về cho BTC
+   hoặc tải trực tiếp lên mục 'Tiếp Nhận Kết Quả' trên Admin Dashboard!
+"""
+        zf.writestr("HUONG_DAN_CHAM_THI.txt", instructions)
+
+    return FileResponse(
+        path=zip_path,
+        filename=zip_filename,
+        media_type="application/zip",
+    )
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# ── MỤC 3: TIẾP NHẬN KẾT QUẢ TỪ 10 MÁY CHẤM & CẬP NHẬT TIẾN ĐỘ ───────────────
+# ════════════════════════════════════════════════════════════════════════════
+
+@router.post("/swiss/upload-result")
+async def upload_machine_result(
+    file: UploadFile = File(...),
+    round_num: Optional[int] = Form(None),
+):
+    """
+    Tiếp nhận file result_XX.json từ máy chấm phân tán hoặc file ZIP chứa nhiều result.
+    Lưu trực tiếp vào thư mục results/ của vòng đấu.
+    """
+    file_bytes = await file.read()
+    filename = file.filename or ""
+
+    if filename.endswith(".json"):
+        try:
+            data = json.loads(file_bytes.decode("utf-8"))
+        except Exception:
+            raise HTTPException(status_code=400, detail="File nộp không phải định dạng JSON hợp lệ!")
+
+        r_num = round_num or data.get("round", 1)
+        chunk_id = data.get("chunk_id")
+        if not chunk_id:
+            # Thử parse từ tên file result_01.json
+            clean_name = os.path.splitext(filename)[0]
+            if "result_" in clean_name:
+                try:
+                    chunk_id = int(clean_name.replace("result_", ""))
+                except Exception:
+                    pass
+
+        if not chunk_id:
+            raise HTTPException(status_code=400, detail="Không xác định được chunk_id từ file kết quả!")
+
+        results_dir = os.path.join(SWISS_STORAGE_DIR, f"round_{r_num}", "results")
+        os.makedirs(results_dir, exist_ok=True)
+
+        target_file = os.path.join(results_dir, f"result_{str(chunk_id).zfill(2)}.json")
+        with open(target_file, "wb") as f:
+            f.write(file_bytes)
+
+        matches_count = len(data.get("results", []))
+        return {
+            "success": True,
+            "round": r_num,
+            "chunk_id": chunk_id,
+            "matches_count": matches_count,
+            "message": f"Đã tiếp nhận thành công kết quả Máy #{chunk_id} ({matches_count} trận đấu)!",
+        }
+
+    elif filename.endswith(".zip"):
+        try:
+            zf = zipfile.ZipFile(io.BytesIO(file_bytes))
+            count_saved = 0
+            for name in zf.namelist():
+                if name.endswith(".json") and "result_" in os.path.basename(name):
+                    b_name = os.path.basename(name)
+                    c_id = int(b_name.replace("result_", "").replace(".json", ""))
+                    
+                    r_num = round_num or 1
+                    results_dir = os.path.join(SWISS_STORAGE_DIR, f"round_{r_num}", "results")
+                    os.makedirs(results_dir, exist_ok=True)
+                    
+                    with open(os.path.join(results_dir, b_name), "wb") as out_f:
+                        out_f.write(zf.read(name))
+                    count_saved += 1
+
+            return {
+                "success": True,
+                "count_saved": count_saved,
+                "message": f"Đã giải nén và lưu thành công {count_saved} file kết quả từ gói ZIP!",
+            }
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Lỗi khi đọc file ZIP kết quả: {str(e)}")
+
+    else:
+        raise HTTPException(status_code=400, detail="Định dạng không được hỗ trợ! Vui lòng nộp file .json hoặc .zip!")
+
+
+@router.get("/swiss/results-status/{round_num}")
+def get_round_results_status(round_num: int):
+    """Kiểm tra chi tiết tình trạng nộp bài của từng máy chấm trong 10 máy."""
+    round_dir = os.path.join(SWISS_STORAGE_DIR, f"round_{round_num}")
+    results_dir = os.path.join(round_dir, "results")
+
+    status_list = []
+    ready_count = 0
+    total_matches_done = 0
+
+    for chunk_id in range(1, 11):
+        res_file = os.path.join(results_dir, f"result_{str(chunk_id).zfill(2)}.json")
+        is_ready = os.path.exists(res_file)
+
+        matches_count = 0
+        file_size_kb = 0.0
+        last_updated = None
+
+        if is_ready:
+            ready_count += 1
+            file_size_kb = round(os.path.getsize(res_file) / 1024, 1)
+            last_updated = datetime.fromtimestamp(os.path.getmtime(res_file)).strftime("%H:%M:%S %d/%m")
+            try:
+                with open(res_file, "r", encoding="utf-8") as f:
+                    d = json.load(f)
+                    matches_count = len(d.get("results", []))
+                    total_matches_done += matches_count
+            except Exception:
+                matches_count = 100
+                total_matches_done += 100
+
+        status_list.append({
+            "chunk_id": chunk_id,
+            "machine_label": f"Máy #{str(chunk_id).zfill(2)}",
+            "is_ready": is_ready,
+            "matches_count": matches_count,
+            "file_size_kb": file_size_kb,
+            "last_updated": last_updated,
+        })
+
+    return {
+        "round": round_num,
+        "ready_count": ready_count,
+        "total_chunks": 10,
+        "total_matches_done": total_matches_done,
+        "is_all_ready": ready_count >= 10,
+        "progress_percent": int((ready_count / 10) * 100),
+        "machines": status_list,
+    }
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# ── MỤC 4: VÒNG CHUNG KẾT TOP 32 & CẤU HÌNH Ô CHƯỚNG NGẠI VẬT ───────────────
+# ════════════════════════════════════════════════════════════════════════════
+
+class Top32ConfigRequest(BaseModel):
+    obstacles: List[str] = Field(default_factory=lambda: ["d4", "d6", "f4", "f6", "e5"])
+    rules_announcement: Optional[str] = Field(None, description="Thông báo đổi luật cho thí sinh")
+
+
+@router.get("/top32/config")
+def get_top32_config(db: Session = Depends(get_db)):
+    """Lấy danh sách hạt giống Top 32 và cấu hình các ô chướng ngại vật."""
+    config_file = os.path.join(SWISS_STORAGE_DIR, "top32_config.json")
+    default_obstacles = ["d4", "d6", "f4", "f6", "e5"]
+    announcement = "Vòng Chung kết Top 32 áp dụng luật bàn cờ có ô chướng ngại vật cấm đi vào tại 5 vị trí: d4, d6, f4, f6, e5."
+
+    if os.path.exists(config_file):
+        try:
+            with open(config_file, "r", encoding="utf-8") as f:
+                saved = json.load(f)
+                default_obstacles = saved.get("obstacles", default_obstacles)
+                announcement = saved.get("rules_announcement", announcement)
+        except Exception:
+            pass
+
+    # Lấy danh sách Top 32 thí sinh từ DB
+    top32_users = (
+        db.query(User)
+        .filter(User.is_top32 == True)
+        .order_by(User.swiss_wins.desc(), User.buchholz.desc())
+        .limit(32)
+        .all()
+    )
+
+    if not top32_users:
+        # Fallback lấy 32 người điểm cao nhất
+        top32_users = (
+            db.query(User)
+            .order_by(User.swiss_wins.desc(), User.swiss_points.desc())
+            .limit(32)
+            .all()
+        )
+
+    users_list = []
+    for idx, u in enumerate(top32_users, 1):
+        users_list.append({
+            "seed": idx,
+            "id": u.id,
+            "name": u.name,
+            "student_id": u.student_id,
+            "class_name": u.class_name,
+            "bot_name": u.bot_name,
+            "swiss_wins": u.swiss_wins or 0,
+            "swiss_points": u.swiss_points or 0,
+            "github_repo_url": u.github_repo_url,
+        })
+
+    return {
+        "obstacles": default_obstacles,
+        "rules_announcement": announcement,
+        "total_seeds": len(users_list),
+        "seeds": users_list,
+    }
+
+
+@router.post("/top32/config")
+def save_top32_config(req: Top32ConfigRequest):
+    """Cập nhật cấu hình các ô chướng ngại vật cho Vòng Chung Kết Top 32."""
+    config_file = os.path.join(SWISS_STORAGE_DIR, "top32_config.json")
+    try:
+        data = {
+            "obstacles": [o.lower().strip() for o in req.obstacles if o.strip()],
+            "rules_announcement": req.rules_announcement or "",
+            "updated_at": datetime.now().isoformat(),
+        }
+        with open(config_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+
+        return {
+            "success": True,
+            "obstacles": data["obstacles"],
+            "message": f"Đã lưu thành công cấu hình {len(data['obstacles'])} ô chướng ngại vật cho Vòng Chung Kết!",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi khi lưu cấu hình Top 32: {str(e)}")
+
 
 
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ShieldCheck,
@@ -25,6 +25,13 @@ import {
   Edit2,
   GitBranch,
   Bot,
+  FileSpreadsheet,
+  UploadCloud,
+  FolderArchive,
+  Layers,
+  Settings2,
+  FileText,
+  Copy,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useAuth } from '@/shared/context/AuthContext.jsx';
@@ -38,8 +45,10 @@ export function AdminDashboardPage() {
   const { user, isAuthenticated } = useAuth();
   const { showToast } = useToast();
 
+  // Active Admin Tab: 'tournament' | 'import' | 'students' | 'top32'
+  const [activeAdminTab, setActiveAdminTab] = useState('tournament');
+
   const [stats, setStats] = useState(null);
-  const [tournamentStatus, setTournamentStatus] = useState(null);
   const [swissStatus, setSwissStatus] = useState(null);
   const [usersList, setUsersList] = useState([]);
   const [submissionFilter, setSubmissionFilter] = useState('');
@@ -50,11 +59,32 @@ export function AdminDashboardPage() {
   const [selectedSwissRound, setSelectedSwissRound] = useState(1);
   const [isPairingSwiss, setIsPairingSwiss] = useState(false);
   const [isPublishingSwiss, setIsPublishingSwiss] = useState(false);
+  const [isSyncingData, setIsSyncingData] = useState(false);
+
+  // Chunks & Machine Results State
+  const [chunksInfo, setChunksInfo] = useState([]);
+  const [resultsStatus, setResultsStatus] = useState(null);
+  const [isUploadingResult, setIsUploadingResult] = useState(false);
+  const [activeUploadChunkId, setActiveUploadChunkId] = useState(null);
+  const singleResultInputRef = useRef(null);
+  const batchResultInputRef = useRef(null);
+
+  // Google Form Import State
+  const [csvFile, setCsvFile] = useState(null);
+  const [csvText, setCsvText] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const fileInputRef = useRef(null);
+
+  // Top 32 Obstacles Config State
+  const [top32Obstacles, setTop32Obstacles] = useState(['d4', 'd6', 'f4', 'f6', 'e5']);
+  const [top32Announcement, setTop32Announcement] = useState('');
+  const [top32Seeds, setTop32Seeds] = useState([]);
+  const [isSavingObstacles, setIsSavingObstacles] = useState(false);
 
   // Modals state
   const [selectedUserForReview, setSelectedUserForReview] = useState(null);
   const [selectedUserForEdit, setSelectedUserForEdit] = useState(null);
-  const [isSyncingData, setIsSyncingData] = useState(false);
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
@@ -67,16 +97,48 @@ export function AdminDashboardPage() {
       setStats(statsRes);
       setSwissStatus(swissRes);
       setUsersList(usersRes || []);
-    } catch (err) {
+    } catch {
       // ignore
     } finally {
       setIsLoading(false);
     }
   };
 
+  const fetchChunksAndResults = async (roundNum) => {
+    try {
+      const [chunksRes, resultsRes] = await Promise.all([
+        apiClient.get(`/admin/swiss/chunks/${roundNum}`).catch(() => null),
+        apiClient.get(`/admin/swiss/results-status/${roundNum}`).catch(() => null),
+      ]);
+      if (chunksRes?.chunks) setChunksInfo(chunksRes.chunks);
+      if (resultsRes) setResultsStatus(resultsRes);
+    } catch {
+      // ignore
+    }
+  };
+
+  const fetchTop32Config = async () => {
+    try {
+      const res = await apiClient.get('/admin/top32/config');
+      if (res?.obstacles) setTop32Obstacles(res.obstacles);
+      if (res?.rules_announcement) setTop32Announcement(res.rules_announcement);
+      if (res?.seeds) setTop32Seeds(res.seeds);
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (activeAdminTab === 'tournament') {
+      fetchChunksAndResults(selectedSwissRound);
+    } else if (activeAdminTab === 'top32') {
+      fetchTop32Config();
+    }
+  }, [activeAdminTab, selectedSwissRound]);
 
   // Filter students list by search and submission status
   const filteredUsers = useMemo(() => {
@@ -96,7 +158,7 @@ export function AdminDashboardPage() {
     });
   }, [usersList, submissionFilter, searchQuery]);
 
-  // Handle Swiss Pairing
+  // 1. Handle Swiss Pairing
   const handleTriggerSwissPair = async () => {
     setIsPairingSwiss(true);
     try {
@@ -108,6 +170,7 @@ export function AdminDashboardPage() {
       });
       showToast(res.message || `Đã ghép cặp thành công Vòng ${selectedSwissRound}!`, 'success');
       fetchDashboardData();
+      fetchChunksAndResults(selectedSwissRound);
     } catch (err) {
       showToast(err.message || 'Lỗi khi ghép cặp Swiss', 'error');
     } finally {
@@ -115,7 +178,7 @@ export function AdminDashboardPage() {
     }
   };
 
-  // Handle Swiss Publish
+  // 2. Handle Swiss Publish
   const handleTriggerSwissPublish = async () => {
     setIsPublishingSwiss(true);
     try {
@@ -125,6 +188,7 @@ export function AdminDashboardPage() {
       });
       showToast(res.message || `Xuất bản bảng xếp hạng Vòng ${selectedSwissRound} thành công!`, 'success');
       fetchDashboardData();
+      fetchChunksAndResults(selectedSwissRound);
     } catch (err) {
       showToast(err.message || 'Lỗi khi xuất bản kết quả Swiss', 'error');
     } finally {
@@ -132,6 +196,101 @@ export function AdminDashboardPage() {
     }
   };
 
+  // 3. Download All Chunks ZIP
+  const handleDownloadAllChunksZip = () => {
+    window.open(`/api/admin/swiss/chunks/${selectedSwissRound}/download-zip`, '_blank');
+    showToast(`Đang tải file ZIP 10 chunks Vòng ${selectedSwissRound}...`, 'info');
+  };
+
+  // 4. Download Single Chunk
+  const handleDownloadSingleChunk = (chunkId) => {
+    window.open(`/api/admin/swiss/chunks/${selectedSwissRound}/${chunkId}/download`, '_blank');
+  };
+
+  // 5. Handle Upload Machine Result File (JSON or ZIP)
+  const handleUploadResultFile = async (file, chunkId = null) => {
+    if (!file) return;
+    setIsUploadingResult(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('round_num', selectedSwissRound);
+
+      const res = await apiClient.post('/admin/swiss/upload-result', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      showToast(res.message || 'Tiếp nhận file kết quả thành công!', 'success');
+      fetchChunksAndResults(selectedSwissRound);
+      fetchDashboardData();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi nộp file kết quả', 'error');
+    } finally {
+      setIsUploadingResult(false);
+      setActiveUploadChunkId(null);
+    }
+  };
+
+  // 6. Handle Google Form CSV Import
+  const handleImportGoogleForm = async (e) => {
+    e.preventDefault();
+    if (!csvFile && !csvText.trim()) {
+      showToast('Vui lòng chọn file CSV hoặc dán nội dung CSV từ Google Form!', 'error');
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const formData = new FormData();
+      if (csvFile) {
+        formData.append('file', csvFile);
+      }
+      if (csvText.trim()) {
+        formData.append('csv_text', csvText.trim());
+      }
+
+      showToast('Đang phân tích dữ liệu Google Form và nạp thí sinh...', 'info');
+      const res = await apiClient.post('/admin/import/google-form', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      setImportResult(res);
+      showToast(res.message || 'Nạp danh sách thí sinh từ Google Form thành công!', 'success');
+      fetchDashboardData();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi nhập dữ liệu từ Google Form', 'error');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // 7. Toggle Top 32 Obstacle Cell
+  const toggleObstacleCell = (sq) => {
+    const cleanSq = sq.toLowerCase().trim();
+    if (top32Obstacles.includes(cleanSq)) {
+      setTop32Obstacles(top32Obstacles.filter((o) => o !== cleanSq));
+    } else {
+      setTop32Obstacles([...top32Obstacles, cleanSq]);
+    }
+  };
+
+  // 8. Save Top 32 Obstacles
+  const handleSaveTop32Config = async () => {
+    setIsSavingObstacles(true);
+    try {
+      const res = await apiClient.post('/admin/top32/config', {
+        obstacles: top32Obstacles,
+        rules_announcement: top32Announcement,
+      });
+      showToast(res.message || 'Đã lưu cấu hình ô chướng ngại vật Top 32!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi lưu cấu hình Top 32', 'error');
+    } finally {
+      setIsSavingObstacles(false);
+    }
+  };
+
+  // 9. Sync demo data
   const handleSyncSeedData = async () => {
     if (!window.confirm('Bạn có muốn đồng bộ lại toàn bộ dữ liệu bài nộp mẫu cho các thí sinh vào cơ sở dữ liệu hiện tại?')) {
       return;
@@ -181,7 +340,10 @@ export function AdminDashboardPage() {
           <button
             id="btn-admin-refresh"
             className="btn btn-outline btn-sm"
-            onClick={fetchDashboardData}
+            onClick={() => {
+              fetchDashboardData();
+              if (activeAdminTab === 'tournament') fetchChunksAndResults(selectedSwissRound);
+            }}
             disabled={isLoading}
           >
             <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
@@ -197,7 +359,7 @@ export function AdminDashboardPage() {
             <span className="stat-metric-title">Tổng Thí Sinh</span>
             <Users size={18} color="var(--primary-600)" />
           </div>
-          <div className="stat-metric-value">{swissStatus?.total_players || 2000}</div>
+          <div className="stat-metric-value">{usersList.length || 2000}</div>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             Toàn bộ sinh viên Khoa CNTT - UET
           </span>
@@ -237,8 +399,52 @@ export function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* SWISS TOURNAMENT CONTROLLER */}
-      <div className="glass-card tournament-hub-card" style={{ marginBottom: '2.5rem' }}>
+      {/* 4 MAIN ADMIN NAVIGATION TABS */}
+      <div className="admin-main-tabs-bar">
+        <button
+          type="button"
+          className={`admin-main-tab-item ${activeAdminTab === 'tournament' ? 'active' : ''}`}
+          onClick={() => setActiveAdminTab('tournament')}
+        >
+          <Zap size={16} />
+          <span>Điều Hành Giải Đấu (Swiss &amp; 10 Máy Chấm)</span>
+          <span className="admin-tab-count-badge">Vòng {selectedSwissRound}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`admin-main-tab-item ${activeAdminTab === 'import' ? 'active' : ''}`}
+          onClick={() => setActiveAdminTab('import')}
+        >
+          <FileSpreadsheet size={16} />
+          <span>Thu Thập Google Form &amp; Repositories</span>
+          <span className="admin-tab-count-badge">CSV</span>
+        </button>
+
+        <button
+          type="button"
+          className={`admin-main-tab-item ${activeAdminTab === 'students' ? 'active' : ''}`}
+          onClick={() => setActiveAdminTab('students')}
+        >
+          <Users size={16} />
+          <span>Quản Lý Thí Sinh &amp; Chấm Điểm</span>
+          <span className="admin-tab-count-badge">{usersList.length} SV</span>
+        </button>
+
+        <button
+          type="button"
+          className={`admin-main-tab-item ${activeAdminTab === 'top32' ? 'active' : ''}`}
+          onClick={() => setActiveAdminTab('top32')}
+        >
+          <Award size={16} />
+          <span>Vòng Chung Kết Top 32 &amp; Ô Chướng Ngại Vật</span>
+          <span className="admin-tab-count-badge">{top32Obstacles.length} Ô Cản</span>
+        </button>
+      </div>
+
+      {/* TAB 1: TOURNAMENT & SWISS 10 CHUNKS OPERATIONS */}
+      {activeAdminTab === 'tournament' && (
+        <div className="glass-card tournament-hub-card" style={{ marginBottom: '2.5rem' }}>
           <div className="hub-header">
             <div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
@@ -267,6 +473,16 @@ export function AdminDashboardPage() {
                   ))}
                 </select>
               </div>
+
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={handleDownloadAllChunksZip}
+                title="Tải trọn gói 10 file chunk kèm script chấm thi"
+              >
+                <FolderArchive size={14} color="var(--primary-600)" />
+                <span>Tải Gói 10 Chunks (.ZIP)</span>
+              </button>
 
               <Link to="/leaderboard" className="btn btn-outline btn-sm">
                 <ExternalLink size={14} />
@@ -302,15 +518,31 @@ export function AdminDashboardPage() {
             <div className="swiss-step-box">
               <div className="step-box-header">
                 <span className="step-number">BƯỚC 2</span>
-                <h4>Phân Bổ 10 Máy Chấm</h4>
+                <h4>Phân Bổ &amp; Nhận Kết Quả</h4>
               </div>
               <p className="step-desc">
-                10 laptop sinh viên chạy <code>run_batch.py</code> độc lập qua Sandbox (mỗi máy 100 trận, ~2-3 phút xong).
+                10 máy chấm chạy <code>run_batch.py</code> độc lập qua Sandbox (mỗi máy 100 trận, ~2-3 phút xong).
               </p>
               <div className="chunk-progress-summary">
                 <span>Tiến độ nộp kết quả:</span>
-                <strong>{swissStatus?.results_ready || 0} / 10 Máy Chấm</strong>
+                <strong>{resultsStatus?.ready_count || 0} / 10 Máy Chấm</strong>
               </div>
+              <label
+                className="btn btn-outline btn-sm"
+                style={{ width: '100%', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                <UploadCloud size={14} />
+                <span>{isUploadingResult ? 'Đang xử lý...' : 'Nộp Gói Kết Quả (File/ZIP)'}</span>
+                <input
+                  type="file"
+                  accept=".json,.zip"
+                  style={{ display: 'none' }}
+                  disabled={isUploadingResult}
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) handleUploadResultFile(e.target.files[0]);
+                  }}
+                />
+              </label>
             </div>
 
             {/* Step 3: Merge & Publish */}
@@ -330,213 +562,465 @@ export function AdminDashboardPage() {
                 disabled={isPublishingSwiss}
               >
                 <CheckCircle2 size={14} className={isPublishingSwiss ? 'animate-spin' : ''} />
-                <span>{isPublishingSwiss ? 'Đang xuất bản...' : `Hợp Nhất &amp; Xuất Bản Vòng ${selectedSwissRound}`}</span>
+                <span>{isPublishingSwiss ? 'Đang xuất bản...' : `Hợp Nhất & Xuất Bản Vòng ${selectedSwissRound}`}</span>
               </button>
             </div>
           </div>
 
-          {/* 10 Chunks Cluster Monitor Grid */}
+          {/* 10 Chunks Cluster Monitor Grid with Actions */}
           <div className="chunks-monitor-wrap">
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <Laptop size={16} color="var(--primary-700)" />
-              <span>Trạng Thái Cụm 10 Máy Chấm Phân Tán (Vòng {selectedSwissRound})</span>
-            </h4>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                <Laptop size={16} color="var(--primary-700)" />
+                <span>Trạng Thái Cụm 10 Máy Chấm Phân Tán (Vòng {selectedSwissRound})</span>
+              </h4>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Đã nhận kết quả: <strong>{resultsStatus?.total_matches_done || 0} / 1.000 trận đấu</strong>
+              </span>
+            </div>
 
             <div className="chunks-grid">
               {Array.from({ length: 10 }, (_, i) => i + 1).map((chunkId) => {
-                const isReady = (swissStatus?.results_ready || 0) >= chunkId;
+                const machine = resultsStatus?.machines?.find((m) => m.chunk_id === chunkId);
+                const isReady = machine?.is_ready || (swissStatus?.results_ready || 0) >= chunkId;
+
                 return (
                   <div key={chunkId} className={`chunk-card ${isReady ? 'chunk-done' : 'chunk-pending'}`}>
                     <div className="chunk-card-header">
                       <span className="chunk-id-tag">MÁY #{String(chunkId).padStart(2, '0')}</span>
                       {isReady ? (
-                        <span className="chunk-status-pill done">✓ Xong</span>
+                        <span className="chunk-status-pill done">✓ Xong ({machine?.matches_count || 100} trận)</span>
                       ) : (
                         <span className="chunk-status-pill waiting">Chờ nộp</span>
                       )}
                     </div>
                     <div className="chunk-matches-num">100 Trận</div>
                     <div className="chunk-file-name">chunk_{String(chunkId).padStart(2, '0')}.json</div>
+
+                    {/* Machine Actions: Download chunk & Upload result */}
+                    <div className="chunk-actions-row">
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-xs"
+                        style={{ fontSize: '0.72rem', padding: '0.2rem 0.45rem' }}
+                        onClick={() => handleDownloadSingleChunk(chunkId)}
+                        title={`Tải file chunk_${chunkId}.json`}
+                      >
+                        <Download size={11} />
+                        <span>Tải Chunk</span>
+                      </button>
+
+                      <label
+                        className="chunk-upload-label-btn"
+                        title={`Tải file result_${chunkId}.json cho Máy #${chunkId}`}
+                      >
+                        <UploadCloud size={11} />
+                        <span>{isReady ? 'Nộp Lại' : 'Nộp KQ'}</span>
+                        <input
+                          type="file"
+                          accept=".json"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) handleUploadResultFile(e.target.files[0], chunkId);
+                          }}
+                        />
+                      </label>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
         </div>
+      )}
 
-      {/* Students List & Grading Review Table */}
-      <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="students-table-toolbar">
-          <div>
-            <h3 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 800 }}>Danh Sách Thí Sinh &amp; Chấm Thi</h3>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Hiển thị {filteredUsers.length} / {usersList.length} thí sinh
-            </span>
+      {/* TAB 2: GOOGLE FORM IMPORT & REPOSITORIES */}
+      {activeAdminTab === 'import' && (
+        <div className="google-import-card animate-fade-in">
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.35rem' }}>
+              <span className="swiss-hub-badge">TRỤ CỘT 1: THU THẬP BÀI THI</span>
+            </div>
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Nhập Danh Sách Bài Thi Từ Google Form
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+              Xuất file CSV từ Google Form (thu link GitHub Repository và Mã Sinh Viên) rồi tải lên hoặc dán trực tiếp bên dưới. Hệ thống sẽ tự động đối soát và cập nhật vào danh sách thí sinh.
+            </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <div className="admin-search-wrap">
-              <Search size={15} color="var(--text-muted)" />
+          <form onSubmit={handleImportGoogleForm}>
+            <div
+              className={`import-dropzone ${csvFile ? 'drag-active' : ''}`}
+              onClick={() => fileInputRef.current?.click()}
+            >
               <input
-                type="text"
-                placeholder="Tìm kiếm theo tên hoặc email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="admin-search-input"
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.txt"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  if (e.target.files?.[0]) setCsvFile(e.target.files[0]);
+                }}
+              />
+              <div className="import-icon-wrap">
+                <FileSpreadsheet size={28} />
+              </div>
+              <div>
+                <strong>{csvFile ? csvFile.name : 'Nhấp hoặc kéo thả file CSV từ Google Form vào đây'}</strong>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.25rem 0 0' }}>
+                  Hỗ trợ định dạng: <code>.csv</code> (UTF-8). Tự động nhận diện các cột MSSV, Họ tên, Email, Link GitHub.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '1.25rem' }}>
+              <label htmlFor="csv-raw-textarea" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
+                Hoặc dán trực tiếp nội dung CSV vào ô dưới đây:
+              </label>
+              <textarea
+                id="csv-raw-textarea"
+                rows={4}
+                className="form-control"
+                style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}
+                placeholder={`Dấu thời gian,Địa chỉ email,Họ và tên,Mã sinh viên,Lớp,Link GitHub Repository,Tên Bot\n2026/10/20 8:30:15 CH,21020001@vnu.edu.vn,Nguyễn Văn An,21020001,QH-2022-I/CQ-CLC1,https://github.com/annguyen/ottv2-bot,AlphaBot`}
+                value={csvText}
+                onChange={(e) => setCsvText(e.target.value)}
               />
             </div>
 
-            <select
-              className="admin-filter-select"
-              value={submissionFilter}
-              onChange={(e) => setSubmissionFilter(e.target.value)}
-              aria-label="Lọc theo trạng thái nộp bot"
-            >
-              <option value="">Tất Cả Thí Sinh</option>
-              <option value="submitted">Đã Nộp Bot (Hợp Lệ)</option>
-              <option value="pending">Chưa Nộp Bot</option>
-            </select>
-          </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                💡 Gợi ý: Bạn có thể chạy script <code>python scripts/tournament/1_clone_from_sheets.py --csv data.csv</code> để tải toàn bộ mã nguồn về máy.
+              </span>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isImporting}
+              >
+                <CheckCircle2 size={16} className={isImporting ? 'animate-spin' : ''} />
+                <span>{isImporting ? 'Đang Phân Tích & Nạp...' : 'Xác Nhận Nạp Thí Sinh Vào Hệ Thống'}</span>
+              </button>
+            </div>
+          </form>
+
+          {/* Import Preview Table */}
+          {importResult && (
+            <div className="import-preview-table-wrap">
+              <div style={{ padding: '0.85rem 1.25rem', background: 'var(--bg-surface-elevated)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--emerald-600)' }}>
+                  ✓ {importResult.message}
+                </span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Xem trước {importResult.preview?.length || 0} bản ghi đầu tiên
+                </span>
+              </div>
+              <div className="table-responsive" style={{ margin: 0, maxHeight: '320px', overflowY: 'auto' }}>
+                <table className="styled-table">
+                  <thead>
+                    <tr>
+                      <th>MSSV</th>
+                      <th>Họ và Tên</th>
+                      <th>Email VNU</th>
+                      <th>Lớp</th>
+                      <th>Tên Bot</th>
+                      <th>GitHub Repository</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {importResult.preview?.map((p, idx) => (
+                      <tr key={idx}>
+                        <td><code>{p.student_id || '—'}</code></td>
+                        <td><strong>{p.name}</strong></td>
+                        <td>{p.email}</td>
+                        <td>{p.class_name}</td>
+                        <td><span className="bot-name-chip">{p.bot_name}</span></td>
+                        <td>
+                          {p.github_repo_url ? (
+                            <a href={p.github_repo_url} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-600)', fontSize: '0.78rem' }}>
+                              {p.github_repo_url}
+                            </a>
+                          ) : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
+      )}
 
-        <div className="table-responsive" style={{ margin: 0 }}>
-          <table className="styled-table" aria-label="Bảng quản lý thí sinh">
-            <thead>
-              <tr>
-                <th>Thí Sinh / MSSV / Lớp</th>
-                <th>Bot &amp; GitHub</th>
-                <th style={{ textAlign: 'center' }}>Bài Nộp</th>
-                <th style={{ textAlign: 'center' }}>Swiss 13 Vòng</th>
-                <th style={{ textAlign: 'center' }}>Điểm HP Đề Xuất</th>
-                <th style={{ textAlign: 'center' }}>Hội Đồng Chấm (Bot / AI / VD / BC)</th>
-                <th style={{ textAlign: 'center' }}>Điểm Tổng</th>
-                <th style={{ textAlign: 'center' }}>Thao Tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.length === 0 ? (
+      {/* TAB 3: STUDENTS LIST & GRADING REVIEW TABLE */}
+      {activeAdminTab === 'students' && (
+        <div className="glass-card animate-fade-in" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="students-table-toolbar">
+            <div>
+              <h3 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 800 }}>Danh Sách Thí Sinh &amp; Chấm Thi</h3>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Hiển thị {filteredUsers.length} / {usersList.length} thí sinh
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <div className="admin-search-wrap">
+                <Search size={15} color="var(--text-muted)" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo MSSV, tên, email, lớp..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="admin-search-input"
+                />
+              </div>
+
+              <select
+                className="admin-filter-select"
+                value={submissionFilter}
+                onChange={(e) => setSubmissionFilter(e.target.value)}
+                aria-label="Lọc theo trạng thái nộp bot"
+              >
+                <option value="">Tất Cả Thí Sinh</option>
+                <option value="submitted">Đã Nộp Bot (Hợp Lệ)</option>
+                <option value="pending">Chưa Nộp Bot</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="table-responsive" style={{ margin: 0 }}>
+            <table className="styled-table" aria-label="Bảng quản lý thí sinh">
+              <thead>
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-                    Không tìm thấy thí sinh phù hợp
-                  </td>
+                  <th>Thí Sinh / MSSV / Lớp</th>
+                  <th>Bot &amp; GitHub</th>
+                  <th style={{ textAlign: 'center' }}>Bài Nộp</th>
+                  <th style={{ textAlign: 'center' }}>Swiss 13 Vòng</th>
+                  <th style={{ textAlign: 'center' }}>Điểm HP Đề Xuất</th>
+                  <th style={{ textAlign: 'center' }}>Hội Đồng Chấm (Bot / AI / VD / BC)</th>
+                  <th style={{ textAlign: 'center' }}>Điểm Tổng</th>
+                  <th style={{ textAlign: 'center' }}>Thao Tác</th>
                 </tr>
-              ) : (
-                filteredUsers.map((u) => (
-                  <tr key={u.id}>
-                    <td>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                          <strong style={{ fontSize: '0.92rem' }}>{u.name}</strong>
-                          {u.is_top32 && (
-                            <span className="swiss-hub-badge" style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
-                              ★ TOP 32
-                            </span>
-                          )}
-                          {u.is_admin && <span className="admin-tag">Admin</span>}
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                          {u.student_id ? <code>MSSV: {u.student_id}</code> : <span style={{ color: 'var(--text-muted)' }}>Chưa có MSSV</span>}
-                          {u.class_name && <span> • {u.class_name}</span>}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{u.email}</div>
-                      </div>
-                    </td>
-
-                    <td>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600, color: 'var(--primary-700)' }}>
-                          <Bot size={13} />
-                          <span>{u.bot_name || 'Chưa đặt tên'}</span>
-                        </div>
-                        {u.github_repo_url ? (
-                          <a
-                            href={u.github_repo_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--cyan-400)', marginTop: '2px' }}
-                          >
-                            <GitBranch size={11} />
-                            <span>GitHub Repo</span>
-                            <ExternalLink size={10} />
-                          </a>
-                        ) : (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Chưa liên kết</span>
-                        )}
-                      </div>
-                    </td>
-
-                    <td style={{ textAlign: 'center' }}>
-                      <span className={`submission-status-badge ${u.has_submission ? 'valid' : 'none'}`}>
-                        {u.has_submission ? '✓ Đã Nộp' : 'Chưa Nộp'}
-                      </span>
-                    </td>
-
-                    <td style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                        {u.swiss_wins || 0} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>/ 13 thắng</span>
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        {u.swiss_points || 0} pts
-                      </div>
-                    </td>
-
-                    <td style={{ textAlign: 'center' }}>
-                      <span
-                        className="admin-final-score-pill"
-                        style={{
-                          background: u.projected_grade_10 >= 8.5 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(59, 130, 246, 0.12)',
-                          borderColor: u.projected_grade_10 >= 8.5 ? 'rgba(16, 185, 129, 0.35)' : 'rgba(59, 130, 246, 0.35)',
-                          color: u.projected_grade_10 >= 8.5 ? '#10b981' : '#3b82f6',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {u.projected_grade_10 !== undefined && u.projected_grade_10 !== null
-                          ? `${Number(u.projected_grade_10).toFixed(1)} / 10`
-                          : '—'}
-                      </span>
-                    </td>
-
-                    <td style={{ textAlign: 'center', fontSize: '0.85rem' }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>
-                        {u.score_bot || 0} • {u.score_ai_profile || 0} • {u.score_interview || 0} • {u.score_report || 0}
-                      </span>
-                    </td>
-
-                    <td style={{ textAlign: 'center' }}>
-                      <span className="admin-final-score-pill">
-                        {u.final_score !== undefined ? u.final_score : '—'}
-                      </span>
-                    </td>
-
-                    <td style={{ textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
-                        <button
-                          type="button"
-                          className="btn btn-outline btn-xs"
-                          onClick={() => setSelectedUserForEdit(u)}
-                          title="Chỉnh sửa thông tin thí sinh"
-                        >
-                          <Edit2 size={12} />
-                          <span>Sửa</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-xs btn-review-action"
-                          onClick={() => setSelectedUserForReview(u)}
-                          title="Hội đồng chấm điểm và đánh giá"
-                        >
-                          <Award size={12} />
-                          <span>Chấm</span>
-                        </button>
-                      </div>
+              </thead>
+              <tbody>
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                      Không tìm thấy thí sinh phù hợp
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredUsers.map((u) => (
+                    <tr key={u.id}>
+                      <td>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <strong style={{ fontSize: '0.92rem' }}>{u.name}</strong>
+                            {u.is_top32 && (
+                              <span className="swiss-hub-badge" style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
+                                ★ TOP 32
+                              </span>
+                            )}
+                            {u.is_admin && <span className="admin-tag">Admin</span>}
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                            {u.student_id ? <code>MSSV: {u.student_id}</code> : <span style={{ color: 'var(--text-muted)' }}>Chưa có MSSV</span>}
+                            {u.class_name && <span> • {u.class_name}</span>}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{u.email}</div>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600, color: 'var(--primary-700)' }}>
+                            <Bot size={13} />
+                            <span>{u.bot_name || 'Chưa đặt tên'}</span>
+                          </div>
+                          {u.github_repo_url ? (
+                            <a
+                              href={u.github_repo_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--cyan-400)', marginTop: '2px' }}
+                            >
+                              <GitBranch size={11} />
+                              <span>GitHub Repo</span>
+                              <ExternalLink size={10} />
+                            </a>
+                          ) : (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Chưa liên kết</span>
+                          )}
+                        </div>
+                      </td>
+
+                      <td style={{ textAlign: 'center' }}>
+                        <span className={`submission-status-badge ${u.has_submission ? 'valid' : 'none'}`}>
+                          {u.has_submission ? '✓ Đã Nộp' : 'Chưa Nộp'}
+                        </span>
+                      </td>
+
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                          {u.swiss_wins || 0} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>/ 13 thắng</span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          {u.swiss_points || 0} pts
+                        </div>
+                      </td>
+
+                      <td style={{ textAlign: 'center' }}>
+                        <span
+                          className="admin-final-score-pill"
+                          style={{
+                            background: u.projected_grade_10 >= 8.5 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(59, 130, 246, 0.12)',
+                            borderColor: u.projected_grade_10 >= 8.5 ? 'rgba(16, 185, 129, 0.35)' : 'rgba(59, 130, 246, 0.35)',
+                            color: u.projected_grade_10 >= 8.5 ? '#10b981' : '#3b82f6',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {u.projected_grade_10 !== undefined && u.projected_grade_10 !== null
+                            ? `${Number(u.projected_grade_10).toFixed(1)} / 10`
+                            : '—'}
+                        </span>
+                      </td>
+
+                      <td style={{ textAlign: 'center', fontSize: '0.85rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>
+                          {u.score_bot || 0} • {u.score_ai_profile || 0} • {u.score_interview || 0} • {u.score_report || 0}
+                        </span>
+                      </td>
+
+                      <td style={{ textAlign: 'center' }}>
+                        <span className="admin-final-score-pill">
+                          {u.final_score !== undefined ? u.final_score : '—'}
+                        </span>
+                      </td>
+
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-xs"
+                            onClick={() => setSelectedUserForEdit(u)}
+                            title="Chỉnh sửa thông tin thí sinh"
+                          >
+                            <Edit2 size={12} />
+                            <span>Sửa</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-xs btn-review-action"
+                            onClick={() => setSelectedUserForReview(u)}
+                            title="Hội đồng chấm điểm và đánh giá"
+                          >
+                            <Award size={12} />
+                            <span>Chấm</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* TAB 4: TOP 32 FINALS & OBSTACLES CONFIGURATION */}
+      {activeAdminTab === 'top32' && (
+        <div className="google-import-card animate-fade-in">
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.35rem' }}>
+              <span className="round-badge">VÒNG CHUNG KẾT TOP 32</span>
+            </div>
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Cấu Hình Địa Hình Ô Chướng Ngại Vật (Bot v2)
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+              Để thử thách thuật toán tìm đường (A*, Minimax) tại Vòng Chung kết, hãy chọn các vị trí ô cấm đi trên bàn cờ 9×9. Cấu hình này sẽ được công bố trước 24 giờ cho 32 thí sinh hạt giống.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', flexWrap: 'wrap' }}>
+            {/* Interactive 9x9 Obstacle Cell Selector */}
+            <div>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                Bàn Cờ 9×9 Chọn Vị Trí Ô Cấm (Nhấp để bật/tắt):
+              </h4>
+              <div className="obstacles-grid-selector">
+                {['9', '8', '7', '6', '5', '4', '3', '2', '1'].map((row) =>
+                  ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'].map((col) => {
+                    const sq = `${col}${row}`;
+                    const isObs = top32Obstacles.includes(sq);
+                    const isGoal = sq === 'i9' || sq === 'a1';
+
+                    return (
+                      <button
+                        key={sq}
+                        type="button"
+                        disabled={isGoal}
+                        className={`obstacle-cell-toggle ${isObs ? 'is-obstacle' : ''}`}
+                        onClick={() => toggleObstacleCell(sq)}
+                        title={isGoal ? `Ô đích ${sq} không thể đặt cản` : `Ô ${sq}: ${isObs ? 'ĐANG LÀ Ô CẢN' : 'Bình thường'}`}
+                      >
+                        {isObs ? '✕' : isGoal ? '★' : sq}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                Các ô cản hiện tại ({top32Obstacles.length} ô): <strong>{top32Obstacles.join(', ') || 'Chưa chọn'}</strong>
+              </span>
+            </div>
+
+            {/* Announcement & Save */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label htmlFor="top32-announcement-input" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
+                  Thông báo đổi luật cho 32 Thí sinh:
+                </label>
+                <textarea
+                  id="top32-announcement-input"
+                  rows={4}
+                  className="form-control"
+                  value={top32Announcement}
+                  onChange={(e) => setTop32Announcement(e.target.value)}
+                  placeholder="Thông báo danh sách ô cản, thời hạn nộp Bot v2..."
+                />
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ width: 'fit-content' }}
+                onClick={handleSaveTop32Config}
+                disabled={isSavingObstacles}
+              >
+                <Check size={16} />
+                <span>{isSavingObstacles ? 'Đang lưu...' : 'Lưu Cấu Hình Ô Cản Top 32'}</span>
+              </button>
+
+              {/* Seeds Preview */}
+              <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+                <h5 style={{ fontSize: '0.9rem', fontWeight: 700, margin: '0 0 0.5rem' }}>
+                  Hạt Giống Top 32 Dẫn Đầu ({top32Seeds.length} thí sinh):
+                </h5>
+                <div style={{ maxHeight: '180px', overflowY: 'auto', fontSize: '0.8rem' }}>
+                  {top32Seeds.slice(0, 10).map((s) => (
+                    <div key={s.seed} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.25rem 0', borderBottom: '1px dashed var(--border-subtle)' }}>
+                      <span><strong>#{s.seed}</strong>. {s.name} ({s.student_id})</span>
+                      <span style={{ color: 'var(--primary-700)', fontWeight: 600 }}>{s.swiss_wins} thắng • {s.swiss_points} pts</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Grade Review Modal */}
       {selectedUserForReview && (
