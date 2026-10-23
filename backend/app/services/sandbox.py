@@ -104,11 +104,52 @@ def execute_bot_move(
     state: BoardState,
     timeout_sec: float = 2.0,
     block_network: bool = True,
+    allow_fast_path: bool = True,
 ) -> BotExecutionResult:
     """
     Thực thi 1 nước đi của bot trong subprocess độc lập an toàn.
+    Hỗ trợ fast-path cho bot chuẩn hệ thống (random, greedy, obstacle) để tối ưu hiệu năng.
     """
     start_time = time.perf_counter()
+
+    # Fast-path cho official starter bots (tiết kiệm 150ms spawn process mỗi nước cờ)
+    is_trusted_bot = getattr(bot_fn, "_is_trusted", False) or (
+        hasattr(bot_fn, "__module__")
+        and bot_fn.__module__ in (
+            "app.services.starter_bots.random_bot",
+            "app.services.starter_bots.greedy_bot",
+            "app.services.starter_bots.obstacle_bot",
+        )
+    )
+    if allow_fast_path and is_trusted_bot:
+        try:
+            move = bot_fn(state)
+            elapsed_ms = int((time.perf_counter() - start_time) * 1000)
+            if (
+                not isinstance(move, (tuple, list))
+                or len(move) != 2
+                or not isinstance(move[0], str)
+                or not isinstance(move[1], str)
+            ):
+                return BotExecutionResult(
+                    is_success=False,
+                    duration_ms=elapsed_ms,
+                    error_code="INVALID_FORMAT",
+                    error_message=f"Bot trả về sai định dạng: {move}",
+                )
+            return BotExecutionResult(
+                is_success=True,
+                move=(move[0], move[1]),
+                duration_ms=elapsed_ms,
+            )
+        except Exception as e:
+            elapsed_ms = int((time.perf_counter() - start_time) * 1000)
+            return BotExecutionResult(
+                is_success=False,
+                duration_ms=elapsed_ms,
+                error_code="CRASH",
+                error_message=f"Lỗi thực thi bot: {str(e)}",
+            )
 
     # 1. Định danh target thực thi
     if hasattr(bot_fn, "_bot_file_path"):

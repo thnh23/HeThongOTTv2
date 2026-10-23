@@ -1,0 +1,206 @@
+{
+  "round": 1,
+  "total_matches": 20,
+  "matches": [
+    {
+      "match_id": "R1_M0001",
+      "chunk": 1,
+      "white_id": "p_38",
+      "black_id": "p_8",
+      "white_name": "Đỗ Thế Huy",
+      "black_name": "Trần Hữu Quân",
+      "winner": "W",
+      "end_code": "W1"
+    },
+    {
+      "match_id": "R1_M0002",
+      "chunk": 1,
+      "white_id": "p_3",
+      "black_id": "p_9",
+      "white_name": "Lê Văn Bình",
+      "black_name": "Trần Tuấn Phong",
+      "winner": "B",
+      "end_code": "B1"
+    },
+    {
+      "match_id": "R1_M0003",
+      "chunk": 1,
+      "white_id": "p_28",
+      "black_id": "p_16",
+      "white_name": "Bùi Đức Việt",
+      "black_name": "Lý Thị Quân",
+      "winner": "W",
+      "end_code": "W1"
+    },
+    {
+      "match_id": "R1_M0004",
+      "chunk": 1,
+      "white_id": "p_36",
+      "black_id": "p_21",
+      "white_name": "Ngô Hữu Hải",
+      "black_name": "Phạm Hải Quân",
+      "winner": "W",
+      "end_code": "W1"
+    },
+    {
+      "match_id": "R1_M0005",
+      "chunk": 1,
+      "white_id": "p_40",
+      "black_id": "p_32",
+      "white_name": "Huỳnh Minh An",
+      "black_name": "Ngô Tuấn Sơn",
+      "winner": "W",
+      "end_code": "W1"
+    },
+    {
+      "match_id": "R1_M0006",
+      "chunk": 2,
+      "white_id": "p_20",
+      "black_id": "p_6",
+      "white_name": "Hoàng Văn Phong",
+      "black_name": "Hoàng Tuấn Nam",
+      "winner": "W",
+      "end_code": "W1"
+    },
+    {
+      "match_id": "R1_M0007",
+      "chunk": 2,
+      "white_id": "p_2",
+      "black_id": "p_17",
+      "white_name": "Đặng Minh Huy",
+      "black_name": "Phạm Quang Cường",
+      "winner": "W",
+      "end_code": "W1"
+    },
+    {
+      "match_id": "R1_M0008",
+      "chunk": 2,
+      "white_id": "p_7",
+      "black_id": "p_18",
+      "white_name": "Lê Thị Sơn",
+      "black_name": "Huỳnh Tuấn Cường",
+      "winner": "W",
+      "end_code": "W1"
+    },
+    {
+      "match_id": "R1_M0009",
+      "chunk": 2,
+      "white_id": "p_34",
+      "black_id": "p_37",
+      "white_name": "Bùi Hữu Phong",
+      "black_name": "Bùi Tuấn Long",
+      "winner": "B",
+      "end_code": "B1"
+    },
+    {
+      "match_id": "R1_M0010",
+      "chunk": 2,
+      "white_id": "p_13",
+      "black_id": "p_31",
+      "white_name": "Hoàng Thái Triết",
+      "black_name": "Trần Thế Bình",
+      "winner": "D",
+      "end_code": "D2"
+    },
+    {
+      "match_id": "R1_M0011",
+      "chunk": 3,
+      "white_id": "p_30",
+      "black_id": "p_19",
+      "white_name": "Ngô Hữu Dũng",
+      "black_name": "Bùi Tuấn Triết",
+      "winner": "D",
+      "end_code": "D2"
+    },
+    {
+      "match_id": "R1_M0012",
+      "chunk": 3,
+      "white_id": "p_23",
+      "black_id": "p_22",
+      "white_name": "Hoàng Đức Triết",
+      "black_name": "Lý Tuấn Em",
+      "winner": "W",
+      "end_code": "W1"
+    },
+    {
+      "match_id": "R1_M0013",
+      "chunk": 3,
+      "white_id": "p_39",
+      "black_id": "p_10",
+      "white_name": "Ngô Bảo Quân",
+      "black_name": "Võ Thái Hải",
+      "winner": "D",
+      "end_code": "D2"
+    },
+    {
+      "match_id": "R1_M0014",
+      "chunk": 3,
+      "white_id": "p_15",
+      "black_id": "p_5",
+      "white_name": "Đặng Thị An",
+      "black_name": "Đỗ Bảo Dũng",
+      "winner": "B",
+      "end_code": "B1"
+    },
+    {
+      "match_id": "R1_M0015",
+      "chunk": 3,
+      "white_id": "p_14",
+      "black_id": "p_4",
+      "white_name": "Đặng Bảo Thắng",
+      "black_name": "Đỗ Văn Tú",
+      "winner": "B",
+      "end_code": "B1"
+    },
+    {
+      "match_id": "R1_M0016",
+      "chunk": 4,
+      "white_id": "p_12",
+      "black_id": "p_24",
+      "white_name": "Lý Minh Phong",
+      "black_name": "Võ Đình Quân",
+      "winner": "B",
+      "end_code": "B1"
+    },
+    {
+      "match_id": "R1_M0017",
+      "chunk": 4,
+      "white_id": "p_1",
+      "black_id": "p_26",
+      "white_name": "Ngô Đức Hải",
+      "black_name": "Võ Hữu Huy",
+      "winner": "B",
+      "end_code": "B1"
+    },
+    {
+      "match_id": "R1_M0018",
+      "chunk": 4,
+      "white_id": "p_35",
+      "black_id": "p_29",
+      "white_name": "Vũ Minh Sơn",
+      "black_name": "Bùi Thành Phong",
+      "winner": "B",
+      "end_code": "B1"
+    },
+    {
+      "match_id": "R1_M0019",
+      "chunk": 4,
+      "white_id": "p_25",
+      "black_id": "p_27",
+      "white_name": "Huỳnh Bảo Long",
+      "black_name": "Ngô Thành Nam",
+      "winner": "W",
+      "end_code": "W1"
+    },
+    {
+      "match_id": "R1_M0020",
+      "chunk": 4,
+      "white_id": "p_11",
+      "black_id": "p_33",
+      "white_name": "Võ Quang An",
+      "black_name": "Võ Đức Long",
+      "winner": "B",
+      "end_code": "B1"
+    }
+  ]
+}

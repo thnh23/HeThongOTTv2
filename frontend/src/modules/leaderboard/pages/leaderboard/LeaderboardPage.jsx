@@ -119,11 +119,36 @@ export function LeaderboardPage() {
     }
   };
 
+  const [isJamstackMode, setIsJamstackMode] = useState(false);
+
   const fetchLeaderboard = async (tier, isManual = false) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await apiClient.get(`/leaderboard?tier=${tier}`);
+      let data = null;
+
+      // 1. Kiểm tra Jamstack Static CDN data trước (Trụ cột 4: 0đ chi phí máy chủ)
+      if (tier === 'SWISS') {
+        try {
+          const staticResp = await fetch('/data/standings.json');
+          if (staticResp.ok) {
+            const staticData = await staticResp.json();
+            if (Array.isArray(staticData) && staticData.length > 0) {
+              data = staticData;
+              setIsJamstackMode(true);
+            }
+          }
+        } catch {
+          // fallback sang API FastAPI
+        }
+      }
+
+      // 2. Nếu chưa có dữ liệu tĩnh, gọi API backend
+      if (!data) {
+        data = await apiClient.get(`/leaderboard?tier=${tier}`);
+        setIsJamstackMode(false);
+      }
+
       if (data && data.length > 0) {
         // Map backend response with Swiss attributes if missing
         const formatted = data.map((item, idx) => {
@@ -293,7 +318,12 @@ export function LeaderboardPage() {
             </button>
           </div>
 
-          {isWsConnected && (
+          {isJamstackMode && (
+            <span className="live-standings-pill" style={{ background: 'rgba(34, 211, 238, 0.1)', color: 'var(--cyan-400)', border: '1px solid rgba(34, 211, 238, 0.3)' }} title="Đang nạp từ CDN tĩnh Cloudflare Pages (Chi phí 0đ)">
+              ⚡ CDN Jamstack Mode
+            </span>
+          )}
+          {isWsConnected && !isJamstackMode && (
             <span className="live-standings-pill" title="Đang kết nối WebSocket trực tiếp">
               <span className="live-dot-green animate-ping"></span> Live Sync
             </span>

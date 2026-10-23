@@ -1,0 +1,73 @@
+name: OTTv2 Bot Automated Verification
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check Mandatory Files
+        run: |
+          echo "[*] Kiem tra su ton tai cua cac file bat buoc..."
+          test -f bot.py || (echo "Loi: Thieu file bot.py!" && exit 1)
+          test -f REPORT.md || (echo "Loi: Thieu file REPORT.md!" && exit 1)
+          echo "✓ bot.py va REPORT.md hop le!"
+
+      - name: Verify Python Syntax & Function Signature
+        run: |
+          python -c "
+          import ast, sys
+          with open('bot.py', 'r', encoding='utf-8') as f:
+              tree = ast.parse(f.read(), filename='bot.py')
+          has_choose_move = False
+          for node in ast.walk(tree):
+              if isinstance(node, ast.FunctionDef) and node.name == 'choose_move':
+                  has_choose_move = True
+                  break
+          if not has_choose_move:
+              print('Loi: bot.py khong chua ham choose_move(state)!')
+              sys.exit(1)
+          print('✓ Cu phap AST va ham choose_move hop le!')
+          "
+
+      - name: Security & Secret Leak Scanner
+        run: |
+          python -c "
+          import re, sys
+          patterns = [
+              r'sk-[a-zA-Z0-9]{20,}',
+              r'AIza[0-9A-Za-z-_]{35}',
+              r'ghp_[a-zA-Z0-9]{36}',
+          ]
+          with open('bot.py', 'r', encoding='utf-8') as f:
+              content = f.read()
+          for p in patterns:
+              if re.search(p, content):
+                  print('Loi bao mat: Phat hien API Key/Token trong bot.py!')
+                  sys.exit(1)
+          print('✓ Khong phat hien ro ri API key!')
+          "
+
+      - name: Check Git Commits Count
+        run: |
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          echo "So luong commit hien tai: $COMMIT_COUNT"
+          if [ "$COMMIT_COUNT" -lt 4 ]; then
+            echo "::warning::Luu y: Ban moi chi co $COMMIT_COUNT commit. Giai dau khuyen khich toi thieu 4 commit the hien tien trinh phat trien."
+          else
+            echo "✓ Dat yeu cau so luong commit ($COMMIT_COUNT >= 4)!"
+          fi

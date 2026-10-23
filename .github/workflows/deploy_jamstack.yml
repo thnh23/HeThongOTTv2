@@ -1,0 +1,40 @@
+name: Deploy Jamstack Static Results (Cloudflare Pages)
+
+on:
+  push:
+    paths:
+      - 'backend/published/**'
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy-cdn:
+    runs-on: ubuntu-latest
+    name: Deploy Static JSON to Cloudflare Pages CDN
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Prepare Static Assets
+        run: |
+          mkdir -p static_cdn/data
+          if [ -d "backend/published" ]; then
+            cp -r backend/published/* static_cdn/data/
+          fi
+          echo "Dữ liệu xuất bản tĩnh:"
+          ls -la static_cdn/data/
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ottv2-tournament
+          directory: static_cdn
+        continue-on-error: true
