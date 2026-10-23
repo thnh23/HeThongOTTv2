@@ -1,0 +1,6 @@
+# OTTv2 Distributed Scoring Node — Minimal Dependencies
+# Các module engine cốt lõi (board, rules, referee, sandbox) chỉ dùng thư viện chuẩn của Python.
+# File này phục vụ môi trường máy chấm độc lập nhẹ nhất có thể.
+
+# (Tùy chọn) Thư viện hỗ trợ gõ lệnh và xuất log đẹp
+colorama>=0.4.6

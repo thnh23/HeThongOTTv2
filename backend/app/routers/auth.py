@@ -106,6 +106,26 @@ def get_current_user(
     return user
 
 
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
+
+
+def get_optional_current_user(
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """Lấy user hiện tại nếu có Authorization header Bearer token hợp lệ, ngược lại trả về None."""
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id: str = payload.get("sub")
+        if not user_id:
+            return None
+        return db.query(User).filter(User.id == user_id, User.is_active == True).first()
+    except Exception:
+        return None
+
+
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if not current_user.is_admin:
         raise HTTPException(
@@ -113,6 +133,7 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
             detail="Chỉ dành cho Ban tổ chức",
         )
     return current_user
+
 
 
 # ── Routes ──────────────────────────────────────

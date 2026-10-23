@@ -16,7 +16,7 @@ from typing import Callable, Tuple, Optional, List, Dict, Any
 from dataclasses import dataclass, field
 
 from app.services.engine.board import (
-    BoardState, create_initial_board, parse_square, is_in_bounds
+    BoardState, create_initial_board, parse_square, square_to_str, is_in_bounds
 )
 from app.services.engine.rules import (
     step, parse_move, is_legal_move, check_game_over, EndCode
@@ -37,6 +37,7 @@ class MatchResult:
     moves: List[Dict[str, Any]] = field(default_factory=list)
     states: List[Dict[str, Any]] = field(default_factory=list)
     reason: str = ""
+    obstacles: List[str] = field(default_factory=list)
 
     def to_replay_dict(self) -> dict:
         return {
@@ -48,6 +49,7 @@ class MatchResult:
             "total_moves": self.total_moves,
             "duration_ms": self.duration_ms,
             "reason": self.reason,
+            "obstacles": self.obstacles,
             "moves": self.moves,
             "states": self.states,
         }
@@ -61,6 +63,7 @@ def play_match(
     timeout_sec: float = 2.0,
     max_moves: int = 200,
     match_id: Optional[str] = None,
+    obstacles: Optional[any] = None,
 ) -> MatchResult:
     """
     Điều phối một ván đấu trọn vẹn giữa hai bot.
@@ -68,12 +71,13 @@ def play_match(
     if match_id is None:
         match_id = str(uuid.uuid4())
 
-    state = create_initial_board()
+    state = create_initial_board(obstacles=obstacles)
     moves_history: List[Dict[str, Any]] = []
     states_history: List[Dict[str, Any]] = [state.to_dict()]
 
     start_total_time = time.perf_counter()
     turn_counter = 1
+
 
     winner: Optional[str] = None
     end_code: str = EndCode.D2.value
@@ -130,10 +134,15 @@ def play_match(
             break
 
         if not is_legal_move(state, move_tuple):
-            # Đi phạm luật (T07)
+            # Đi phạm luật (T07 hoặc đi vào ô chướng ngại vật)
             winner = opponent
             end_code = "T1"
-            reason = f"{active_bot_name} ({current_player}) bị xử thua T1 do đi nước không hợp lệ: {from_sq} -> {to_sq}"
+            if (tc, tr) in state.obstacles:
+                reason = f"{active_bot_name} ({current_player}) bị xử thua T1 do đi vào ô chướng ngại vật: {from_sq} -> {to_sq}"
+                err_msg = "Nước đi vào ô chướng ngại vật cấm"
+            else:
+                reason = f"{active_bot_name} ({current_player}) bị xử thua T1 do đi nước không hợp lệ: {from_sq} -> {to_sq}"
+                err_msg = "Nước đi phạm luật OTTv2"
             moves_history.append({
                 "turn": turn_counter,
                 "player": current_player,
@@ -141,7 +150,7 @@ def play_match(
                 "to": to_sq,
                 "captured": None,
                 "duration_ms": bot_res.duration_ms,
-                "error": "Nước đi phạm luật OTTv2",
+                "error": err_msg,
             })
             break
 
@@ -196,4 +205,5 @@ def play_match(
         moves=moves_history,
         states=states_history,
         reason=reason,
+        obstacles=[square_to_str(c, r) for c, r in sorted(state.obstacles)],
     )

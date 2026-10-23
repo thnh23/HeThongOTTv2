@@ -58,44 +58,37 @@ def create_in_memory_zip() -> io.BytesIO:
 
 
 class TestSubmitAPI:
-    """Kiểm thử API nộp bài."""
+    """Kiểm thử API nộp bài (Chuyển sang Google Form & GitHub Repository)."""
 
-    def test_submit_valid_zip(self, client, auth_headers):
+    def test_submit_config(self, client):
+        resp = client.get("/api/submit/config")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["submission_mode"] == "google_form"
+        assert "google_form_url" in data
+        assert "github_template_url" in data
+        assert len(data["form_fields"]) == 4
+
+    def test_submit_zip_deprecated_returns_400(self, client, auth_headers):
         headers, _ = auth_headers
         zip_buf = create_in_memory_zip()
-
         files = {"file": ("package.zip", zip_buf, "application/zip")}
         resp = client.post("/api/submit", headers=headers, files=files)
-        assert resp.status_code == 201
-        data = resp.json()
-        assert data["is_valid"] is True
-        assert data["status"] == "valid"
-        assert data["validation"]["bot_py"] is True
-        assert data["validation"]["report_md"] is True
-        assert data["validation"]["git_log"] is True
+        assert resp.status_code == 400
+        assert "Google Form" in resp.json()["detail"]
 
-        sub_id = data["id"]
-
-        # Kiểm tra history
+    def test_submit_history(self, client, auth_headers):
+        headers, _ = auth_headers
         hist_resp = client.get("/api/submit/history", headers=headers)
         assert hist_resp.status_code == 200
-        items = hist_resp.json()
-        assert len(items) >= 1
-        assert items[0]["id"] == sub_id
+        assert isinstance(hist_resp.json(), list)
 
-        # Kiểm tra test-run
-        run_resp = client.post(f"/api/submit/test-run/{sub_id}", headers=headers)
-        assert run_resp.status_code == 200
-        run_data = run_resp.json()
-        assert run_data["submission_id"] == sub_id
-        assert run_data["status"] in ("win", "loss", "draw", "error")
-
-    def test_submit_non_zip_rejected(self, client, auth_headers):
-        headers, _ = auth_headers
-        fake_txt = io.BytesIO(b"Hello world")
-        files = {"file": ("bot.txt", fake_txt, "text/plain")}
-        resp = client.post("/api/submit", headers=headers, files=files)
-        assert resp.status_code == 400
+    def test_submit_lookup(self, client):
+        resp = client.get("/api/submit/lookup/99999999")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["student_id"] == "99999999"
+        assert data["status"] in ("not_found", "pending_clone", "valid", "invalid")
 
 
 class TestMatchesAndLeaderboardAPI:

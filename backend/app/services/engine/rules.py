@@ -97,10 +97,13 @@ def is_square_accessible(
     """
     Kiểm tra quân `attacker` có thể di chuyển đến `target_square` không.
 
+    - Ô chướng ngại vật: không được
     - Ô trống: luôn được
     - Ô có quân địch: chỉ được nếu attacker ăn được defender
     - Ô có quân mình: không được
     """
+    if target_square in state.obstacles:
+        return False
     occupant = state.board.get(target_square)
     if occupant is None:
         return True
@@ -108,6 +111,7 @@ def is_square_accessible(
         return False
     # Quân địch
     return can_capture(attacker.piece_type, occupant.piece_type)
+
 
 
 # ────────────────────────────────────────────────

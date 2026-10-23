@@ -15,6 +15,7 @@ from app.routers.admin.common import (
     UpdateUserAdminRequest,
     ChangeTierRequest,
     calculate_final_score,
+    get_submission_files_content,
     ensure_submission_package,
     extract_files_from_package,
     TOURNAMENT_WEIGHTS,
@@ -289,25 +290,23 @@ def view_submission_files(submission_id: str, db: Session = Depends(get_db)):
     sub = db.query(Submission).filter(Submission.id == submission_id).first()
     if not sub:
         sub = db.query(Submission).filter(Submission.user_id == submission_id, Submission.is_active == True).first()
-    if not sub:
-        user = db.query(User).filter(User.id == submission_id).first()
-        if user:
-            sub = db.query(Submission).filter(Submission.user_id == user.id, Submission.is_active == True).first()
-            if not sub:
-                raise HTTPException(status_code=404, detail="Thí sinh chưa nộp bài")
-        else:
-            raise HTTPException(status_code=404, detail="Không tìm thấy bài nộp")
 
-    user = db.query(User).filter(User.id == sub.user_id).first()
-    abs_zip = ensure_submission_package(sub, user)
-    files_content = extract_files_from_package(abs_zip)
+    user = None
+    if sub:
+        user = db.query(User).filter(User.id == sub.user_id).first()
+    else:
+        user = db.query(User).filter(User.id == submission_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Không tìm thấy bài nộp hoặc thí sinh")
+
+    files_content = get_submission_files_content(sub, user)
 
     return {
-        "submission_id": sub.id,
-        "user_id": sub.user_id,
+        "submission_id": sub.id if sub else (user.id if user else ""),
+        "user_id": user.id if user else (sub.user_id if sub else ""),
         "user_name": user.name if user else "Unknown",
         "user_email": user.email if user else "",
-        "submitted_at": sub.submitted_at,
+        "submitted_at": sub.submitted_at if sub else None,
         "files": files_content,
     }
 

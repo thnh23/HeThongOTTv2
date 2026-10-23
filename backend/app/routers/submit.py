@@ -22,16 +22,42 @@ from app.config import settings
 from app.database import get_db
 from app.models.user import User
 from app.models.submission import Submission
-from app.routers.auth import get_current_user
-from app.services.validator import validate_submission_zip
+from app.routers.auth import get_current_user, get_optional_current_user
+from app.routers.admin.common import SWISS_STORAGE_DIR
+from app.services.validator import validate_submission_zip, check_choose_move_in_code
 from app.services.sandbox import load_bot_from_file
 from app.services.starter_bots.greedy_bot import choose_move as greedy_choose_move
+from app.services.starter_bots.obstacle_bot import choose_move as obstacle_choose_move
 from app.services.engine.referee import play_match
 
 router = APIRouter(prefix="/api/submit", tags=["submit"])
 
 
 # ── Pydantic Schemas ────────────────────────────
+
+class BenchmarkObstacleRequest(BaseModel):
+    student_id: Optional[str] = None
+    submission_id: Optional[str] = None
+    bot_code: Optional[str] = None
+    obstacles: Optional[List[str]] = None
+
+
+class BenchmarkObstacleResponse(BaseModel):
+    status: str
+    winner: Optional[str]
+    end_code: str
+    total_moves: int
+    duration_ms: int
+    average_move_time_ms: float
+    max_move_time_ms: int
+    is_latency_compliant: bool
+    is_obstacle_compliant: bool
+    obstacles: List[str]
+    reason: str
+    bot_name: str
+    opponent_name: str
+    replay: dict
+
 
 class ValidationDetailSchema(BaseModel):
     bot_py: bool = False
@@ -41,6 +67,7 @@ class ValidationDetailSchema(BaseModel):
 
     class Config:
         extra = "ignore"
+
 
 
 class SubmissionResponse(BaseModel):
@@ -72,81 +99,41 @@ class TestRunResponse(BaseModel):
 
 # ── Routes ──────────────────────────────────────
 
-@router.post("", response_model=SubmissionResponse, status_code=status.HTTP_201_CREATED)
-async def submit_package(
-    file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
+@router.get("/config")
+def get_submission_config():
+    """Lấy cấu hình phương thức nộp bài chính thức của giải đấu (Google Form + GitHub Template)."""
+    return {
+        "submission_mode": "google_form",
+        "google_form_url": settings.GOOGLE_FORM_URL,
+        "github_template_url": settings.GITHUB_TEMPLATE_URL,
+        "form_fields": [
+            {"id": "fullname", "label": "Họ và tên", "description": "Họ tên đầy đủ theo danh sách lớp UET"},
+            {"id": "student_id", "label": "Mã sinh viên (MSSV)", "description": "8 chữ số (ví dụ: 22028100)"},
+            {"id": "class_name", "label": "Lớp học phần", "description": "Lớp môn học Lập trình mạng (INT3304)"},
+            {"id": "github_repo_url", "label": "Link GitHub Repository", "description": "https://github.com/<username>/ottv2-<MaSV> (Public, tạo từ Template chuẩn)"},
+        ],
+        "announcement": (
+            "Giải đấu thống nhất phương thức nộp bài: Thí sinh tạo repo cá nhân từ GitHub Template của BTC, "
+            "kiểm tra xanh toàn bộ bài test CI/CD tự động, và điền link repo vào Google Form. "
+            "Hệ thống KHÔNG tự điền bot hộ thí sinh; bài thi không hợp lệ hoặc không nộp sẽ bị xử thua T1."
+        ),
+    }
+
+
+@router.post("")
+async def submit_package():
     """
-    Nộp gói bài làm (.zip).
-    Tự động giải nén, kiểm tra cấu trúc (T08) và quét an ninh API key (T09).
+    Cổng nộp file .ZIP trực tiếp qua web đã đóng để chuyển sang hình thức thống nhất:
+    GitHub Template + Google Form thu link (Trụ cột 1).
     """
-    if not file.filename.lower().endswith(".zip"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Chỉ chấp nhận file có định dạng nén .ZIP",
-        )
-
-    sub_id = str(uuid.uuid4())
-    sub_dir = os.path.abspath(os.path.join(settings.STORAGE_PATH, "submissions", sub_id))
-    os.makedirs(sub_dir, exist_ok=True)
-
-    zip_file_path = os.path.join(sub_dir, "package.zip")
-    extract_dir = os.path.join(sub_dir, "extracted")
-
-    try:
-        with open(zip_file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Lỗi khi lưu file nộp: {str(e)}",
-        )
-
-    # Thực hiện validation
-    user_tier = current_user.tier or "A"
-    val_res = validate_submission_zip(zip_file_path, extract_dir, tier=user_tier)
-
-    # Nếu hợp lệ, chuyển các bài nộp cũ thành is_active=False
-    if val_res.is_valid:
-        db.query(Submission).filter(
-            Submission.user_id == current_user.id,
-            Submission.is_active == True,
-        ).update({"is_active": False})
-
-    submission = Submission(
-        id=sub_id,
-        user_id=current_user.id,
-        status="valid" if val_res.is_valid else "invalid",
-        zip_path=zip_file_path,
-        is_active=val_res.is_valid,
-        validation=val_res.to_dict(),
-        commit_count=val_res.commit_count,
-    )
-    if val_res.commit_count > 0:
-        current_user.commit_count = max(current_user.commit_count or 0, val_res.commit_count)
-
-    db.add(submission)
-    db.commit()
-    db.refresh(submission)
-
-    return SubmissionResponse(
-        id=submission.id,
-        user_id=submission.user_id,
-        status=submission.status,
-        is_valid=val_res.is_valid,
-        is_active=submission.is_active,
-        validation=val_res.details,
-        errors=val_res.errors,
-        warnings=val_res.warnings,
-        commit_count=val_res.commit_count,
-        test_run_result=submission.test_run_result,
-        submitted_at=submission.submitted_at,
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Hệ thống đã chuyển sang hình thức nộp qua Google Form và GitHub Repository. Vui lòng nộp link repo qua Google Form chính thức của Ban tổ chức.",
     )
 
 
 @router.get("/history", response_model=List[SubmissionResponse])
+
 def get_submission_history(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -309,13 +296,14 @@ def test_run_submission(
 # ── Public Student Submission Lookup ─────────────
 
 @router.get("/lookup")
+@router.get("/lookup/{student_id}")
 def lookup_student_submission(student_id: str, db: Session = Depends(get_db)):
     """
     Cổng tra cứu công khai bài thi dành cho thí sinh:
     Nhập Mã Sinh Viên (MSSV) để xem tình trạng thẩm định bài nộp,
     mã commit hash chốt, thời gian commit, và hướng dẫn sửa lỗi nếu có.
     """
-    s_clean = student_id.strip()
+    s_clean = student_id.strip() if student_id else ""
     if not s_clean:
         raise HTTPException(status_code=400, detail="Vui lòng cung cấp Mã Sinh Viên để tra cứu")
 
@@ -326,10 +314,16 @@ def lookup_student_submission(student_id: str, db: Session = Depends(get_db)):
         .first()
     )
     if not user:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Chưa tìm thấy thông tin thí sinh với MSSV '{s_clean}'. Hãy kiểm tra lại MSSV hoặc biểu mẫu Google Form bạn đã nộp."
-        )
+        return {
+            "found": False,
+            "has_submission": False,
+            "student_id": s_clean,
+            "name": None,
+            "class_name": None,
+            "github_repo_url": None,
+            "status": "not_found",
+            "message": f"Chưa tìm thấy thông tin thí sinh với MSSV '{s_clean}'. Hãy kiểm tra lại MSSV hoặc biểu mẫu Google Form bạn đã nộp.",
+        }
 
     # Tìm submission active của user
     sub = (
@@ -385,3 +379,162 @@ def lookup_student_submission(student_id: str, db: Session = Depends(get_db)):
         "warnings": val.get("warnings", []),
         "submitted_at": sub.submitted_at,
     }
+
+
+# ── Top 32 Obstacle Sandbox Benchmark ─────────────
+
+def get_default_top32_obstacles() -> List[str]:
+    """Lấy danh sách ô chướng ngại vật mặc định từ top32_config.json."""
+    config_file = os.path.join(SWISS_STORAGE_DIR, "top32_config.json")
+    default_obstacles = ["d4", "d6", "f4", "f6", "e5"]
+    if os.path.exists(config_file):
+        try:
+            with open(config_file, "r", encoding="utf-8") as f:
+                saved = json.load(f)
+                return saved.get("obstacles", default_obstacles)
+        except Exception:
+            pass
+    return default_obstacles
+
+
+@router.post("/benchmark-obstacle", response_model=BenchmarkObstacleResponse)
+def run_benchmark_obstacle(
+    req: BenchmarkObstacleRequest,
+    current_user: Optional[User] = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Sandbox Benchmark API dành cho Top 32 Vòng Chung Kết:
+    - Kiểm thử Bot v2 đối đầu ObstacleBot trên bàn cờ có ô chướng ngại vật cấm.
+    - Đo lường độ trễ tính toán trung bình (yêu cầu <= 200ms/nước).
+    - Thẩm định tính tuân thủ ô cản (bot có phạm luật lao vào ô cấm không).
+    - Trả về toàn bộ dữ liệu replay trực quan (obstacles, moves, board states).
+    """
+    target_user = current_user
+    if not target_user and req.student_id:
+        s_clean = req.student_id.strip()
+        target_user = (
+            db.query(User)
+            .filter((User.student_id == s_clean) | (User.email == s_clean))
+            .first()
+        )
+
+    # 1. Xác định bot thí sinh
+    temp_bot_file = None
+    candidate_fn = None
+    bot_name = "Thí sinh"
+
+    try:
+        if req.bot_code and req.bot_code.strip():
+            # Chạy từ mã nguồn trực tiếp (IDE / Web snippet)
+            temp_dir = os.path.join(settings.STORAGE_PATH, "submissions", "temp")
+            os.makedirs(temp_dir, exist_ok=True)
+            temp_bot_file = os.path.join(temp_dir, f"bot_bench_{uuid.uuid4().hex[:8]}.py")
+            with open(temp_bot_file, "w", encoding="utf-8") as f:
+                f.write(req.bot_code)
+
+            if not check_choose_move_in_code(temp_bot_file):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Mã nguồn thiếu định nghĩa hàm 'def choose_move(state)'.",
+                )
+            candidate_fn = load_bot_from_file(temp_bot_file)
+            bot_name = (target_user.name if target_user else "Bot v2 Snippet")
+        elif req.submission_id:
+            sub = db.query(Submission).filter(Submission.id == req.submission_id).first()
+            if not sub or not sub.extracted_path:
+                raise HTTPException(status_code=404, detail="Không tìm thấy bản nộp.")
+            bot_path = os.path.join(sub.extracted_path, "bot.py")
+            if not os.path.exists(bot_path):
+                raise HTTPException(status_code=400, detail="Không tìm thấy bot.py trong bản nộp.")
+            candidate_fn = load_bot_from_file(bot_path)
+            bot_name = f"Bản nộp #{sub.id[:8]}"
+        elif target_user:
+            # Ưu tiên repo đã clone
+            repo_bot = os.path.join(
+                settings.STORAGE_PATH, "submissions", "repos", str(target_user.student_id or ""), "bot.py"
+            )
+            if os.path.exists(repo_bot):
+                candidate_fn = load_bot_from_file(repo_bot)
+                bot_name = target_user.bot_name or f"Bot của {target_user.name}"
+            else:
+                # Kiểm tra submission gần nhất
+                sub = (
+                    db.query(Submission)
+                    .filter(Submission.user_id == target_user.id)
+                    .order_by(Submission.submitted_at.desc())
+                    .first()
+                )
+                if sub and sub.extracted_path:
+                    bot_path = os.path.join(sub.extracted_path, "bot.py")
+                    if os.path.exists(bot_path):
+                        candidate_fn = load_bot_from_file(bot_path)
+                        bot_name = target_user.bot_name or f"Bot của {target_user.name}"
+
+        # Fallback an toàn nếu chưa có bot thực tế
+        if candidate_fn is None:
+            candidate_fn = greedy_choose_move
+            bot_name = "GreedyBot (Chế độ Demo Mẫu)"
+
+        # 2. Xác định danh sách ô chướng ngại vật
+        if req.obstacles and len(req.obstacles) > 0:
+            obstacles_list = [str(o).strip().lower() for o in req.obstacles if str(o).strip()]
+        else:
+            obstacles_list = get_default_top32_obstacles()
+
+        # 3. Chạy trận đấu Benchmark với ObstacleBot
+        match_res = play_match(
+            bot_white_fn=candidate_fn,
+            bot_black_fn=obstacle_choose_move,
+            bot_white_name=bot_name,
+            bot_black_name="ObstacleBot (Mẫu Top 32)",
+            timeout_sec=2.0,
+            max_moves=60,
+            obstacles=obstacles_list,
+        )
+
+        # 4. Thống kê chỉ số hiệu năng
+        white_moves = [m for m in match_res.moves if m.get("player") == "W"]
+        if white_moves:
+            durations = [int(m.get("duration_ms", 0)) for m in white_moves]
+            avg_ms = round(sum(durations) / len(durations), 2)
+            max_ms = max(durations)
+        else:
+            avg_ms = 0.0
+            max_ms = 0
+
+        # Kiểm tra tính tuân thủ ô cản
+        is_obstacle_compliant = True
+        for m in match_res.moves:
+            if m.get("player") == "W" and "chướng ngại vật" in str(m.get("error", "")).lower():
+                is_obstacle_compliant = False
+                break
+        if "chướng ngại vật" in match_res.reason.lower() and match_res.winner == "B":
+            is_obstacle_compliant = False
+
+        is_latency_compliant = (avg_ms <= 200.0)
+
+        return BenchmarkObstacleResponse(
+            status="finished",
+            winner=match_res.winner,
+            end_code=match_res.end_code,
+            total_moves=match_res.total_moves,
+            duration_ms=match_res.duration_ms,
+            average_move_time_ms=avg_ms,
+            max_move_time_ms=max_ms,
+            is_latency_compliant=is_latency_compliant,
+            is_obstacle_compliant=is_obstacle_compliant,
+            obstacles=obstacles_list,
+            reason=match_res.reason,
+            bot_name=bot_name,
+            opponent_name="ObstacleBot (Mẫu Top 32)",
+            replay=match_res.to_replay_dict(),
+        )
+
+    finally:
+        if temp_bot_file and os.path.exists(temp_bot_file):
+            try:
+                os.remove(temp_bot_file)
+            except Exception:
+                pass
+

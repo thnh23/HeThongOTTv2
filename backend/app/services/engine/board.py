@@ -68,6 +68,34 @@ class Piece:
 
 
 # ────────────────────────────────────────────────
+# Obstacle Set
+# ────────────────────────────────────────────────
+
+class ObstacleSet(set):
+    """
+    Set chứa toạ độ ô chướng ngại vật, hỗ trợ kiểm tra membership
+    bằng cả tuple toạ độ (col, row) lẫn chuỗi ký hiệu ô cờ ("e5", "d4").
+    """
+    def __contains__(self, item: object) -> bool:
+        if super().__contains__(item):
+            return True
+        if isinstance(item, str):
+            try:
+                c, r = parse_square(item)
+                return super().__contains__((c, r))
+            except Exception:
+                return False
+        elif isinstance(item, (tuple, list)) and len(item) == 2:
+            try:
+                c, r = int(item[0]), int(item[1])
+                return super().__contains__((c, r)) or super().__contains__(square_to_str(c, r))
+            except Exception:
+                return False
+        return False
+
+
+
+# ────────────────────────────────────────────────
 # Board State
 # ────────────────────────────────────────────────
 
@@ -82,12 +110,14 @@ class BoardState:
         move_count:    số nước đã đi
         position_history: list[frozenset] để phát hiện lặp thế
         last_move:     ((from_col, from_row), (to_col, to_row)) | None
+        obstacles:     ObstacleSet chứa toạ độ các ô chướng ngại vật cấm đi vào
     """
     board: dict[tuple[int, int], Piece] = field(default_factory=dict)
     current_player: str = 'W'
     move_count: int = 0
     position_history: list[frozenset] = field(default_factory=list)
     last_move: Optional[tuple] = None
+    obstacles: ObstacleSet = field(default_factory=ObstacleSet)
 
     def copy(self) -> BoardState:
         """Trả về bản sao sâu của trạng thái."""
@@ -97,16 +127,19 @@ class BoardState:
             move_count=self.move_count,
             position_history=list(self.position_history),
             last_move=self.last_move,
+            obstacles=ObstacleSet(self.obstacles),
         )
         return new
 
     def to_snapshot(self) -> frozenset:
         """
         Chuyển trạng thái thành frozenset để so sánh lặp thế.
-        Bao gồm cả current_player để phân biệt lượt đi.
+        Bao gồm cả current_player và ô chướng ngại vật.
         """
         items = [(pos, repr(piece)) for pos, piece in self.board.items()]
         items.append(('_turn', self.current_player))
+        if self.obstacles:
+            items.append(('_obs', tuple(sorted(self.obstacles))))
         return frozenset(items)
 
     def get_piece_counts(self, player: str) -> dict[str, int]:
@@ -129,8 +162,8 @@ class BoardState:
             "move_count": self.move_count,
             "white_pieces": self.get_piece_counts('W'),
             "black_pieces": self.get_piece_counts('B'),
+            "obstacles": [square_to_str(c, r) for c, r in sorted(self.obstacles)],
         }
-
 
 
 # ────────────────────────────────────────────────
@@ -168,7 +201,9 @@ def is_in_bounds(col: int, row: int) -> bool:
 # Initial board setup
 # ────────────────────────────────────────────────
 
-def create_initial_board() -> BoardState:
+def create_initial_board(
+    obstacles: Optional[any] = None,
+) -> BoardState:
     """
     Tạo bàn cờ ban đầu theo rules.json:
 
@@ -179,6 +214,9 @@ def create_initial_board() -> BoardState:
     Black (Đen) — hàng 9 và 8 (row_idx 8, 7):
       Row 9 (idx=8): P S R P S R P S R
       Row 8 (idx=7): S R P S R P S R P
+
+    Args:
+        obstacles: Danh sách các ô chướng ngại vật (chuỗi "e5" hoặc toạ độ (col, row)).
     """
     board: dict[tuple[int, int], Piece] = {}
 
@@ -193,6 +231,18 @@ def create_initial_board() -> BoardState:
         board[(col, 8)] = Piece('B', black_row9[col])
         board[(col, 7)] = Piece('B', black_row8[col])
 
-    state = BoardState(board=board, current_player='W')
+    obs_set = ObstacleSet()
+    if obstacles:
+        for obs in obstacles:
+            if isinstance(obs, str):
+                try:
+                    obs_set.add(parse_square(obs))
+                except Exception:
+                    pass
+            elif isinstance(obs, (tuple, list)) and len(obs) == 2:
+                obs_set.add((int(obs[0]), int(obs[1])))
+
+    state = BoardState(board=board, current_player='W', obstacles=obs_set)
     state.position_history.append(state.to_snapshot())
     return state
+

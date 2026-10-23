@@ -17,15 +17,17 @@ import {
   Edit2,
   GitBranch,
   Bot,
-  FileSpreadsheet,
   UploadCloud,
   FolderArchive,
+  Shield,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useToast } from '@/shared/context/ToastContext.jsx';
 import { GradeReviewModal } from '../../components/GradeReviewModal/GradeReviewModal.jsx';
 import { EditUserModal } from '../../components/EditUserModal/index.js';
+import { BenchmarkObstacleModal } from '@/shared/components/BenchmarkObstacleModal/BenchmarkObstacleModal.jsx';
 import './AdminDashboardPage.css';
+
 
 export function AdminDashboardPage() {
   const { showToast } = useToast();
@@ -120,10 +122,12 @@ export function AdminDashboardPage() {
   const [top32Announcement, setTop32Announcement] = useState('');
   const [top32Seeds, setTop32Seeds] = useState([]);
   const [isSavingObstacles, setIsSavingObstacles] = useState(false);
+  const [isBenchmarkOpen, setIsBenchmarkOpen] = useState(false);
 
   // Modals state
   const [selectedUserForReview, setSelectedUserForReview] = useState(null);
   const [selectedUserForEdit, setSelectedUserForEdit] = useState(null);
+
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
@@ -1094,16 +1098,27 @@ export function AdminDashboardPage() {
                 />
               </div>
 
-              <button
-                type="button"
-                className="btn btn-primary"
-                style={{ width: 'fit-content' }}
-                onClick={handleSaveTop32Config}
-                disabled={isSavingObstacles}
-              >
-                <Check size={16} />
-                <span>{isSavingObstacles ? 'Đang lưu...' : 'Lưu Cấu Hình Ô Cản Top 32'}</span>
-              </button>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{ width: 'fit-content' }}
+                  onClick={handleSaveTop32Config}
+                  disabled={isSavingObstacles}
+                >
+                  <Check size={16} />
+                  <span>{isSavingObstacles ? 'Đang lưu...' : 'Lưu Cấu Hình Ô Cản Top 32'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  style={{ borderColor: 'rgba(245, 158, 11, 0.5)', color: '#fbbf24' }}
+                  onClick={() => setIsBenchmarkOpen(true)}
+                >
+                  <Shield size={16} color="#fbbf24" />
+                  <span>Mở Sandbox Benchmark Kiểm Thử</span>
+                </button>
+              </div>
 
               {/* Seeds Preview */}
               <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
@@ -1153,8 +1168,16 @@ export function AdminDashboardPage() {
           }}
         />
       )}
+
+      {/* Top 32 Obstacle Benchmark Modal */}
+      <BenchmarkObstacleModal
+        isOpen={isBenchmarkOpen}
+        onClose={() => setIsBenchmarkOpen(false)}
+      />
     </div>
   );
 }
 
 export default AdminDashboardPage;
+
+

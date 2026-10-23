@@ -75,11 +75,28 @@ class TestTournamentMatchmaking:
         tier = "A"
         # Đảm bảo A có student-a (nộp), student-a2 (nộp), student-a3 (chưa nộp)
         # Khôi phục submission cho a và a2
+        sub_a = db.query(Submission).filter(Submission.user_id == "user-student-a").first()
+        if not sub_a:
+            sub_a = Submission(
+                id="07593876-492b-4cc1-bd4e-59bf81204563",
+                user_id="user-student-a",
+                status="valid",
+                is_active=True,
+                github_repo_url="https://github.com/nguyenvanan/ottv2-bot",
+            )
+            db.add(sub_a)
+
         sub_a2 = db.query(Submission).filter(Submission.user_id == "user-student-a2").first()
         if not sub_a2:
-            sub_a2 = Submission(id="a2a2a2a2-492b-4cc1-bd4e-59bf81204563", user_id="user-student-a2", status="valid", is_active=True)
+            sub_a2 = Submission(
+                id="a2a2a2a2-492b-4cc1-bd4e-59bf81204563",
+                user_id="user-student-a2",
+                status="valid",
+                is_active=True,
+                github_repo_url="https://github.com/dominhkhang/ottv2-code",
+            )
             db.add(sub_a2)
-            db.commit()
+        db.commit()
 
         # Đảm bảo student-a3 KHÔNG có submission
         db.query(Submission).filter(Submission.user_id == "user-student-a3").delete()
@@ -97,9 +114,9 @@ class TestTournamentMatchmaking:
 
         # Kiểm tra chi tiết các trận đấu tạo ra trong database
         db = SessionLocal()
-        pending_matches = db.query(Match).filter(Match.tier == tier, Match.status == "pending").all()
+        matches = db.query(Match).filter(Match.tier == tier).all()
         paired_user_ids = set()
-        for m in pending_matches:
+        for m in matches:
             paired_user_ids.add(m.bot_a_id)
             paired_user_ids.add(m.bot_b_id)
 

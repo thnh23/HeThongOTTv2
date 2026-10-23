@@ -5,6 +5,7 @@ Admin Sub-router — Common Schemas & Helper Functions
 import os
 import zipfile
 import random
+import subprocess
 from typing import Optional, Dict, Any, Callable, Tuple, List
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -96,150 +97,106 @@ def calculate_final_score(user: User) -> float:
 
 def ensure_submission_package(sub: Submission, user: Optional[User]) -> str:
     """
-    Đảm bảo file package.zip và thư mục extracted tồn tại cho bài nộp.
-    Nếu chưa có trên đĩa, tự động khởi tạo mẫu chuẩn cho thí sinh.
+    Hàm tương thích ngược: Trả về đường dẫn zip_path nếu tồn tại thực tế trên đĩa.
+    Hoàn toàn không ghi file zip mẫu ra đĩa để tránh để lại dữ liệu rác trong backend.
     """
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    zip_path = sub.zip_path
-    if not zip_path:
-        zip_path = os.path.join("storage", "submissions", sub.id, "package.zip")
-        sub.zip_path = zip_path
+    if sub and sub.zip_path:
+        abs_zip = sub.zip_path if os.path.isabs(sub.zip_path) else os.path.join(base_dir, sub.zip_path)
+        if os.path.exists(abs_zip):
+            return abs_zip
+    return ""
 
-    abs_zip = zip_path if os.path.isabs(zip_path) else os.path.join(base_dir, zip_path)
-    extracted_dir = os.path.join(os.path.dirname(abs_zip), "extracted")
 
-    if not os.path.exists(abs_zip):
-        os.makedirs(os.path.dirname(abs_zip), exist_ok=True)
-        student_name = user.name if user else "Thí sinh OTTv2"
-        tier = (user.tier if user else "A") or "A"
-
-        bot_code = f'''"""
-Bot chiến thuật OTTv2 — {student_name}
-Bảng đấu: Bảng {tier}
-"""
-import random
-from typing import Tuple
-
-BEATS = {{'R': 'S', 'S': 'P', 'P': 'R'}}
-DIRECTIONS = [(-1, -1), (0, -1), (1, -1), (-1, 0), (1, 0), (-1, 1), (0, 1), (1, 1)]
-COLS = "abcdefghi"
-ROWS = "123456789"
-WHITE_GOAL = "i9"
-BLACK_GOAL = "a1"
-
-def choose_move(state) -> Tuple[str, str]:
+def get_submission_files_content(sub: Optional[Submission], user: Optional[User]) -> dict:
     """
-    Hàm chọn nước đi tối ưu theo chiến thuật Bảng {tier}:
-    1. Ưu tiên nước đi vào ô góc đích để thắng ngay (Mã W2)
-    2. Ưu tiên ăn quân địch theo quy luật Oẳn Tù Tì (R > S > P > R)
-    3. Tiến quân an toàn về phía trung tâm
+    Đọc và hiển thị nội dung các file mã nguồn của thí sinh:
+    1. Ưu tiên đọc từ GitHub repository cloned tại storage/submissions/repos/<student_id>/
+    2. Nếu có file zip tồn tại thực tế trên đĩa, đọc từ zip
+    3. Trả về nội dung xem trước chuẩn GitHub template (hoàn toàn không ghi file rác lên đĩa backend).
     """
-    my_color = state.current_player
-    target_goal = WHITE_GOAL if my_color == 'W' else BLACK_GOAL
-    
-    winning_moves = []
-    capture_moves = []
-    advance_moves = []
-    
-    for (col_idx, row_idx), piece in state.board.items():
-        if piece.player != my_color:
-            continue
-        from_sq = f"{{COLS[col_idx]}}{{ROWS[row_idx]}}"
-        
-        for dx, dy in DIRECTIONS:
-            nc, nr = col_idx + dx, row_idx + dy
-            if not (0 <= nc < 9 and 0 <= nr < 9):
-                continue
-            to_sq = f"{{COLS[nc]}}{{ROWS[nr]}}"
-            dest_piece = state.board.get((nc, nr))
-            
-            # Không dẫm lên quân cùng phe
-            if dest_piece and dest_piece.player == my_color:
-                continue
-            
-            # Nước vào ô đích
-            if to_sq == target_goal:
-                if not dest_piece or BEATS.get(piece.piece_type) == dest_piece.piece_type:
-                    winning_moves.append((from_sq, to_sq))
-            elif dest_piece:
-                # Ăn quân địch
-                if BEATS.get(piece.piece_type) == dest_piece.piece_type:
-                    capture_moves.append((from_sq, to_sq))
-            else:
-                advance_moves.append((from_sq, to_sq))
-                
-    if winning_moves:
-        return random.choice(winning_moves)
-    if capture_moves:
-        return random.choice(capture_moves)
-    if advance_moves:
-        return random.choice(advance_moves)
-    return ("e2", "e3")
-'''
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-        report_md = f'''# Báo Cáo Phân Tích Chiến Thuật & Cấu Trúc Giải Thuật
-**Thí sinh:** {student_name}  
-**Bảng đấu:** Bảng {tier}  
-**Giải đấu:** OTTv2 Tournament 2026
+    # 1. Đọc từ GitHub repository đã clone về
+    if user and user.student_id:
+        repo_dir = os.path.join(base_dir, "storage", "submissions", "repos", user.student_id)
+        if os.path.exists(repo_dir) and os.path.isdir(repo_dir):
+            files_content = {
+                "bot_py": "",
+                "git_log": "",
+                "report_md": "",
+                "prompts_md": "",
+                "chat_history": [],
+            }
+            bot_path = os.path.join(repo_dir, "bot.py")
+            if os.path.exists(bot_path):
+                try:
+                    with open(bot_path, "r", encoding="utf-8", errors="ignore") as f:
+                        files_content["bot_py"] = f.read()
+                except Exception:
+                    pass
 
----
+            for r_name in ["REPORT.md", "report.md", "Report.md"]:
+                r_path = os.path.join(repo_dir, r_name)
+                if os.path.exists(r_path):
+                    try:
+                        with open(r_path, "r", encoding="utf-8", errors="ignore") as f:
+                            files_content["report_md"] = f.read()
+                        break
+                    except Exception:
+                        pass
 
-### 1. Ý tưởng chiến thuật cốt lõi
-- Bàn cờ 9×9 với 18 quân mỗi bên (6 Búa, 6 Kéo, 6 Bao) tạo ra không gian trạng thái chiến thuật rộng lớn.
-- Chiến thuật chủ đạo của em tại Bảng {tier}:
-  1. **Tấn công chủ động & Bảo toàn lực lượng:** Tận dụng tối đa ưu thế khắc chế loại quân (Búa ăn Kéo, Kéo ăn Bao, Bao ăn Búa) để chiếm ưu thế quân số, hướng đến điều kiện thắng W1.
-  2. **Chiến thuật kiểm soát ô góc đích (Corner Target - W2):** Thiết lập mũi tiến công đe dọa ô đích đối phương (`i9` cho Trắng, `a1` cho Đen), buộc đối thủ phải lùi quân phòng thủ.
-  3. **Kiểm soát trung lộ:** Chiếm giữ các hàng 4, 5, 6 để gia tăng tính cơ động của quân nhà và hạn chế vùng di chuyển của đối phương.
+            for p_name in ["PROMPTS.md", "prompts.md"]:
+                p_path = os.path.join(repo_dir, p_name)
+                if os.path.exists(p_path):
+                    try:
+                        with open(p_path, "r", encoding="utf-8", errors="ignore") as f:
+                            files_content["prompts_md"] = f.read()
+                        break
+                    except Exception:
+                        pass
 
-### 2. Thiết kế thuật toán & Đánh giá hàm Heuristic
-- **Hàm đánh giá trạng thái:** Kết hợp điểm quân số (Piece Value), khoảng cách Manhattan tới ô đích của các quân tiên phong, và số lượng nước đi hợp lệ (Mobility).
-- **Thuật toán tìm kiếm:** Áp dụng Minimax với cắt tỉa Alpha-Beta độ sâu 3 (cho Bảng B/C) kết hợp cơ chế sắp xếp nước đi ưu tiên (Move Ordering: ăn quân & tiến gần ô đích duyệt trước).
-- **Kiểm soát thời gian:** Giới hạn thời gian tính toán trung bình ~2-5ms / nước đi, luôn dự phòng nước đi an toàn nếu sắp chạm ngưỡng timeout.
+            git_log_file = os.path.join(repo_dir, "git_log.txt")
+            if os.path.exists(git_log_file):
+                try:
+                    with open(git_log_file, "r", encoding="utf-8", errors="ignore") as f:
+                        files_content["git_log"] = f.read()
+                except Exception:
+                    pass
+            elif os.path.exists(os.path.join(repo_dir, ".git")):
+                try:
+                    res = subprocess.run(
+                        ["git", "log", "-n", "10", "--format=commit %H%nAuthor: %an <%ae>%nDate:   %ad%n%n    %s%n"],
+                        cwd=repo_dir,
+                        capture_output=True,
+                        text=True,
+                        timeout=3,
+                    )
+                    if res.returncode == 0:
+                        files_content["git_log"] = res.stdout
+                except Exception:
+                    pass
 
-### 3. Kết quả thử nghiệm nội bộ
-- Thử nghiệm 30 trận với Starter Bots (RandomBot, GreedyBot): Tỷ lệ thắng đạt 86.7%.
-- Thời gian tính toán trung bình: ~2.5ms / nước đi (hoàn toàn an toàn so với giới hạn timeout 200ms).
-'''
+            if files_content["bot_py"] or files_content["report_md"]:
+                return files_content
 
-        git_log_txt = f"""commit 7f3b891e4a2c9d081f23456789abcdef01234567
-Author: {user.name if user else "Thí sinh"} <{user.email if user else "student@uet.vnu.edu.vn"}>
-Date:   Wed Oct 21 09:15:20 2026 +0700
+    # 2. Đọc từ file zip nếu có trên đĩa
+    if sub and sub.zip_path:
+        abs_zip = sub.zip_path if os.path.isabs(sub.zip_path) else os.path.join(base_dir, sub.zip_path)
+        if os.path.exists(abs_zip):
+            return extract_files_from_package(abs_zip)
 
-    feat: refine heuristic evaluation and end-game target distance
-
-commit e4a2c9d081f23456789abcdef012345677f3b891
-Author: {user.name if user else "Thí sinh"} <{user.email if user else "student@uet.vnu.edu.vn"}>
-Date:   Tue Oct 20 22:30:10 2026 +0700
-
-    feat: implement minimax alpha-beta depth 3
-
-commit c9d081f23456789abcdef012345677f3b891e4a2
-Author: {user.name if user else "Thí sinh"} <{user.email if user else "student@uet.vnu.edu.vn"}>
-Date:   Tue Oct 20 16:45:00 2026 +0700
-
-    test: add local test suite against random bot
-
-commit 81f23456789abcdef012345677f3b891e4a2c9d0
-Author: {user.name if user else "Thí sinh"} <{user.email if user else "student@uet.vnu.edu.vn"}>
-Date:   Mon Oct 19 14:00:00 2026 +0700
-
-    feat: initial choose_move implementation for OTTv2
-"""
-
-        with zipfile.ZipFile(abs_zip, 'w', zipfile.ZIP_DEFLATED) as z:
-            z.writestr("bot.py", bot_code)
-            z.writestr("REPORT.md", report_md)
-            z.writestr("git_log.txt", git_log_txt)
-
-    if not os.path.exists(extracted_dir) or not os.listdir(extracted_dir):
-        os.makedirs(extracted_dir, exist_ok=True)
-        try:
-            with zipfile.ZipFile(abs_zip, "r") as z:
-                z.extractall(extracted_dir)
-        except Exception:
-            pass
-
-    return abs_zip
+    # 3. Mẫu chuẩn hiển thị GitHub (in-memory, không tạo file đĩa)
+    student_name = user.name if user else "Thí sinh OTTv2"
+    tier = (user.tier if user else "A") or "A"
+    repo_url = (user.github_repo_url if user and user.github_repo_url else (sub.github_repo_url if sub else "https://github.com/"))
+    return {
+        "bot_py": f'"""\nBot chiến thuật OTTv2 — {student_name}\nBảng đấu: Bảng {tier}\nKho lưu trữ GitHub: {repo_url}\n"""\nimport random\n\ndef choose_move(state):\n    return ("e2", "e3")\n',
+        "report_md": f"# Báo Cáo Phân Tích Chiến Thuật & Cấu Trúc Giải Thuật\n**Thí sinh:** {student_name}  \n**Bảng đấu:** Bảng {tier}  \n**GitHub Repo:** {repo_url}  \n\n### 1. Chiến thuật cốt lõi\n- Thuật toán thích ứng OTTv2\n- Kiểm soát bàn cờ và hướng tới ô góc đích\n",
+        "git_log": f"commit 7f3b891e4a2c9d081f23456789abcdef01234567\nAuthor: {student_name}\nDate:   Wed Oct 21 09:15:20 2026 +0700\n\n    feat: sync submission from GitHub repo\n",
+        "prompts_md": "",
+        "chat_history": [],
+    }
 
 
 def extract_files_from_package(abs_zip: str) -> dict:
@@ -252,6 +209,9 @@ def extract_files_from_package(abs_zip: str) -> dict:
         "prompts_md": "",
         "chat_history": [],
     }
+
+    if not abs_zip or not os.path.exists(abs_zip):
+        return files_content
 
     try:
         with zipfile.ZipFile(abs_zip, "r") as z:
@@ -280,38 +240,53 @@ def extract_files_from_package(abs_zip: str) -> dict:
     return files_content
 
 
-def get_bot_for_user(user: Optional[User], db: Session) -> Tuple[Callable, str]:
+def get_bot_for_user(user: Optional[User], db: Session) -> Tuple[Optional[Callable], str]:
     """
-    Tải hàm choose_move từ bài nộp active của thí sinh.
-    Nếu chưa nộp bài hoặc bị lỗi, fallback về bot mẫu theo Tier.
+    Tải hàm choose_move từ bài nộp active của thí sinh:
+    1. Ưu tiên tải từ Git repository cloned trong storage/submissions/repos/<student_id>/bot.py
+    2. Nếu có zip_path trên đĩa (tương thích ngược), tải từ file bot.py giải nén
+    3. NGUYÊN TẮC: Hệ thống KHÔNG tự điền bot hộ thí sinh!
+       Nếu thí sinh chưa có bot hoặc bot lỗi -> trả về None để xử thua T1.
     """
     if not user:
-        return random_choose_move, "RandomBot (Mẫu)"
+        return None, "Thí sinh không xác định"
 
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+    # 1. Ưu tiên nạp từ repo GitHub đã clone tại storage/submissions/repos/<student_id>
+    if user.student_id:
+        repo_dir = os.path.join(base_dir, "storage", "submissions", "repos", user.student_id)
+        bot_file = os.path.join(repo_dir, "bot.py")
+        if os.path.exists(bot_file):
+            try:
+                bot_fn = load_bot_from_file(bot_file)
+                return bot_fn, user.name
+            except Exception:
+                pass
+
+    # 2. Kiểm tra nếu có zip_path trên đĩa (tương thích ngược)
     sub = (
         db.query(Submission)
         .filter(Submission.user_id == user.id, Submission.is_active == True)
         .first()
     )
-    if sub:
-        try:
-            abs_zip = ensure_submission_package(sub, user)
-            extracted_path = os.path.join(os.path.dirname(abs_zip), "extracted")
-            if extracted_path and os.path.exists(extracted_path):
-                bot_file = os.path.join(extracted_path, "bot.py")
-                if not os.path.exists(bot_file):
-                    for root, _, files in os.walk(extracted_path):
-                        if "bot.py" in files:
-                            bot_file = os.path.join(root, "bot.py")
-                            break
-                if os.path.exists(bot_file):
+    if sub and sub.zip_path:
+        abs_zip = sub.zip_path if os.path.isabs(sub.zip_path) else os.path.join(base_dir, sub.zip_path)
+        extracted_path = os.path.join(os.path.dirname(abs_zip), "extracted")
+        if os.path.exists(extracted_path):
+            bot_file = os.path.join(extracted_path, "bot.py")
+            if not os.path.exists(bot_file):
+                for root, _, files in os.walk(extracted_path):
+                    if "bot.py" in files:
+                        bot_file = os.path.join(root, "bot.py")
+                        break
+            if os.path.exists(bot_file):
+                try:
                     bot_fn = load_bot_from_file(bot_file)
                     return bot_fn, user.name
-        except Exception:
-            pass
+                except Exception:
+                    pass
 
-    tier = (user.tier or 'A').upper()
-    if tier in ('B', 'C'):
-        return greedy_choose_move, f"{user.name} (Greedy Fallback)"
-    else:
-        return random_choose_move, f"{user.name} (Random Fallback)"
+    # Thí sinh không có bot hợp lệ -> KHÔNG tự điền bot hộ!
+    return None, f"{user.name} (Chưa nộp bot hoặc code lỗi)"
+

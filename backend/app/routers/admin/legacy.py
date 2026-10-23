@@ -44,6 +44,28 @@ async def run_tournament_queue_async(tier: str, match_ids: List[str], move_delay
         finally:
             db.close()
 
+        # Nếu một trong 2 bên không có bot hợp lệ -> Xử thua T1 ngay lập tức (KHÔNG tự điền bot)
+        if bot_white_fn is None or bot_black_fn is None:
+            db_forfeit = SessionLocal()
+            try:
+                err_m = db_forfeit.query(Match).filter(Match.id == match_id).first()
+                if err_m:
+                    err_m.status = "done"
+                    err_m.end_code = "T1"
+                    if bot_white_fn is None and bot_black_fn is not None:
+                        err_m.winner = "B"
+                        err_m.reason = f"Thí sinh White ({bot_w_name}) bị xử thua T1 do không có bot hợp lệ."
+                    elif bot_black_fn is None and bot_white_fn is not None:
+                        err_m.winner = "W"
+                        err_m.reason = f"Thí sinh Black ({bot_b_name}) bị xử thua T1 do không có bot hợp lệ."
+                    else:
+                        err_m.winner = None
+                        err_m.reason = "Cả hai thí sinh đều không có bot hợp lệ."
+                    db_forfeit.commit()
+            finally:
+                db_forfeit.close()
+            continue
+
         # Thực thi trận đấu có streaming qua WebSocket
         try:
             await run_live_match_async(
@@ -55,6 +77,7 @@ async def run_tournament_queue_async(tier: str, match_ids: List[str], move_delay
                 move_delay_sec=move_delay_sec,
                 max_moves=200,
             )
+
         except Exception as e:
             db_err = SessionLocal()
             try:
@@ -234,6 +257,25 @@ def retry_match(match_id: str, db: Session = Depends(get_db)):
     bot_w_fn, bot_w_name = get_bot_for_user(user_w, db)
     bot_b_fn, bot_b_name = get_bot_for_user(user_b, db)
 
+    if bot_w_fn is None or bot_b_fn is None:
+        m.status = "done"
+        m.end_code = "T1"
+        if bot_w_fn is None and bot_b_fn is not None:
+            m.winner = "B"
+            m.reason = f"Thí sinh White ({bot_w_name}) bị xử thua T1 do không có bot hợp lệ."
+        elif bot_b_fn is None and bot_w_fn is not None:
+            m.winner = "W"
+            m.reason = f"Thí sinh Black ({bot_b_name}) bị xử thua T1 do không có bot hợp lệ."
+        else:
+            m.winner = None
+            m.reason = "Cả hai thí sinh đều không có bot hợp lệ."
+        db.commit()
+        return {
+            "success": True,
+            "match_id": m.id,
+            "message": f"Trận đấu kết thúc ngay lập tức (Xử thua T1): {m.reason}",
+        }
+
     asyncio.create_task(
         run_live_match_async(
             match_id=m.id,
@@ -250,6 +292,7 @@ def retry_match(match_id: str, db: Session = Depends(get_db)):
         "match_id": m.id,
         "message": "Trận đấu đang được khởi chạy lại trong Sandbox!",
     }
+
 
 
 @router.post("/seed-data")
