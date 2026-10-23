@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Search,
   CheckCircle2,
@@ -12,21 +13,26 @@ import {
   HelpCircle,
   RefreshCw,
   Award,
+  Shield,
+  ArrowRight,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
+import { useAuth } from '@/shared/context/AuthContext.jsx';
 import { useToast } from '@/shared/context/ToastContext.jsx';
+import { BenchmarkObstacleModal } from '@/shared/components/BenchmarkObstacleModal/BenchmarkObstacleModal.jsx';
 import './LookupPage.css';
 
 export function LookupPage() {
+  const { user, isAuthenticated } = useAuth();
   const { showToast } = useToast();
   const [studentIdInput, setStudentIdInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [searchedId, setSearchedId] = useState('');
+  const [isBenchmarkOpen, setIsBenchmarkOpen] = useState(false);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    const cleanId = studentIdInput.trim();
+  const fetchStudentData = async (idToSearch) => {
+    const cleanId = (idToSearch || '').trim();
     if (!cleanId) {
       showToast('Vui lòng nhập Mã Sinh Viên (MSSV) để tra cứu!', 'error');
       return;
@@ -37,11 +43,17 @@ export function LookupPage() {
     setSearchedId(cleanId);
 
     try {
-      const data = await apiClient.get(`/submit/lookup?student_id=${encodeURIComponent(cleanId)}`);
+      const data = await apiClient.get(`/submit/lookup/${encodeURIComponent(cleanId)}`);
       setResult(data);
+      if (data && data.found) {
+        showToast(`Đã tìm thấy bài thi của MSSV ${cleanId}`, 'success');
+      } else {
+        showToast(`Chưa có dữ liệu thí sinh cho MSSV ${cleanId}`, 'info');
+      }
     } catch (err) {
       setResult({
         found: false,
+        student_id: cleanId,
         error_message: err.message || 'Không tìm thấy thông tin thí sinh với MSSV này.',
       });
     } finally {
@@ -49,8 +61,24 @@ export function LookupPage() {
     }
   };
 
-  const v = result?.validation_details || {};
+  // Auto search on mount if user is logged in
+  useEffect(() => {
+    if (isAuthenticated && user?.student_id) {
+      setStudentIdInput(user.student_id);
+      fetchStudentData(user.student_id);
+    }
+  }, [isAuthenticated, user]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchStudentData(studentIdInput);
+  };
+
+  const v = result?.validation || result?.validation_details || {};
   const isValid = result?.is_valid;
+  const commitHash = result?.commit_hash || result?.git_log?.checkout_hash;
+  const commitCount = result?.commit_count || result?.git_log?.total_commits || 0;
+  const commitDate = result?.commit_date || result?.git_log?.latest_commit_date;
 
   return (
     <div className="lookup-page container animate-fade-in">
@@ -71,14 +99,20 @@ export function LookupPage() {
             <Search size={18} className="lookup-search-icon" />
             <input
               type="text"
+              id="lookup-student-id-input"
               className="lookup-input"
-              placeholder="Nhập Mã Sinh Viên (ví dụ: 22028123)..."
+              placeholder="Nhập Mã Sinh Viên (ví dụ: 22028123 hoặc 22020001)..."
               value={studentIdInput}
               onChange={(e) => setStudentIdInput(e.target.value)}
               disabled={isLoading}
             />
           </div>
-          <button type="submit" className="btn btn-primary lookup-submit-btn" disabled={isLoading}>
+          <button
+            type="submit"
+            id="btn-lookup-submit"
+            className="btn btn-primary lookup-submit-btn"
+            disabled={isLoading}
+          >
             {isLoading ? (
               <>
                 <RefreshCw size={16} className="animate-spin" />
@@ -103,17 +137,23 @@ export function LookupPage() {
         {!isLoading && result && !result.found && (
           <div className="lookup-notfound-box glass-card animate-fade-in">
             <XCircle size={44} color="var(--rose-400)" />
-            <h3>Chưa Tìm Thấy Dữ Liệu</h3>
+            <h3>Chưa Tìm Thấy Dữ Liệu Thí Sinh</h3>
             <p className="notfound-desc">
-              Hệ thống chưa tìm thấy thông tin của MSSV <strong>{searchedId}</strong>.
+              Hệ thống chưa tìm thấy bài nộp hoặc thông tin đăng ký của MSSV <strong>{searchedId}</strong>.
             </p>
             <div className="notfound-guide">
               <strong>Gợi ý kiểm tra:</strong>
               <ul>
                 <li>Kiểm tra lại xem bạn đã điền đúng MSSV trong biểu mẫu Google Form chưa.</li>
-                <li>Nếu bạn vừa nộp Google Form gần đây, vui lòng đợi đợt nạp dữ liệu tiếp theo của Ban Tổ chức.</li>
-                <li>Liên hệ Ban Tổ chức qua email hỗ trợ nếu bạn chắc chắn đã nộp bài thành công.</li>
+                <li>Nếu bạn vừa nộp Google Form gần đây, vui lòng đợi đợt nạp dữ liệu định kỳ của Ban Tổ chức.</li>
+                <li>Đảm bảo link repository đã được tạo ở chế độ <strong>Public</strong> từ GitHub Template chuẩn.</li>
               </ul>
+              <div style={{ marginTop: '1.25rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <Link to="/submit" className="btn btn-primary btn-sm">
+                  <span>Mở Cổng Nộp Bài (Google Form &amp; Hướng Dẫn)</span>
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
             </div>
           </div>
         )}
@@ -138,7 +178,7 @@ export function LookupPage() {
                 <p>
                   {isValid
                     ? 'Mã nguồn của bạn đã vượt qua toàn bộ các bước thẩm định tự động và chạy thử Sandbox an toàn.'
-                    : 'Bài nộp hiện chưa đạt đủ điều kiện để đưa vào danh sách thi đấu. Vui lòng xem chi tiết lỗi bên dưới và khắc phục.'}
+                    : 'Bài nộp hiện chưa đạt đủ điều kiện để đưa vào danh sách thi đấu. Thí sinh sẽ bị xử thua T1 nếu không khắc phục trước deadline.'}
                 </p>
               </div>
             </div>
@@ -147,7 +187,7 @@ export function LookupPage() {
             <div className="candidate-info-grid">
               <div className="info-item">
                 <span className="info-label">Thí Sinh</span>
-                <strong className="info-value">{result.name}</strong>
+                <strong className="info-value">{result.name || 'Thí sinh UET'}</strong>
               </div>
               <div className="info-item">
                 <span className="info-label">Mã Sinh Viên</span>
@@ -155,7 +195,7 @@ export function LookupPage() {
               </div>
               <div className="info-item">
                 <span className="info-label">Lớp Khóa</span>
-                <span className="info-value">{result.class_name || 'QH-2022-I/CQ'}</span>
+                <span className="info-value">{result.class_name || 'INT3304'}</span>
               </div>
               <div className="info-item">
                 <span className="info-label">Tên Bot Đăng Ký</span>
@@ -168,7 +208,7 @@ export function LookupPage() {
               <div className="commit-box-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <GitBranch size={16} color="var(--primary-400)" />
-                  <strong>Mã Nguồn & Phiên Bản Commit Được Chốt</strong>
+                  <strong>Mã Nguồn &amp; Phiên Bản Commit Được Chốt</strong>
                 </div>
                 {result.github_repo_url && (
                   <a
@@ -187,24 +227,24 @@ export function LookupPage() {
                 <div className="commit-metric">
                   <span className="metric-title">Commit Hash Chốt Thi Đấu:</span>
                   <code className="commit-hash-code">
-                    {result.commit_hash ? result.commit_hash.slice(0, 10) : 'HEAD (Mới nhất)'}
+                    {commitHash ? commitHash.slice(0, 10) : 'HEAD (Mới nhất)'}
                   </code>
                 </div>
-                {result.commit_date && (
+                {commitDate && (
                   <div className="commit-metric">
                     <span className="metric-title">Thời Gian Commit:</span>
-                    <span>{result.commit_date}</span>
+                    <span>{new Date(commitDate).toLocaleString('vi-VN')}</span>
                   </div>
                 )}
                 <div className="commit-metric">
                   <span className="metric-title">Lịch Sử Tự Viết Code:</span>
                   <span
                     className={`commit-badge ${
-                      result.commit_count >= 4 ? 'badge-green' : 'badge-yellow'
+                      commitCount >= 4 ? 'badge-green' : 'badge-yellow'
                     }`}
                   >
-                    {result.commit_count > 0
-                      ? `${result.commit_count} commits`
+                    {commitCount > 0
+                      ? `${commitCount} commits`
                       : 'Chưa đếm được commit'}
                   </span>
                 </div>
@@ -253,10 +293,10 @@ export function LookupPage() {
                   </div>
                   <strong>Tiến Trình Git Commit</strong>
                   <span>
-                    {result.commit_count >= 4
-                      ? `Đạt chuẩn (${result.commit_count} commits)`
+                    {commitCount >= 4
+                      ? `Đạt chuẩn (${commitCount} commits)`
                       : v.git_log
-                      ? `Ít commit (${result.commit_count}/4 commits)`
+                      ? `Ít commit (${commitCount}/4 commits)`
                       : 'Thiếu lịch sử commit'}
                   </span>
                 </div>
@@ -268,7 +308,7 @@ export function LookupPage() {
               <div className="lookup-errors-box">
                 <div className="box-title">
                   <ShieldAlert size={18} color="var(--rose-400)" />
-                  <strong>Các Lỗi Cần Khắc Phục Ngay:</strong>
+                  <strong>Các Lỗi Cần Khắc Phục Ngay (Tránh bị xử thua T1):</strong>
                 </div>
                 <ul className="errors-list">
                   {result.errors.map((err, idx) => (
@@ -304,7 +344,7 @@ export function LookupPage() {
               <div className="lookup-warnings-box">
                 <div className="box-title">
                   <AlertTriangle size={16} color="var(--amber-400)" />
-                  <strong>Lưu Ý Từ Ban Tổ Chức:</strong>
+                  <strong>Lưu Ý Từ Ban Tổ Chức (T09):</strong>
                 </div>
                 <ul className="warnings-list">
                   {result.warnings.map((w, idx) => (
@@ -313,9 +353,33 @@ export function LookupPage() {
                 </ul>
               </div>
             )}
+
+            {/* Action Buttons Footer */}
+            <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle, #e2e8f0)', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <button
+                className="btn btn-outline"
+                style={{ borderColor: 'rgba(245, 158, 11, 0.5)', color: '#d97706' }}
+                onClick={() => setIsBenchmarkOpen(true)}
+              >
+                <Shield size={16} color="#d97706" />
+                <span>Thử Nghiệm Sandbox Top 32 (Ô Cản)</span>
+              </button>
+
+              <Link to="/submit" className="btn btn-outline">
+                <ExternalLink size={16} />
+                <span>Xem Cổng Nộp Bài &amp; Google Form</span>
+              </Link>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Benchmark Obstacle Modal */}
+      <BenchmarkObstacleModal
+        isOpen={isBenchmarkOpen}
+        onClose={() => setIsBenchmarkOpen(false)}
+        initialStudentId={searchedId || result?.student_id || ''}
+      />
     </div>
   );
 }
