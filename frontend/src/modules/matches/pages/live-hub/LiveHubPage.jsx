@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Radio,
   Swords,
@@ -12,7 +12,6 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
-import { useToast } from '@/shared/context/ToastContext.jsx';
 import { StatusBadge } from '@/shared/components/StatusBadge/StatusBadge.jsx';
 import './LiveHubPage.css';
 
@@ -20,9 +19,6 @@ export function LiveHubPage() {
   const [runningMatches, setRunningMatches] = useState([]);
   const [recentDoneMatches, setRecentDoneMatches] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSimulating, setIsSimulating] = useState(false);
-  const { showToast } = useToast();
-  const navigate = useNavigate();
 
   const fetchLiveMatches = async () => {
     setIsLoading(true);
@@ -34,11 +30,6 @@ export function LiveHubPage() {
       const running = runningRes.items || [];
       setRunningMatches(running);
       setRecentDoneMatches(doneRes.items || []);
-
-      // If exactly 1 match is running, optionally redirect or inform user
-      if (running.length === 1) {
-        // Just inform or let user choose
-      }
     } catch {
       // ignore
     } finally {
@@ -51,26 +42,6 @@ export function LiveHubPage() {
     const interval = setInterval(fetchLiveMatches, 5000);
     return () => clearInterval(interval);
   }, []);
-
-  const handleLaunchLiveSimulate = async () => {
-    setIsSimulating(true);
-    try {
-      showToast('Đang khởi tạo trận đấu Live giữa GreedyBot và RandomBot...', 'info');
-      const res = await apiClient.post('/matches/simulate', {
-        tier: 'A',
-        bot_a_name: 'GreedyBot (White)',
-        bot_b_name: 'RandomBot (Black)',
-        move_delay_sec: 0.6,
-      });
-
-      showToast('Trận đấu đã bắt đầu! Đang mở phòng xem trực tiếp...', 'success');
-      navigate(`/matches/${res.match_id}/live`);
-    } catch (err) {
-      showToast('Không thể khởi chạy trận đấu: ' + err.message, 'error');
-    } finally {
-      setIsSimulating(false);
-    }
-  };
 
   return (
     <div className="live-hub-page animate-fade-in">
@@ -99,24 +70,6 @@ export function LiveHubPage() {
             <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
             <span>Làm mới</span>
           </button>
-          <button
-            id="btn-live-hub-simulate"
-            className="btn btn-primary btn-sm"
-            onClick={handleLaunchLiveSimulate}
-            disabled={isSimulating}
-          >
-            {isSimulating ? (
-              <>
-                <RefreshCw size={15} className="animate-spin" />
-                <span>Đang khởi tạo...</span>
-              </>
-            ) : (
-              <>
-                <Radio size={15} className="animate-pulse" />
-                <span>Khởi Chạy Trận Đấu Mẫu</span>
-              </>
-            )}
-          </button>
         </div>
       </div>
 
@@ -144,12 +97,8 @@ export function LiveHubPage() {
             <Radio size={48} color="var(--rose-400)" style={{ margin: '0 auto 1rem', opacity: 0.6 }} />
             <h3>Hiện không có trận đấu nào đang phát sóng</h3>
             <p style={{ color: 'var(--text-secondary)', maxWidth: '520px', margin: '0.5rem auto 1.5rem', lineHeight: 1.6 }}>
-              Giải đấu đang tạm nghỉ giữa các cặp đấu, hoặc chưa có trận mới được khởi chạy. Bạn có thể bấm nút bên dưới để tạo ngay 1 trận live mô phỏng giữa GreedyBot và RandomBot!
+              Giải đấu đang tạm nghỉ giữa các cặp đấu, hoặc chưa có trận mới được khởi chạy. Khi các ván đấu mới diễn ra, danh sách sẽ tự động hiển thị tại đây.
             </p>
-            <button className="btn btn-primary" onClick={handleLaunchLiveSimulate} disabled={isSimulating}>
-              <Radio size={16} />
-              <span>Khởi Chạy 1 Trận Đấu Mẫu Ngay</span>
-            </button>
           </div>
         ) : (
           <div className="live-matches-grid">

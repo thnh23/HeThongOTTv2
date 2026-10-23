@@ -13,7 +13,7 @@
    - 1.3. Thang điểm trận đấu & Hệ số phụ ưu tiên
    - 1.4. Vòng Chung kết Top 32 & Cơ chế đổi luật chướng ngại vật
    - 1.5. Thang điểm học phần & Cơ chế tích lũy trận thắng
-   - 1.6. Lịch trình tổ chức chi tiết (Timeline 2 Ngày)
+   - 1.6. Lịch trình tổ chức chi tiết (Timeline: Vòng Swiss 1 Ngày & Chung Kết sau 1 Tuần)
 3. [PHẦN II: KIẾN TRÚC HỆ THỐNG 4 TRỤ CỘT (CHI PHÍ 0 ĐỒNG)](#-phần-ii-kiến-trúc-hệ-thống-4-trụ-cột-chi-phí-0-đồng)
    - 2.1. Sơ đồ kiến trúc tổng thể 4 trụ cột
    - 2.2. Trụ cột 1: Kênh thu bài GitHub Template & Google Form CSV Pipeline
@@ -51,22 +51,30 @@ Giải đấu **Đấu Trường Lập Trình Thuật Toán & Game Chiến Thu�
 ### 1.1. Mục đích, Quy mô & Đối tượng tham gia
 * **Đối tượng:** Toàn bộ sinh viên đăng ký học phần Lập Trình Mạng (quy mô ~**2.000 sinh viên**).
 * **Hình thức:** Cá nhân. Mỗi sinh viên đóng gói một chương trình bot Python (`bot.py` với hàm `choose_move(state)`).
-* **Thời gian tổ chức:** 02 ngày cuối tuần (Thứ Bảy & Chủ Nhật).
+* **Thời gian tổ chức & Lộ trình:** 
+  * **Vòng Bảng Swiss (01 Ngày duy nhất):** Tổ chức trọn vẹn 13 vòng đấu phân hạng trong 1 ngày, chấm điểm tự động toàn bộ 13.000 ván đấu, xếp hạng và chính thức chốt danh sách **Top 32 kỳ thủ xuất sắc nhất**.
+  * **Tuần Lễ Tinh Chỉnh & Đổi Code (Dành 01 Tuần / 7 Ngày):** Ban tổ chức công bố bản đồ ô chướng ngại vật; 32 thí sinh hạt giống có trọn vẹn 1 tuần làm việc độc lập để nghiên cứu giải thuật, thay đổi mã nguồn bot thích ứng với địa hình mới.
+  * **Vòng Chung kết Vô địch (Sau 01 Tuần):** 32 thí sinh nộp phiên bản "Bot v2", thi đấu loại trực tiếp (Knockout BO2 đổi phe) và tham gia vấn đáp chuyên môn trước Hội đồng.
 
 ### 1.2. Thể thức Thụy Sĩ (Swiss System) 13 Vòng
-Giải đấu áp dụng thể thức **Swiss System** (chuẩn FIDE cờ vua quốc tế), chia làm 2 giai đoạn:
+Giải đấu áp dụng thể thức **Swiss System** (chuẩn FIDE cờ vua quốc tế), chia làm lộ trình 3 giai đoạn bài bản:
 
 ```
-[2.000 Thí sinh] ───► [GIAI ĐOẠN 1: 13 VÒNG SWISS] ───► [Top 32] ───► [GIAI ĐOẠN 2: CHUNG KẾT KNOCKOUT]
-                      • Ngày 1: Đánh 8 vòng                     • Đổi luật: Thêm ô chướng ngại vật
-                      • Ngày 2: Đánh 5 vòng                     • Thi đấu loại trực tiếp BO2 đổi phe
+[2.000 Thí sinh] ───► [GIAI ĐOẠN 1: 13 VÒNG SWISS (01 NGÀY)] ───► [1 TUẦN ĐỔI CODE & TỐI ƯU] ───► [GIAI ĐOẠN 2: CHUNG KẾT TOP 32]
+                      • Toàn bộ 13 vòng Swiss trong 1 ngày          • Công bố luật ô cản mới            • Thi đấu BO2 Knockout trực tiếp
+                      • Tự động chấm điểm & Chốt Top 32            • Top 32 nâng cấp Bot v2            • Phỏng vấn vấn đáp & Trao giải
 ```
 
-#### Phân bổ vòng đấu:
-* **Ngày 1 (Thứ Bảy):** Thi đấu **8 vòng Swiss đầu tiên**. Thanh lọc bot lỗi kỹ thuật, phân tầng rõ rệt các nhóm điểm từ cao đến thấp.
-* **Ngày 2 (Chủ Nhật):**
-  * **Buổi sáng:** Thi đấu **5 vòng Swiss cuối (Vòng 9 $\to$ 13)** để chốt danh sách Top 32.
-  * **Buổi chiều:** **Vòng Chung kết Top 32** loại trực tiếp tranh cúp Vô địch.
+#### Phân bổ vòng đấu & Tiến trình tổ chức:
+* **Giai đoạn 1 — Ngày Hội Đấu Trường Swiss (Gói gọn trong 01 Ngày):**
+  * **Buổi sáng:** Khởi động hệ thống, chạy thẩm định sơ bộ và thi đấu tập trung **Vòng 1 $\to$ Vòng 7**.
+  * **Buổi chiều:** Thi đấu tiếp sức **Vòng 8 $\to$ Vòng 13** với độ kịch tính tăng dần khi các nhóm điểm đã hội tụ.
+  * **Cuối ngày:** Cụm máy chấm phân tán hoàn tất chấm toàn bộ 13.000 ván đấu. Hệ thống tự động tổng hợp Match Points, hệ số Buchholz và Sonneborn-Berger để **chính thức chốt và công bố danh sách Top 32** bước tiếp vào Vòng Chung kết. Ngay tại thời điểm này, BTC công bố cấu hình ô chướng ngại vật mới.
+* **Giai đoạn Đệm — 01 Tuần dành cho thí sinh thay đổi code (Bot Refactoring Sprint):**
+  * Thí sinh thuộc Top 32 có trọn vẹn **01 tuần (7 ngày)** để nghiên cứu luật địa hình mới, tái cấu trúc thuật toán tìm đường (A*, BFS/DFS, Minimax có xét vật cản) và nộp phiên bản nâng cấp **"Bot v2"**.
+  * Hệ thống mở chế độ Sandbox Benchmark với bản đồ ô chướng ngại vật để thí sinh Top 32 tự do đấu thử, đo đạc thời gian chạy $\le 200\text{ms}$ và tối ưu chiến thuật.
+* **Giai đoạn 2 — Vòng Chung Kết Top 32 (Sau 01 Tuần):**
+  * 32 kỳ thủ chính thức thi đấu loại trực tiếp Knockout BO2 đổi phe trên bàn cờ có ô chướng ngại vật để tìm ra Quán quân, Á quân và Top 4 chung cuộc.
 
 #### Nguyên tắc bốc thăm ghép cặp Swiss (Dutch System):
 1. **Vòng 1:** Bốc thăm ngẫu nhiên 100% (1.000 cặp đấu).
@@ -86,11 +94,11 @@ Giải đấu áp dụng thể thức **Swiss System** (chuẩn FIDE cờ vua qu
   3. **Hệ số phụ 3:** Hiệu số quân cờ ăn được trên bàn cờ.
 
 ### 1.4. Vòng Chung kết Top 32 & Cơ chế đổi luật chướng ngại vật
-* **Đối tượng:** 32 sinh viên có thứ hạng cao nhất sau 13 vòng Swiss.
+* **Đối tượng:** 32 sinh viên có thứ hạng cao nhất sau 13 vòng Swiss trong ngày thi đấu thứ nhất.
 * **Đổi luật địa hình (Bổ sung ô chướng ngại vật):**
   * Bàn cờ 9×9 ở Vòng Chung kết xuất hiện các **ô chướng ngại vật / ô cấm đi** (ví dụ: các ô trung tâm `d4, d6, f4, f6` hoặc bố cục đối xứng).
-  * Ban tổ chức công bố cấu hình ô cản trước 24 giờ (cuối Ngày 1).
-  * Top 32 sinh viên được nộp bản nâng cấp **"Bot v2"** tối ưu thuật toán tìm đường trên địa hình mới.
+  * Ban tổ chức công bố cấu hình ô cản ngay sau khi kết thúc 13 vòng Swiss và chốt danh sách Top 32 ở cuối ngày thi đấu.
+  * Top 32 sinh viên có **thời gian trọn vẹn 01 tuần** để nghiên cứu giải thuật, thay đổi mã nguồn và nộp bản nâng cấp **"Bot v2"** tối ưu thuật toán tìm đường trên địa hình mới.
 * **Thể thức thi đấu:** Knockout **BO2 đổi phe** (1 ván Trắng, 1 ván Đen; nếu hòa đánh ván phụ cờ chớp Blitz 0.5s/nước).
 
 ### 1.5. Thang điểm học phần & Cơ chế tích lũy trận thắng
@@ -105,15 +113,31 @@ Giải đấu áp dụng thể thức **Swiss System** (chuẩn FIDE cờ vua qu
 | **10 – 11 trận thắng** | **9.5** | **A+** | Đỉnh cao: Thuật toán có chiều sâu, đánh bại hầu hết đối thủ |
 | **Lọt vào Top 32** | **10.0 Tối đa** | **A+** | Điểm 10 tuyệt đối + Vinh danh bảng vàng UET |
 
-### 1.6. Lịch trình tổ chức chi tiết (Timeline 2 Ngày)
+### 1.6. Lịch trình tổ chức chi tiết (Timeline Giải Đấu)
 
 ```
-THỨ BẢY (NGÀY 1)                                CHỦ NHẬT (NGÀY 2)
-08:00 - 08:30: Chốt danh sách 2.000 bot          08:30 - 11:30: Thi đấu Vòng 9 -> 13 (Chốt Top 32)
-08:30 - 11:30: Thi đấu Vòng 1 -> 4 (4 vòng)      11:30 - 13:30: Nghỉ trưa & Top 32 nộp "Bot v2"
-11:30 - 13:30: Nghỉ trưa                         13:30 - 14:00: Vấn đáp nhanh 5p kiểm tra Top 32
-13:30 - 16:30: Thi đấu Vòng 5 -> 8 (4 vòng)      14:00 - 16:30: Vòng Chung kết Knockout Top 32
-17:00        : Công bố Top đầu & Luật Ô Cản      16:30 - 17:00: Bế mạc, xuất bảng điểm & Trao giải
+NGÀY HỘI THI ĐẤU SWISS (NGÀY 1 - TẬP TRUNG TOÀN KHÓA)
+07:30 - 08:00: Khóa danh sách 2.000 bot & Khởi động cụm 10 máy chấm phân tán
+08:00 - 11:45: Thi đấu liên tục Vòng 1 -> 7 (7 vòng; chấm song song & cập nhật BXH realtime)
+11:45 - 13:00: Nghỉ trưa
+13:00 - 16:45: Thi đấu liên tục Vòng 8 -> 13 (6 vòng quyết định phân hạng)
+16:45 - 17:30: Máy chấm tổng hợp điểm toàn giải, tính hệ số Buchholz & Sonneborn-Berger
+17:30 - 18:00: CHẤM DỨT VÒNG BẢNG & CHỐT DANH SÁCH CHÍNH THỨC TOP 32
+18:00        : Công bố cấu hình Ô Chướng Ngại Vật và mở cổng nộp bài cho Bot v2
+
+KHOẢNG THỜI GIAN ĐỆM (DÀNH 01 TUẦN CHO TOP 32 THAY ĐỔI CODE)
+• Thời gian: Trọn vẹn 07 ngày làm việc độc lập của 32 thí sinh xuất sắc nhất.
+• Nhiệm vụ: Phân tích bàn cờ có ô cản, nâng cấp thuật toán A* / Heuristic và thay đổi code bot.
+• Hỗ trợ: Hệ thống mở môi trường Sandbox Benchmark để thí sinh kiểm thử ván cờ với ô cản.
+• Hạn chót nộp Bot v2: 23:59 ngày thứ 6 của tuần đệm (được thẩm định tự động ngay khi nộp).
+
+NGÀY CHUNG KẾT & TRAO GIẢI (DIỄN RA SAU 01 TUẦN)
+08:00 - 08:30: Khóa nộp bài, kiểm tra kỹ thuật và điểm danh 32 kỳ thủ hạt giống
+08:30 - 11:30: Thi đấu Vòng 1/16 (Top 32 -> Top 16) & Tứ kết (Top 16 -> Top 8) BO2 đổi phe
+11:30 - 13:00: Nghỉ trưa
+13:00 - 15:30: Bán kết & Trận Chung kết tranh Cúp Vô Địch (Livestream màn hình lớn có BLV)
+15:30 - 16:30: Vấn đáp chuyên môn 5 phút kiểm tra tác quyền mã nguồn trước Hội đồng Chấm thi
+16:30 - 17:00: Lễ bế mạc, vinh danh giải thưởng & Xuất bảng điểm môn học chuẩn UET
 ```
 
 ---
@@ -311,18 +335,24 @@ sequenceDiagram
     SB-->>SYS: Kết quả ván đấu (W1/W2/T1) & Replay
     SYS-->>ST: Hiển thị kết quả & Replay trực quan
 
-    Note over AD, SYS: Giai đoạn 3: Vòng Đấu Swiss 13 Vòng
-    AD->>SYS: Kích hoạt Vòng Swiss (Vòng 1 -> 13)
-    SYS->>SYS: Thuật toán Swiss Matchmaker ghép cặp 2.000 bot
+    Note over AD, SYS: Giai đoạn 3: Vòng Bảng Swiss 13 Vòng (Gói gọn trong 01 Ngày)
+    AD->>SYS: Kích hoạt Vòng Swiss (Toàn bộ 13 vòng trong 1 ngày)
+    SYS->>SYS: Thuật toán Swiss Matchmaker ghép cặp 2.000 bot theo từng vòng
     SYS->>SB: Chạy hàng loạt trận đấu song song trên Worker Pool
     SB-->>SYS: Thu thập kết quả & Sinh file Replay
-    SYS->>SYS: Cập nhật Bảng xếp hạng, tính điểm Buchholz
-    SYS-->>ST: Phát sóng trực tiếp nước đi qua WebSocket
+    SYS->>SYS: Cập nhật Bảng xếp hạng, tính điểm Buchholz & Sonneborn-Berger
+    SYS->>ST: Phát sóng trực tiếp nước đi qua WebSocket
+    SYS->>SYS: Chấm xong 13 vòng, chốt danh sách chính thức Top 32
+    SYS-->>AD: Công bố BXH Swiss, chốt Top 32 & Công bố luật Ô Chướng Ngại Vật
 
-    Note over AD, SYS: Giai đoạn 4: Chung Kết Top 32 & Xuất Bảng Điểm
-    SYS->>SYS: Tự động trích xuất Top 32 bot xuất sắc nhất
-    AD->>SYS: Kích hoạt chế độ Ô Cản cho Vòng Knockout
-    SYS->>SB: Thực thi các trận đấu nhánh thắng-thua Double Elimination
+    Note over ST, SYS: Giai đoạn Đệm: Dành 01 Tuần Cho Top 32 Thay Đổi Code
+    ST->>SYS: Thí sinh Top 32 nhận đề bài ô cản, nghiên cứu và đổi code trong 7 ngày
+    ST->>SB: Đấu thử nghiệm trên Sandbox Benchmark với bản đồ ô chướng ngại vật
+    ST->>SYS: Nộp phiên bản nâng cấp "Bot v2" hoàn thiện trước ngày Chung kết
+
+    Note over AD, SYS: Giai đoạn 4: Chung Kết Top 32 & Xuất Bảng Điểm (Sau 01 Tuần)
+    SYS->>SB: Thực thi các trận đấu Knockout BO2 đổi phe trên bàn cờ có ô cản
+    AD->>ST: Phỏng vấn vấn đáp 5 phút xác thực tác quyền mã nguồn Top 32
     SYS->>SYS: Tự động tính điểm học phần hệ 10 và điểm chữ cho 2.000 SV
     SYS-->>AD: Xuất file bảng điểm tổng hợp CSV/Excel nộp Nhà trường
 ```

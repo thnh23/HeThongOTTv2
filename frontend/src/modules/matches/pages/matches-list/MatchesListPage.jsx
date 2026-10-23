@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Swords,
   Clock,
@@ -20,11 +20,9 @@ export function MatchesListPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isSimulating, setIsSimulating] = useState(false);
   const [error, setError] = useState(null);
 
   const { showToast } = useToast();
-  const navigate = useNavigate();
 
   const fetchMatches = async (isManual = false) => {
     setIsLoading(true);
@@ -71,27 +69,6 @@ export function MatchesListPage() {
     return { total: matches.length, running, done };
   }, [matches]);
 
-  // Launch a new live simulated match
-  const handleLaunchLiveMatch = async () => {
-    setIsSimulating(true);
-    try {
-      showToast('Đang khởi tạo trận đấu Live giữa GreedyBot và RandomBot...', 'info');
-      const res = await apiClient.post('/matches/simulate', {
-        tier: 'A',
-        bot_a_name: 'GreedyBot (White)',
-        bot_b_name: 'RandomBot (Black)',
-        move_delay_sec: 0.6,
-      });
-
-      showToast('Trận đấu đã bắt đầu! Đang mở luồng xem trực tiếp...', 'success');
-      navigate(`/matches/${res.match_id}/live`);
-    } catch (err) {
-      showToast('Không thể khởi chạy trận đấu: ' + err.message, 'error');
-    } finally {
-      setIsSimulating(false);
-    }
-  };
-
   return (
     <div className="matches-page animate-fade-in">
       <div className="matches-header">
@@ -106,23 +83,18 @@ export function MatchesListPage() {
         </div>
 
         <div className="matches-top-actions">
+          <Link to="/matches/live" className="btn btn-outline" id="btn-goto-live-hub">
+            <Radio size={16} color="var(--rose-400)" className="animate-pulse" />
+            <span>Kênh Trực Tiếp Live</span>
+          </Link>
           <button
-            id="btn-launch-live-match"
-            className="btn btn-primary"
-            onClick={handleLaunchLiveMatch}
-            disabled={isSimulating}
+            id="btn-refresh-matches"
+            className="btn btn-outline"
+            onClick={() => fetchMatches(true)}
+            disabled={isLoading}
           >
-            {isSimulating ? (
-              <>
-                <RefreshCw size={16} className="animate-spin" />
-                <span>Đang khởi chạy...</span>
-              </>
-            ) : (
-              <>
-                <Radio size={16} color="#fff" className="animate-pulse" />
-                <span>Khởi Chạy Trận Đấu Live</span>
-              </>
-            )}
+            <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
+            <span>Làm mới</span>
           </button>
         </div>
       </div>
@@ -153,8 +125,8 @@ export function MatchesListPage() {
           {[
             { id: '', label: 'Tất Cả Vòng' },
             { id: '1', label: 'Vòng 1' },
-            { id: '8', label: 'Vòng 8 (Ngày 1)' },
-            { id: '13', label: 'Vòng 13 (Ngày 2)' },
+            { id: '8', label: 'Vòng 8' },
+            { id: '13', label: 'Vòng 13 (Chốt Top 32)' },
             { id: 'finals', label: 'Chung Kết Top 32' },
           ].map((t) => (
             <button

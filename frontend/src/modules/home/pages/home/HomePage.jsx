@@ -619,40 +619,40 @@ export function HomePage() {
 
           <div className="timeline-step-card glass-card">
             <div className="timeline-step-header">
-              <span className="timeline-step-num">Ngày 1 (Sáng &amp; Chiều)</span>
+              <span className="timeline-step-num">Ngày 1 (Trọn Vẹn 1 Ngày)</span>
               <div className="timeline-step-icon">
                 <Swords size={18} color="var(--primary-600)" />
               </div>
             </div>
-            <h3 className="timeline-step-title">Vòng Loại Swiss: Vòng 1 – 8</h3>
+            <h3 className="timeline-step-title">Vòng Swiss 13 Vòng &amp; Chốt Top 32</h3>
             <p className="timeline-step-desc">
-              Khởi tranh 8 vòng Thụy Sĩ đầu tiên. Toàn bộ các trận đấu được chấm song song tự động trên cụm máy tính độc lập. Cập nhật kết quả và bảng xếp hạng sau mỗi vòng đấu.
+              Tổ chức toàn bộ 13 vòng Thụy Sĩ trong 1 ngày duy nhất. Chấm điểm tự động trên cụm máy phân tán, cập nhật BXH realtime và chính thức chốt danh sách Top 32 kỳ thủ hạt giống.
             </p>
           </div>
 
           <div className="timeline-step-card glass-card">
             <div className="timeline-step-header">
-              <span className="timeline-step-num">Ngày 2 (Sáng)</span>
+              <span className="timeline-step-num">1 Tuần Đổi Code (7 Ngày)</span>
               <div className="timeline-step-icon">
                 <Target size={18} color="var(--primary-600)" />
               </div>
             </div>
-            <h3 className="timeline-step-title">Vòng Loại Swiss: Vòng 9 – 13</h3>
+            <h3 className="timeline-step-title">Nâng Cấp Thuật Toán Bot v2</h3>
             <p className="timeline-step-desc">
-              5 vòng đấu quyết định tranh chấp các tấm vé vào vòng chung kết. Chốt bảng xếp hạng chung cuộc 13 vòng và công bố danh sách chính thức Top 32 hạt giống.
+              Công bố bản đồ bổ sung ô chướng ngại vật mới. Top 32 thí sinh có trọn vẹn 1 tuần nghiên cứu, thay đổi mã nguồn và tối ưu giải thuật tìm đường trước khi bước vào Chung kết.
             </p>
           </div>
 
           <div className="timeline-step-card glass-card">
             <div className="timeline-step-header">
-              <span className="timeline-step-num">Ngày 2 (Chiều)</span>
+              <span className="timeline-step-num">Sau 1 Tuần (Chung Kết)</span>
               <div className="timeline-step-icon">
                 <Trophy size={18} color="var(--amber-600)" />
               </div>
             </div>
             <h3 className="timeline-step-title">Chung Kết Top 32 &amp; Trao Giải</h3>
             <p className="timeline-step-desc">
-              Top 32 nộp Bot v2 thích ứng bản đồ chướng ngại vật mới (công bố trước 24h). Thi đấu Knockout trực tiếp tại Hội trường, phỏng vấn vấn đáp và trao cúp vô địch.
+              Top 32 nộp Bot v2 thi đấu Knockout BO2 đổi phe trên bàn cờ có ô cản. Vấn đáp chuyên môn 5 phút xác thực tác quyền trước Hội đồng và trao cúp Vô địch.
             </p>
           </div>
         </div>
@@ -798,7 +798,7 @@ export function HomePage() {
             {
               id: 4,
               q: 'Vòng Chung Kết Top 32 có gì đặc biệt so với 13 vòng Swiss?',
-              a: 'Trước vòng Chung kết 24 giờ, Ban Tổ Chức sẽ công bố một bản đồ bàn cờ 9×9 mới có bổ sung các ô chướng ngại vật cố định (quân cờ không thể đi vào). 32 thí sinh sẽ có 24 giờ để nâng cấp thuật toán của mình thích ứng với địa hình mới (Bot v2) và thi đấu Knockout trực tiếp tại Hội trường.',
+              a: 'Ngay sau khi kết thúc 13 vòng Swiss và chốt danh sách Top 32 trong ngày thi đấu thứ nhất, Ban Tổ Chức sẽ công bố một bản đồ bàn cờ 9×9 mới có bổ sung các ô chướng ngại vật cố định (quân cờ không thể đi vào). 32 thí sinh sẽ có trọn vẹn 01 tuần để nghiên cứu, thay đổi mã nguồn nâng cấp thuật toán (Bot v2) và thi đấu Knockout trực tiếp tại Hội trường.',
             },
           ].map((faq) => {
             const isOpen = openFaqId === faq.id;

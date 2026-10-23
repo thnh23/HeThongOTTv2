@@ -1041,7 +1041,7 @@ export function AdminDashboardPage() {
               Cấu Hình Địa Hình Ô Chướng Ngại Vật (Bot v2)
             </h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-              Để thử thách thuật toán tìm đường (A*, Minimax) tại Vòng Chung kết, hãy chọn các vị trí ô cấm đi trên bàn cờ 9×9. Cấu hình này sẽ được công bố trước 24 giờ cho 32 thí sinh hạt giống.
+              Để thử thách thuật toán tìm đường (A*, Minimax) tại Vòng Chung kết, hãy chọn các vị trí ô cấm đi trên bàn cờ 9×9. Cấu hình này sẽ được công bố ngay sau khi chốt Top 32 để thí sinh có 01 tuần thay đổi mã nguồn.
             </p>
           </div>
 
