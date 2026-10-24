@@ -2,7 +2,7 @@
 Bot Sandbox Execution Environment (Subprocess Isolated)
 ========================================================
 Môi trường cô lập thực thi bot:
-  1. Giới hạn thời gian (Timeout per move: 2.0s tiêu chuẩn toàn giải)
+  1. Giới hạn thời gian (Timeout per move: 300ms tiêu chuẩn toàn giải)
   2. Bắt toàn bộ lỗi (Crash, Exception, Return type sai)
   3. Ngăn chặn phá hoại (Chặn kết nối mạng / socket, bảo vệ file hệ thống - T10)
   4. Trả về BotExecutionResult chuẩn hóa cho Trọng tài
@@ -102,13 +102,14 @@ def load_bot_from_file(file_path: str) -> Callable[[BoardState], Tuple[str, str]
 def execute_bot_move(
     bot_fn: Callable[[BoardState], Tuple[str, str]],
     state: BoardState,
-    timeout_sec: float = 2.0,
+    timeout_sec: float = 0.3,
     block_network: bool = True,
     allow_fast_path: bool = True,
 ) -> BotExecutionResult:
     """
     Thực thi 1 nước đi của bot trong subprocess độc lập an toàn.
     Hỗ trợ fast-path cho bot chuẩn hệ thống (random, greedy, obstacle) để tối ưu hiệu năng.
+    Áp dụng giới hạn cứng 300ms/nước đi: Nước đi quá 300ms bị ngắt ngay và xử thua T1.
     """
     start_time = time.perf_counter()
 
@@ -125,6 +126,13 @@ def execute_bot_move(
         try:
             move = bot_fn(state)
             elapsed_ms = int((time.perf_counter() - start_time) * 1000)
+            if elapsed_ms > int(timeout_sec * 1000):
+                return BotExecutionResult(
+                    is_success=False,
+                    duration_ms=elapsed_ms,
+                    error_code="TIMEOUT",
+                    error_message=f"Bot tính toán quá giờ ({elapsed_ms}ms > {int(timeout_sec * 1000)}ms).",
+                )
             if (
                 not isinstance(move, (tuple, list))
                 or len(move) != 2
@@ -249,7 +257,16 @@ def execute_bot_move(
 
     elapsed_ms = int((time.perf_counter() - start_time) * 1000)
 
-    # 5. Phân tích kết quả từ Delimiter
+    # 5. Kiểm tra thời gian tối đa nếu vượt ngưỡng timeout_sec
+    if elapsed_ms > int(timeout_sec * 1000):
+        return BotExecutionResult(
+            is_success=False,
+            duration_ms=elapsed_ms,
+            error_code="TIMEOUT",
+            error_message=f"Bot tính toán quá giờ ({elapsed_ms}ms > {int(timeout_sec * 1000)}ms).",
+        )
+
+    # 6. Phân tích kết quả từ Delimiter
     if "__SANDBOX_START__" in stdout_data and "__SANDBOX_END__" in stdout_data:
         try:
             json_str = stdout_data.split("__SANDBOX_START__")[1].split("__SANDBOX_END__")[0].strip()

@@ -5,7 +5,7 @@ Trọng tài điều phối toàn bộ ván đấu giữa hai bot:
   1. Khởi tạo bàn cờ 9×9
   2. Quản lý vòng lặp các lượt đi qua Sandbox
   3. Kiểm tra tính hợp lệ của từng nước đi theo OTTv2 rules
-  4. Bắt lỗi bot: Timeout, Crash, Vi phạm an ninh, Đi phạm luật -> xử thua T1
+  4. Bắt lỗi bot: Timeout (>300ms), Crash, Vi phạm an ninh, Đi phạm luật -> xử thua T1
   5. Phát hiện điều kiện kết thúc: W1, W2, D1, D2
   6. Tạo bản ghi Replay JSON đầy đủ
 """
@@ -60,13 +60,14 @@ def play_match(
     bot_black_fn: Callable[[BoardState], Tuple[str, str]],
     bot_white_name: str = "White",
     bot_black_name: str = "Black",
-    timeout_sec: float = 2.0,
+    timeout_sec: float = 0.3,
     max_moves: int = 200,
     match_id: Optional[str] = None,
     obstacles: Optional[any] = None,
 ) -> MatchResult:
     """
     Điều phối một ván đấu trọn vẹn giữa hai bot.
+    Áp dụng giới hạn cứng timeout_sec (mặc định 0.3s / 300ms mỗi nước đi, quá giờ xử thua T1).
     """
     if match_id is None:
         match_id = str(uuid.uuid4())
@@ -94,11 +95,12 @@ def play_match(
             active_bot_fn, state, timeout_sec=timeout_sec
         )
 
-        if not bot_res.is_success:
-            # Bot lỗi: timeout / crash / security violation -> Xử thua T1
+        if not bot_res.is_success or bot_res.duration_ms > int(timeout_sec * 1000):
+            # Bot lỗi: timeout (>300ms) / crash / security violation -> Xử thua T1
             winner = opponent
             end_code = "T1"
-            reason = f"{active_bot_name} ({current_player}) bị xử thua T1: {bot_res.error_message}"
+            err_msg = bot_res.error_message or f"Vượt quá thời gian {int(timeout_sec * 1000)}ms ({bot_res.duration_ms}ms)"
+            reason = f"{active_bot_name} ({current_player}) bị xử thua T1: {err_msg}"
             moves_history.append({
                 "turn": turn_counter,
                 "player": current_player,
@@ -106,7 +108,7 @@ def play_match(
                 "to": None,
                 "captured": None,
                 "duration_ms": bot_res.duration_ms,
-                "error": bot_res.error_message,
+                "error": err_msg,
             })
             break
 

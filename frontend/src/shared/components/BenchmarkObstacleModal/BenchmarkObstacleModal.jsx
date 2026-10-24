@@ -147,7 +147,7 @@ export function BenchmarkObstacleModal({ isOpen, onClose, initialStudentId = '' 
                 <span className="badge-amber">Đổi Luật Ô Cản</span>
               </div>
               <p style={{ margin: '0.2rem 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                Thẩm định Bot v2 đối đầu ObstacleBot: Đo độ trễ tính toán (&le; 200ms) và kiểm tra tính tuân thủ ô cấm.
+                Thẩm định Bot v2 đối đầu ObstacleBot: Đo độ trễ tính toán (&le; 300ms) và kiểm tra tính tuân thủ ô cấm.
               </p>
             </div>
           </div>
@@ -268,7 +268,7 @@ export function BenchmarkObstacleModal({ isOpen, onClose, initialStudentId = '' 
                     <span className="metric-label">Độ trễ trung bình</span>
                     <strong className="metric-val">{result.average_move_time_ms} ms</strong>
                     <span className={`compliance-tag ${result.is_latency_compliant ? 'pass' : 'fail'}`}>
-                      {result.is_latency_compliant ? '✓ Đạt chuẩn (≤200ms)' : '⚠️ Vượt 200ms'}
+                      {result.is_latency_compliant ? '✓ Đạt chuẩn (≤300ms)' : '⚠️ Vượt 300ms (Thua T1)'}
                     </span>
                   </div>
 

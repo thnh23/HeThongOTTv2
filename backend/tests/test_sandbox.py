@@ -89,3 +89,15 @@ class TestSandboxExecution:
         assert result.is_success is True
         assert result.move == ("a1", "a2")
 
+    def test_default_timeout_is_300ms_and_terminates(self):
+        """Kiểm tra mặc định timeout_sec=0.3s (300ms) xử lý timeout chính xác."""
+        def slow_bot(state):
+            import time
+            time.sleep(0.4)
+            return ("a1", "a2")
+
+        state = create_initial_board()
+        result = execute_bot_move(slow_bot, state)  # dùng mặc định timeout_sec=0.3
+        assert result.is_success is False
+        assert result.error_code == "TIMEOUT"
+

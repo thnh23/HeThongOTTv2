@@ -41,12 +41,12 @@
     },
     "D1": "Hết nước hợp lệ → xử thua",
     "D2": "Lặp thế 3 lần hoặc quá 200 nước → hòa",
-    "T1": "Bot quá giờ / trả nước sai / crash → bot đó thua"
+    "T1": "Bot quá giờ (>300ms) / trả nước sai / crash → bot đó thua"
   },
   "time_limits": {
-    "tier_a": 2.0,
-    "tier_b": 1.0,
-    "tier_c": 0.5
+    "per_move_sec": 0.3,
+    "max_per_move_ms": 300,
+    "description": "Giới hạn cứng 300ms / nước đi: Bất kỳ nước đi nào quá 300ms bị ngắt ngay lập tức và xử thua T1"
   },
   "scoring": {
     "win": 3,

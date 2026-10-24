@@ -217,7 +217,7 @@ export function SubmitPage() {
               <div className="step-body">
                 <h4>Kiểm Tra CI/CD GitHub Actions Xanh 100%</h4>
                 <p>
-                  Đẩy code lên GitHub và kiểm tra tab Actions. Hệ thống tự động kiểm tra cú pháp, đo độ trễ &lt; 200ms và quét an ninh mã nguồn (không rò rỉ API Key).
+                  Đẩy code lên GitHub và kiểm tra tab Actions. Hệ thống tự động kiểm tra cú pháp, đo độ trễ &lt; 300ms và quét an ninh mã nguồn (không rò rỉ API Key).
                 </p>
               </div>
             </div>

@@ -125,7 +125,7 @@ export function SandboxPage() {
         <div className="sandbox-title-wrap">
           <h1 className="sandbox-title">Đấu Thử Bot</h1>
           <span className="sandbox-latency-tag">
-            <Clock size={13} /> ≤ 200ms
+            <Clock size={13} /> ≤ 300ms
           </span>
         </div>
         <p className="sandbox-subtitle">
@@ -268,7 +268,7 @@ export function SandboxPage() {
               )}
             </button>
             <span className="editor-footer-hint">
-              Timeout 2s/nước • RAM 128MB • Không mạng
+              Timeout 300ms/nước • RAM 128MB • Không mạng
             </span>
           </div>
 
@@ -331,7 +331,7 @@ export function SandboxPage() {
                       result.is_latency_compliant ? 'badge-success' : 'badge-danger'
                     }`}
                   >
-                    {result.is_latency_compliant ? '✓ Đạt (≤200ms)' : '✕ Quá 200ms'}
+                    {result.is_latency_compliant ? '✓ Đạt (≤300ms)' : '✕ Quá 300ms (Thua T1)'}
                   </span>
                 </div>
 

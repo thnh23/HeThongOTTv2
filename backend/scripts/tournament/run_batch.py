@@ -6,7 +6,7 @@ Chạy độc lập trên mỗi laptop trong cụm 10 laptop chấm thi.
 Chức năng:
   1. Đọc file chunk_XX.json chứa khoảng 100 trận đấu.
   2. Phân phối song song qua multiprocessing tận dụng tối đa CPU core.
-  3. Chạy từng ván cờ qua Referee & Sandbox an toàn (timeout 2.0s / nước).
+  3. Chạy từng ván cờ qua Referee & Sandbox an toàn (timeout 300ms / nước).
   4. Xuất file kết quả result_XX.json sẵn sàng gửi về cho Ban Tổ Chức.
 """
 
@@ -78,7 +78,7 @@ def resolve_bot_callable(bot_info: Dict[str, Any], repos_dir: Optional[str] = No
 
 def execute_single_match(
     match_item: Dict[str, Any],
-    timeout_sec: float = 2.0,
+    timeout_sec: float = 0.3,
     repos_dir: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Chạy 1 ván đấu giữa 2 bot và trả về kết quả."""
@@ -180,7 +180,7 @@ def main():
         help="Thư mục chứa repositories sinh viên đã clone (storage/submissions/repos)",
     )
     parser.add_argument("--workers", type=int, default=4, help="Số tiến trình song song (mặc định 4)")
-    parser.add_argument("--timeout", type=float, default=2.0, help="Thời gian tối đa cho 1 nước đi (giây)")
+    parser.add_argument("--timeout", type=float, default=0.3, help="Thời gian tối đa cho 1 nước đi (giây, mặc định 0.3s = 300ms)")
     args = parser.parse_args()
 
     if not os.path.exists(args.chunk_file):

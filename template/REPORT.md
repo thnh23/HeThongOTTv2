@@ -11,8 +11,8 @@
 ## 1. Ý TƯỞNG CHIẾN THUẬT & GIẢI THUẬT TÌM KIẾM
 *Mô tả kiến trúc thuật toán chính điều khiển bot (Minimax, Alpha-Beta Pruning, Heuristic Greedy, MCTS, v.v.):*
 - Độ sâu tìm kiếm (Search Depth): [Ví dụ: 3 - 4 tầng]
-- Kỹ thuật cắt tỉa (Pruning): [Mô tả cách tỉa nhánh để đảm bảo thời gian < 200ms]
-- Cơ chế kiểm soát thời gian (Time Management): [Cách thức ngắt tìm kiếm nếu gần chạm ngưỡng 2 giây]
+- Kỹ thuật cắt tỉa (Pruning): [Mô tả cách tỉa nhánh để đảm bảo thời gian < 300ms]
+- Cơ chế kiểm soát thời gian (Time Management): [Cách thức ngắt tìm kiếm nếu gần chạm ngưỡng 300ms]
 
 ---
 

@@ -72,7 +72,7 @@ Giải đấu áp dụng thể thức **Swiss System** (chuẩn FIDE cờ vua qu
   * **Cuối ngày:** Cụm máy chấm phân tán hoàn tất chấm toàn bộ 13.000 ván đấu. Hệ thống tự động tổng hợp Match Points, hệ số Buchholz và Sonneborn-Berger để **chính thức chốt và công bố danh sách Top 32** bước tiếp vào Vòng Chung kết. Ngay tại thời điểm này, BTC công bố cấu hình ô chướng ngại vật mới.
 * **Giai đoạn Đệm — 01 Tuần dành cho thí sinh thay đổi code (Bot Refactoring Sprint):**
   * Thí sinh thuộc Top 32 có trọn vẹn **01 tuần (7 ngày)** để nghiên cứu luật địa hình mới, tái cấu trúc thuật toán tìm đường (A*, BFS/DFS, Minimax có xét vật cản) và nộp phiên bản nâng cấp **"Bot v2"**.
-  * Hệ thống mở chế độ Sandbox Benchmark với bản đồ ô chướng ngại vật để thí sinh Top 32 tự do đấu thử, đo đạc thời gian chạy $\le 200\text{ms}$ và tối ưu chiến thuật.
+  * Hệ thống mở chế độ Sandbox Benchmark với bản đồ ô chướng ngại vật để thí sinh Top 32 tự do đấu thử, đo đạc thời gian chạy $\le 300\text{ms}$ (xử thua phạt T1 nếu vượt) và tối ưu chiến thuật.
 * **Giai đoạn 2 — Vòng Chung Kết Top 32 (Sau 01 Tuần):**
   * 32 kỳ thủ chính thức thi đấu loại trực tiếp Knockout BO2 đổi phe trên bàn cờ có ô chướng ngại vật để tìm ra Quán quân, Á quân và Top 4 chung cuộc.
 
@@ -197,7 +197,7 @@ NGÀY CHUNG KẾT & TRAO GIẢI (DIỄN RA SAU 01 TUẦN)
 
 ### 2.4. Trụ cột 3: Cụm máy chấm phân tán File-Batch (10 Laptops sinh viên)
 * 10 máy tính cá nhân của ban kỹ thuật chia sẻ tải: mỗi máy chạy 100 trận/vòng.
-* **An toàn tuyệt đối:** Sandbox cô lập hoàn toàn mạng internet (chặn `socket`, `requests`), giới hạn RAM 128MB, timeout 200ms/nước đi. Máy chấm hoàn toàn miễn nhiễm với virus hoặc bot crash.
+* **An toàn tuyệt đối:** Sandbox cô lập hoàn toàn mạng internet (chặn `socket`, `requests`), giới hạn RAM 128MB, timeout 300ms/nước đi (ngắt ngay và xử thua T1 nếu vượt). Máy chấm hoàn toàn miễn nhiễm với virus hoặc bot crash.
 * Thời gian hoàn thành 1.000 trận đấu: **dưới 5 phút/vòng**.
 
 ### 2.5. Trụ cột 4: Cổng thông tin Web Jamstack trên Cloudflare Pages CDN
@@ -258,7 +258,7 @@ Môn học khuyến khích sinh viên sử dụng công nghệ hỗ trợ cú ph
 
 * **`UC-ST01`: Xem Luật Chơi & Tải Starter Kit:** Thí sinh xem luật di chuyển 8 hướng, ô đích W2, tải mã nguồn mẫu `RandomBot`, `GreedyBot` và cấu trúc nộp bài chuẩn.
 * **`UC-ST02`: Nộp Bài Làm:** Gửi file `.zip` hoặc link repo GitHub qua giao diện `/submit`. Hệ thống tự động ghi nhận và giải nén kiểm tra ngay lập tức.
-* **`UC-ST03`: Đấu Thử Trực Tiếp Với GreedyBot:** Thí sinh bấm 1-click để bot của mình thi đấu thử nghiệm với GreedyBot trong sandbox, xem bot có phản hồi đúng luật và thời gian $\le 200\text{ms}$ hay không.
+* **`UC-ST03`: Đấu Thử Trực Tiếp Với GreedyBot:** Thí sinh bấm 1-click để bot của mình thi đấu thử nghiệm với GreedyBot trong sandbox, xem bot có phản hồi đúng luật và thời gian $\le 300\text{ms}$ hay không.
 * **`UC-ST04`: Tra Cứu Trạng Thái Bài Thi:** Nhập MSSV tại `/lookup` để xem ngay bài đã hợp lệ chưa, số commits đã đếm được, cảnh báo bảo mật nếu có mà không cần đăng nhập.
 * **`UC-ST05`: Xem Live & Replay:** Xem bàn cờ vector trực quan toàn bộ 13 ván đấu của mình, tua từng nước đi và phân tích lý do thắng/thua.
 * **`UC-ST06`: Theo Dõi Xếp Hạng:** Xem thứ hạng, số trận thắng và điểm Buchholz của mình trên bảng xếp hạng tổng sắp.
@@ -306,7 +306,7 @@ Môn học khuyến khích sinh viên sử dụng công nghệ hỗ trợ cú ph
 
 * **`UC-SY01`: Thẩm Định Tự Động:** Tự giải nén, kiểm tra AST `bot.py` (hàm `choose_move`), đếm số lượng Git commits ($\ge 4$ commits) và quét rò rỉ API key cá nhân.
 * **`UC-SY02`: Ghép Cặp Swiss Tự Động:** Ghép các bot có cùng điểm số, không lặp đối thủ cũ, cân bằng lượt đi trước/sau.
-* **`UC-SY03`: Sandbox Cô Lập:** Chặn mọi kết nối internet, giới hạn $\le 200\text{ms}$ / nước đi, $\le 128\text{MB}$ RAM. Tự động xử thua $T1$ nếu bot vi phạm.
+* **`UC-SY03`: Sandbox Cô Lập:** Chặn mọi kết nối internet, giới hạn $\le 300\text{ms}$ / nước đi, $\le 128\text{MB}$ RAM. Tự động ngắt và xử thua $T1$ nếu bot vi phạm hoặc quá thời gian.
 * **`UC-SY04`: Trọng Tài Tự Động:** Kiểm tra tính hợp lệ từng nước đi theo `rules.json`, xác định kết thúc ván đấu và ghi nhận file `replay.json`.
 * **`UC-SY05`: Tự Động Tính Hệ Số Phụ:** Tính toán Buchholz và Sonneborn-Berger phân định thứ hạng không độ trễ.
 * **`UC-SY06`: Xuất Bảng Điểm Tự Động:** Áp dụng công thức thang điểm tích lũy trận thắng để sinh bảng điểm hệ 10 và điểm chữ chuẩn UET cho 2.000 sinh viên.

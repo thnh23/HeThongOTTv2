@@ -434,7 +434,7 @@ def run_benchmark_obstacle(
     """
     Sandbox Benchmark API dành cho Top 32 Vòng Chung Kết:
     - Kiểm thử Bot v2 đối đầu ObstacleBot trên bàn cờ có ô chướng ngại vật cấm.
-    - Đo lường độ trễ tính toán trung bình (yêu cầu <= 200ms/nước).
+    - Đo lường độ trễ tính toán từng nước (yêu cầu <= 300ms/nước, vượt quá bị xử thua T1).
     - Thẩm định tính tuân thủ ô cản (bot có phạm luật lao vào ô cấm không).
     - Trả về toàn bộ dữ liệu replay trực quan (obstacles, moves, board states).
     """
@@ -516,7 +516,7 @@ def run_benchmark_obstacle(
             bot_black_fn=obstacle_choose_move,
             bot_white_name=bot_name,
             bot_black_name="ObstacleBot (Mẫu Top 32)",
-            timeout_sec=2.0,
+            timeout_sec=0.3,
             max_moves=200,
             obstacles=obstacles_list,
         )
@@ -540,7 +540,7 @@ def run_benchmark_obstacle(
         if "chướng ngại vật" in match_res.reason.lower() and match_res.winner == "B":
             is_obstacle_compliant = False
 
-        is_latency_compliant = (avg_ms <= 200.0)
+        is_latency_compliant = (max_ms <= 300 and match_res.end_code != "T1")
 
         return BenchmarkObstacleResponse(
             status="finished",
@@ -578,7 +578,7 @@ def run_benchmark_sandbox(
     - Hỗ trợ 2 chế độ:
         1. 'standard': Bàn cờ chuẩn 9x9 (Vòng Swiss) không ô cản, đối đầu GreedyBot hoặc RandomBot.
         2. 'obstacle': Bàn cờ ô cản 9x9 (Top 32) với các chướng ngại vật cấm, đối đầu ObstacleBot.
-    - Thẩm định độ trễ tính toán (<= 200ms) và luật di chuyển.
+    - Thẩm định độ trễ tính toán (<= 300ms) và luật di chuyển.
     - Trả về toàn bộ replay bàn cờ để tua lại trực quan.
     """
     if not req.bot_code or not req.bot_code.strip():
@@ -628,7 +628,7 @@ def run_benchmark_sandbox(
             bot_black_fn=opponent_fn,
             bot_white_name=bot_name,
             bot_black_name=opponent_name,
-            timeout_sec=2.0,
+            timeout_sec=0.3,
             max_moves=200,
             obstacles=obstacles_list,
         )
@@ -651,7 +651,7 @@ def run_benchmark_sandbox(
             if "chướng ngại vật" in match_res.reason.lower() and match_res.winner == "B":
                 is_obstacle_compliant = False
 
-        is_latency_compliant = (avg_ms <= 200.0)
+        is_latency_compliant = (max_ms <= 300 and match_res.end_code != "T1")
 
         return BenchmarkSandboxResponse(
             status="finished",
