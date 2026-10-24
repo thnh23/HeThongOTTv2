@@ -4,7 +4,6 @@ import {
   ExternalLink,
   FileCode,
   Sparkles,
-  Shield,
   ShieldAlert,
   GitBranch,
   GitCommit,
@@ -33,7 +32,6 @@ export function SubmitPage() {
 
   const [isStarterKitOpen, setIsStarterKitOpen] = useState(false);
 
-  // Fetch config from server
   useEffect(() => {
     let isMounted = true;
     apiClient
@@ -43,9 +41,7 @@ export function SubmitPage() {
           setConfig((prev) => ({ ...prev, ...res }));
         }
       })
-      .catch(() => {
-        // use fallback defaults
-      });
+      .catch(() => {});
     return () => {
       isMounted = false;
     };
@@ -57,28 +53,27 @@ export function SubmitPage() {
       <div className="submit-header">
         <div className="header-badge-wrap">
           <span className="unified-portal-badge">
-            <Sparkles size={14} /> Thống Nhất Phương Thức Nộp Bài Giải Đấu 2026
+            <Sparkles size={13} /> Cổng Nộp Bài Chính Thức 2026
           </span>
         </div>
         <h1 className="submit-main-title">
-          Cổng Nộp Bài &amp; <span className="gradient-text">Quy Chế Thi Đấu</span>
+          Cổng Nộp Bài &amp; <span className="gradient-text">Quy Chế</span>
         </h1>
         <p className="submit-subtitle">
-          Giải đấu OTTv2 chuyển đổi toàn diện sang mô hình GitHub Repository &amp; Google Form.
-          Hệ thống <strong className="highlight-danger">KHÔNG tự điền bot hộ thí sinh</strong>. 
-          Mọi bài nộp không hợp lệ sẽ bị xử thua trực tiếp (Forfeit T1).
+          Nộp link GitHub qua Google Form. Hệ thống <strong>không tự điền bot hộ</strong>; vi phạm sẽ bị xử thua T1.
         </p>
 
-        {/* Primary Call-to-Action Buttons */}
+        {/* Action Buttons */}
         <div className="submit-cta-row">
           <a
             href={config.google_form_url}
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-primary btn-glow"
+            id="btn-open-google-form"
           >
-            <ExternalLink size={18} />
-            <span>Mở Google Form Nộp Bài Thi</span>
+            <ExternalLink size={16} />
+            <span>Mở Google Form</span>
           </a>
 
           <a
@@ -86,67 +81,63 @@ export function SubmitPage() {
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-outline"
+            id="btn-github-template"
           >
-            <GitBranch size={18} />
-            <span>GitHub Template Chuẩn (ottv2-template)</span>
+            <GitBranch size={16} />
+            <span>GitHub Template</span>
           </a>
 
           <button
             className="btn btn-starter-kit"
             onClick={() => setIsStarterKitOpen(true)}
+            id="btn-view-starter-kit"
           >
-            <FileCode size={18} />
-            <span>Xem Starter Kit Bot</span>
+            <FileCode size={16} />
+            <span>Starter Kit</span>
           </button>
 
-          <button
-            className="btn btn-outline btn-amber"
-            onClick={() => setIsBenchmarkOpen(true)}
-          >
-            <Shield size={18} />
-            <span>Benchmark Top 32 (Ô Cản)</span>
-          </button>
+          <Link to="/sandbox" className="btn btn-outline" id="btn-goto-sandbox-top">
+            <Cpu size={16} />
+            <span>Đấu Thử Bot</span>
+          </Link>
         </div>
       </div>
 
-      {/* ── CRITICAL TOURNAMENT RULE BANNER (KHÔNG ĐIỀN HỘ BOT) ── */}
+      {/* ── RULE BANNER (KHÔNG ĐIỀN HỘ BOT) ── */}
       <div className="forfeit-rule-card">
         <div className="forfeit-icon-wrap">
-          <ShieldAlert size={32} />
+          <ShieldAlert size={28} />
         </div>
         <div className="forfeit-content">
           <div className="forfeit-title-row">
-            <h3>Quy Chế Giải Đấu Nghiêm Ngặt: Hệ Thống KHÔNG Tự Điền Bot Hộ</h3>
-            <span className="forfeit-tag">Xử Thua Trực Tiếp T1</span>
+            <h3>Quy định: Không tự điền bot hộ</h3>
+            <span className="forfeit-tag">Xử thua T1</span>
           </div>
-          <p className="forfeit-desc">
-            Nhằm đảm bảo tính minh bạch, công bằng tuyệt đối cho giải đấu:
-          </p>
           <ul className="forfeit-list">
             <li>
-              <strong>Không hỗ trợ Bot thay thế:</strong> Nếu thí sinh không nộp bài, repo đặt Private, thiếu file <code>bot.py</code>, hoặc không chứa hàm <code>choose_move(state)</code>, hệ thống <strong>tuyệt đối không</strong> tự điền GreedyBot hay RandomBot hộ.
+              <strong>Không cấp bot thay thế:</strong> Không nộp bài, repo Private, thiếu <code>bot.py</code> hoặc không có hàm <code>choose_move</code> &rarr; không cấp bot dự phòng.
             </li>
             <li>
-              <strong>Xử thua Forfeit (T1):</strong> Mọi lỗi cú pháp Python (SyntaxError), bot bị crash, vi phạm ô cản, hoặc timeout quá 2.0 giây sẽ lập tức bị <strong>xử thua 0 điểm</strong> trong trận đấu tương ứng.
+              <strong>Xử thua phạt T1:</strong> Lỗi cú pháp, crash, phạm luật hoặc tính toán quá 300ms &rarr; xử thua ngay 0 điểm.
             </li>
             <li>
-              <strong>Thống nhất kênh nộp:</strong> Cổng nộp file .zip qua web đã đóng. Thí sinh phải nộp đường dẫn GitHub Repository qua <strong>Google Form chính thức</strong> trước thời hạn chót (Deadline).
+              <strong>Kênh nộp duy nhất:</strong> Nộp đường dẫn GitHub Repository qua Google Form chính thức trước deadline.
             </li>
           </ul>
         </div>
       </div>
 
-      {/* ── Two-Column Information Cards: Google Form Fields & 4-Step Guide ── */}
+      {/* ── Form Fields & 4-Step Guide ── */}
       <div className="form-guide-grid">
         {/* Card 1: Cấu trúc Google Form */}
         <div className="glass-card form-structure-card">
           <div className="card-header-line">
             <div className="icon-badge-cyan">
-              <FileText size={22} color="var(--cyan-400)" />
+              <FileText size={20} color="var(--cyan-400)" />
             </div>
             <div>
-              <h3 className="card-title">Cấu Trúc Google Form Nộp Link</h3>
-              <span className="card-subtitle">4 trường thông tin bắt buộc thí sinh cần khai báo</span>
+              <h3 className="card-title">Thông Tin Google Form</h3>
+              <span className="card-subtitle">4 trường bắt buộc cần khai báo</span>
             </div>
           </div>
 
@@ -174,20 +165,20 @@ export function SubmitPage() {
               style={{ width: '100%', justifyContent: 'center' }}
             >
               <ExternalLink size={16} />
-              <span>Đi Tới Biểu Mẫu Google Form</span>
+              <span>Đi Tới Google Form</span>
             </a>
           </div>
         </div>
 
-        {/* Card 2: Quy trình 4 bước nộp bài */}
+        {/* Card 2: Quy trình 4 bước */}
         <div className="glass-card workflow-card">
           <div className="card-header-line">
             <div className="icon-badge-indigo">
-              <GitCommit size={22} color="var(--primary-400)" />
+              <GitCommit size={20} color="var(--primary-400)" />
             </div>
             <div>
-              <h3 className="card-title">Quy Trình 4 Bước Hoàn Thiện Bài Nộp</h3>
-              <span className="card-subtitle">Minh chứng năng lực phát triển phần mềm qua Git</span>
+              <h3 className="card-title">Quy Trình 4 Bước</h3>
+              <span className="card-subtitle">Từ template đến nộp bài</span>
             </div>
           </div>
 
@@ -195,9 +186,9 @@ export function SubmitPage() {
             <div className="workflow-step-item">
               <div className="step-circle">1</div>
               <div className="step-body">
-                <h4>Nhận &amp; Khởi Tạo Repository từ Template</h4>
+                <h4>Khởi Tạo Repo Từ Template</h4>
                 <p>
-                  Truy cập GitHub Template của BTC, bấm <strong>Use this template</strong> để tạo repo cá nhân theo cú pháp: <code>https://github.com/&lt;user&gt;/ottv2-&lt;MaSV&gt;</code> (chế độ <strong>Public</strong>).
+                  Bấm <strong>Use this template</strong>, đặt tên <code>ottv2-&lt;MaSV&gt;</code> (chế độ <strong>Public</strong>).
                 </p>
               </div>
             </div>
@@ -205,9 +196,9 @@ export function SubmitPage() {
             <div className="workflow-step-item">
               <div className="step-circle">2</div>
               <div className="step-body">
-                <h4>Lập Trình Thuật Toán &amp; Commit Đều Đặn</h4>
+                <h4>Lập Trình &amp; Commit Đều Đặn</h4>
                 <p>
-                  Cài đặt hàm <code>choose_move(state)</code> trong <code>bot.py</code>. Viết báo cáo giải thuật tại <code>REPORT.md</code>. Thực hiện tối thiểu <strong>4 commits phân tán</strong> phản ánh quá trình tự làm.
+                  Cài đặt hàm <code>choose_move(state)</code> trong <code>bot.py</code> (tối thiểu <strong>4 commits</strong> phản ánh quá trình làm).
                 </p>
               </div>
             </div>
@@ -215,9 +206,9 @@ export function SubmitPage() {
             <div className="workflow-step-item">
               <div className="step-circle">3</div>
               <div className="step-body">
-                <h4>Kiểm Tra CI/CD GitHub Actions Xanh 100%</h4>
+                <h4>Kiểm Tra CI GitHub Actions</h4>
                 <p>
-                  Đẩy code lên GitHub và kiểm tra tab Actions. Hệ thống tự động kiểm tra cú pháp, đo độ trễ &lt; 300ms và quét an ninh mã nguồn (không rò rỉ API Key).
+                  Đảm bảo workflow Actions báo xanh, cú pháp hợp lệ, độ trễ &le; 300ms và không rò rỉ mã bí mật.
                 </p>
               </div>
             </div>
@@ -225,9 +216,9 @@ export function SubmitPage() {
             <div className="workflow-step-item">
               <div className="step-circle">4</div>
               <div className="step-body">
-                <h4>Điền Link Repo Vào Google Form Trước Deadline</h4>
+                <h4>Điền Link Vào Google Form</h4>
                 <p>
-                  Dán link repo của bạn vào Google Form trước giờ đóng cổng. Sau đó kiểm tra tình trạng ghi nhận tại Cổng Tra Cứu chính thức.
+                  Gửi link repo trước giờ đóng cổng, sau đó kiểm tra tình trạng tại Cổng Tra Cứu.
                 </p>
               </div>
             </div>
@@ -235,35 +226,33 @@ export function SubmitPage() {
         </div>
       </div>
 
-      {/* ── REDIRECT CTA TO DEDICATED LOOKUP PAGE ── */}
+      {/* ── REDIRECT CTA TO LOOKUP & SANDBOX ── */}
       <div className="glass-card lookup-redirect-card">
         <div className="lookup-redirect-content">
           <div className="icon-badge-cyan redirect-badge">
-            <Search size={28} color="var(--cyan-400)" />
+            <Search size={24} color="var(--cyan-400)" />
           </div>
           <div>
-            <h3 className="redirect-title">Đã Nộp Bài Qua Google Form? Kiểm Tra Tình Trạng Ngay</h3>
+            <h3 className="redirect-title">Đã Nộp Bài? Tra Cứu Tình Trạng Ngay</h3>
             <p className="redirect-desc">
-              Mọi lượt nộp link repo sẽ được hệ thống clone và thẩm định tự động theo định kỳ. 
-              Hãy truy cập <strong>Cổng Tra Cứu (Lookup)</strong> để xác minh mã commit hash chốt, kiểm tra 4 tiêu chí cốt lõi, 
-              và phát hiện kịp thời các sự cố trước khi bước vào giải đấu.
+              Kiểm tra mã commit chốt, kết quả thẩm định tự động và phát hiện sự cố kịp thời.
             </p>
           </div>
         </div>
         <div className="lookup-redirect-actions">
           <Link to="/sandbox" className="btn btn-secondary" id="btn-goto-sandbox" style={{ marginRight: '0.75rem' }}>
-            <Cpu size={18} />
-            <span>Đấu Thử Bot (Sandbox)</span>
+            <Cpu size={16} />
+            <span>Đấu Thử Bot</span>
           </Link>
           <Link to="/lookup" className="btn btn-primary btn-glow" id="btn-goto-lookup">
-            <Search size={18} />
-            <span>Mở Cổng Tra Cứu Bài Thi</span>
+            <Search size={16} />
+            <span>Tra Cứu Bài Thi</span>
             <ArrowRight size={16} />
           </Link>
         </div>
       </div>
 
-      {/* ── Modals ── */}
+      {/* ── Starter Kit Modal ── */}
       <StarterKitModal
         isOpen={isStarterKitOpen}
         onClose={() => setIsStarterKitOpen(false)}
