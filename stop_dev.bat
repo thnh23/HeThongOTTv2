@@ -1,24 +1,24 @@
 @echo off
-chcp 65001 >nul
-title OTTv2 Shutdown Tool
+setlocal
+
 echo ================================================================
-echo   DỪNG TOÀN BỘ DỊCH VỤ OTTV2 (BACKEND :8000 & FRONTEND :5173)
+echo   DUNG TOAN BO DICH VU OTTV2 (BACKEND :8000 VA FRONTEND :5173)
 echo ================================================================
 echo.
 
-echo [*] Đang tìm và dừng tiến trình trên cổng 8000 (Backend)...
+echo [*] Dang tim va dung tien trinh tren cong 8000 (Backend)...
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8000 ^| findstr LISTENING') do (
-    echo [+] Đang dừng PID %%a...
+    echo [+] Dang dung Backend PID %%a...
     taskkill /F /PID %%a >nul 2>&1
 )
 
-echo [*] Đang tìm và dừng tiến trình trên cổng 5173 (Frontend)...
+echo [*] Dang tim va dung tien trinh tren cong 5173 (Frontend)...
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5173 ^| findstr LISTENING') do (
-    echo [+] Đang dừng PID %%a...
+    echo [+] Dang dung Frontend PID %%a...
     taskkill /F /PID %%a >nul 2>&1
 )
 
 echo.
-echo [✓] Đã giải phóng hoàn tất cổng 8000 và 5173!
+echo [OK] Da giai phong hoan tat cong 8000 va 5173!
 echo.
 powershell -NoProfile -Command "Start-Sleep -Seconds 2" >nul 2>&1
