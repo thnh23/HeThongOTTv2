@@ -20,6 +20,7 @@ import {
   Award,
 } from 'lucide-react';
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
+import { INITIAL_BOARD } from '@/shared/constants/gameState.js';
 import { apiClient } from '@/shared/api-client/index.js';
 import './SandboxPage.css';
 
@@ -111,17 +112,7 @@ export function SandboxPage() {
   const replayMoves = result?.replay?.moves || [];
   const activeObstacles = activeTab === 'obstacle' ? (result?.obstacles || obstacles) : [];
   const currentState = replayStates[currentStepIndex] || {
-    board: [
-      'RRSSPP...',
-      '.........',
-      '.........',
-      '.........',
-      '.........',
-      '.........',
-      '.........',
-      '.........',
-      '...ppssrr',
-    ],
+    board: INITIAL_BOARD,
     current_player: 'W',
     obstacles: activeObstacles,
   };

@@ -517,7 +517,7 @@ def run_benchmark_obstacle(
             bot_white_name=bot_name,
             bot_black_name="ObstacleBot (Mẫu Top 32)",
             timeout_sec=2.0,
-            max_moves=60,
+            max_moves=200,
             obstacles=obstacles_list,
         )
 
@@ -629,7 +629,7 @@ def run_benchmark_sandbox(
             bot_white_name=bot_name,
             bot_black_name=opponent_name,
             timeout_sec=2.0,
-            max_moves=60,
+            max_moves=200,
             obstacles=obstacles_list,
         )
 
