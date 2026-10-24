@@ -15,6 +15,7 @@ import {
   Volume2,
   VolumeX,
   Search,
+  Cpu,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StarterKitModal } from '../StarterKitModal/index.js';
@@ -97,6 +98,12 @@ export function Navbar() {
                 <NavLink to="/lookup" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                   <Search size={16} />
                   <span>Tra Cứu</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/sandbox" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                  <Cpu size={16} />
+                  <span>Đấu Thử Bot</span>
                 </NavLink>
               </li>
               {user?.is_admin && (
@@ -214,6 +221,10 @@ export function Navbar() {
               <NavLink to="/lookup" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>
                 <Search size={18} />
                 <span>Tra Cứu Bài Thi (Lookup)</span>
+              </NavLink>
+              <NavLink to="/sandbox" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>
+                <Cpu size={18} />
+                <span>Đấu Thử Bot (Sandbox Lab)</span>
               </NavLink>
               {isAuthenticated && (
                 <NavLink to="/profile" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}>

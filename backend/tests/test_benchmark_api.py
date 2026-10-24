@@ -74,3 +74,94 @@ class TestBenchmarkObstacleAPI:
         )
         assert res.status_code == 400
         assert "choose_move" in res.json()["detail"]
+
+    def test_sandbox_rejects_empty_code(self):
+        """Sandbox API từ chối nếu không dán mã nguồn."""
+        res = client.post(
+            "/api/submit/benchmark-sandbox",
+            json={"mode": "standard", "bot_code": ""},
+        )
+        assert res.status_code == 400
+        assert "Vui lòng dán mã nguồn" in res.json()["detail"]
+
+    def test_sandbox_standard_mode_greedy(self):
+        """Chạy Sandbox chế độ tiêu chuẩn đấu với GreedyBot."""
+        bot_code = (
+            "from app.services.engine.rules import get_legal_moves\n"
+            "from app.services.engine.board import square_to_str\n"
+            "def choose_move(state):\n"
+            "    moves = get_legal_moves(state)\n"
+            "    if not moves: return ('', '')\n"
+            "    (fc, fr), (tc, tr) = moves[0]\n"
+            "    return (square_to_str(fc, fr), square_to_str(tc, tr))\n"
+        )
+        res = client.post(
+            "/api/submit/benchmark-sandbox",
+            json={
+                "mode": "standard",
+                "opponent": "greedy",
+                "bot_code": bot_code,
+            },
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "finished"
+        assert data["mode"] == "standard"
+        assert data["obstacles"] == []
+        assert "GreedyBot" in data["opponent_name"]
+        assert "replay" in data
+        assert len(data["replay"]["moves"]) > 0
+
+    def test_sandbox_standard_mode_random(self):
+        """Chạy Sandbox chế độ tiêu chuẩn đấu với RandomBot."""
+        bot_code = (
+            "from app.services.engine.rules import get_legal_moves\n"
+            "from app.services.engine.board import square_to_str\n"
+            "def choose_move(state):\n"
+            "    moves = get_legal_moves(state)\n"
+            "    if not moves: return ('', '')\n"
+            "    (fc, fr), (tc, tr) = moves[0]\n"
+            "    return (square_to_str(fc, fr), square_to_str(tc, tr))\n"
+        )
+        res = client.post(
+            "/api/submit/benchmark-sandbox",
+            json={
+                "mode": "standard",
+                "opponent": "random",
+                "bot_code": bot_code,
+            },
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "finished"
+        assert data["mode"] == "standard"
+        assert "RandomBot" in data["opponent_name"]
+
+    def test_sandbox_obstacle_mode(self):
+        """Chạy Sandbox chế độ Top 32 đấu với ObstacleBot có ô cản."""
+        bot_code = (
+            "from app.services.engine.rules import get_legal_moves\n"
+            "from app.services.engine.board import square_to_str\n"
+            "def choose_move(state):\n"
+            "    moves = get_legal_moves(state)\n"
+            "    if not moves: return ('', '')\n"
+            "    (fc, fr), (tc, tr) = moves[0]\n"
+            "    return (square_to_str(fc, fr), square_to_str(tc, tr))\n"
+        )
+        custom_obs = ["d4", "f4", "e5"]
+        res = client.post(
+            "/api/submit/benchmark-sandbox",
+            json={
+                "mode": "obstacle",
+                "bot_code": bot_code,
+                "obstacles": custom_obs,
+            },
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "finished"
+        assert data["mode"] == "obstacle"
+        assert set(data["obstacles"]) == set(custom_obs)
+        assert "ObstacleBot" in data["opponent_name"]
+        assert data["is_obstacle_compliant"] is True
+

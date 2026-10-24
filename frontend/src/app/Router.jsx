@@ -11,6 +11,7 @@ import { LoginPage, RegisterPage } from '@/modules/auth';
 import { AdminDashboardPage } from '@/modules/admin';
 import { ProfilePage } from '@/modules/profile';
 import { LookupPage } from '@/modules/lookup';
+import { SandboxPage } from '@/modules/sandbox';
 import { NotFoundPage } from '@/shared/pages/NotFoundPage.jsx';
 
 export function AppRouter() {
@@ -24,6 +25,7 @@ export function AppRouter() {
       <Route path="/matches/:id/live" element={<LiveMatchPage />} />
       <Route path="/live" element={<LiveHubPage />} />
       <Route path="/lookup" element={<LookupPage />} />
+      <Route path="/sandbox" element={<SandboxPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/submit" element={<SubmitPage />} />
       <Route path="/admin" element={<AdminDashboardPage />} />

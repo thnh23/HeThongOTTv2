@@ -8,6 +8,7 @@ Endpoints:
   POST /api/submit/test-run/{id}  ← Chạy thử bot vừa nộp với GreedyBot
 """
 
+import json
 import os
 import shutil
 import uuid
@@ -27,10 +28,12 @@ from app.routers.admin.common import SWISS_STORAGE_DIR
 from app.services.validator import validate_submission_zip, check_choose_move_in_code
 from app.services.sandbox import load_bot_from_file
 from app.services.starter_bots.greedy_bot import choose_move as greedy_choose_move
+from app.services.starter_bots.random_bot import choose_move as random_choose_move
 from app.services.starter_bots.obstacle_bot import choose_move as obstacle_choose_move
 from app.services.engine.referee import play_match
 
 router = APIRouter(prefix="/api/submit", tags=["submit"])
+
 
 
 # ── Pydantic Schemas ────────────────────────────
@@ -44,6 +47,31 @@ class BenchmarkObstacleRequest(BaseModel):
 
 class BenchmarkObstacleResponse(BaseModel):
     status: str
+    winner: Optional[str]
+    end_code: str
+    total_moves: int
+    duration_ms: int
+    average_move_time_ms: float
+    max_move_time_ms: int
+    is_latency_compliant: bool
+    is_obstacle_compliant: bool
+    obstacles: List[str]
+    reason: str
+    bot_name: str
+    opponent_name: str
+    replay: dict
+
+
+class BenchmarkSandboxRequest(BaseModel):
+    mode: str = "standard"  # "standard" | "obstacle"
+    opponent: str = "greedy"  # "greedy" | "random" | "obstacle"
+    bot_code: str
+    obstacles: Optional[List[str]] = None
+
+
+class BenchmarkSandboxResponse(BaseModel):
+    status: str
+    mode: str
     winner: Optional[str]
     end_code: str
     total_moves: int
@@ -537,4 +565,117 @@ def run_benchmark_obstacle(
                 os.remove(temp_bot_file)
             except Exception:
                 pass
+
+
+@router.post("/benchmark-sandbox", response_model=BenchmarkSandboxResponse)
+def run_benchmark_sandbox(
+    req: BenchmarkSandboxRequest,
+    current_user: Optional[User] = Depends(get_optional_current_user),
+):
+    """
+    Sân Đấu Thử Nghiệm Sandbox Lab Dành Cho Thí Sinh:
+    - 100% Thử nghiệm trực tiếp bằng cách dán mã nguồn bot.py (hàm choose_move).
+    - Hỗ trợ 2 chế độ:
+        1. 'standard': Bàn cờ chuẩn 9x9 (Vòng Swiss) không ô cản, đối đầu GreedyBot hoặc RandomBot.
+        2. 'obstacle': Bàn cờ ô cản 9x9 (Top 32) với các chướng ngại vật cấm, đối đầu ObstacleBot.
+    - Thẩm định độ trễ tính toán (<= 200ms) và luật di chuyển.
+    - Trả về toàn bộ replay bàn cờ để tua lại trực quan.
+    """
+    if not req.bot_code or not req.bot_code.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Vui lòng dán mã nguồn bot.py có định nghĩa hàm 'def choose_move(state)'.",
+        )
+
+    temp_bot_file = None
+    try:
+        temp_dir = os.path.join(settings.STORAGE_PATH, "submissions", "temp")
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_bot_file = os.path.join(temp_dir, f"bot_sandbox_{uuid.uuid4().hex[:8]}.py")
+        with open(temp_bot_file, "w", encoding="utf-8") as f:
+            f.write(req.bot_code)
+
+        if not check_choose_move_in_code(temp_bot_file):
+            raise HTTPException(
+                status_code=400,
+                detail="Mã nguồn thiếu định nghĩa hàm 'def choose_move(state)'. Vui lòng kiểm tra lại cấu trúc bot.",
+            )
+
+        candidate_fn = load_bot_from_file(temp_bot_file)
+        bot_name = current_user.name if current_user else "Thí sinh (Dán Code)"
+
+        mode = req.mode.lower() if req.mode else "standard"
+        if mode == "obstacle":
+            if req.obstacles and len(req.obstacles) > 0:
+                obstacles_list = [str(o).strip().lower() for o in req.obstacles if str(o).strip()]
+            else:
+                obstacles_list = get_default_top32_obstacles()
+            opponent_fn = obstacle_choose_move
+            opponent_name = "ObstacleBot (Mẫu Top 32)"
+        else:
+            mode = "standard"
+            obstacles_list = []
+            opp = (req.opponent or "greedy").lower()
+            if opp == "random":
+                opponent_fn = random_choose_move
+                opponent_name = "RandomBot (Ngẫu Nhiên)"
+            else:
+                opponent_fn = greedy_choose_move
+                opponent_name = "GreedyBot (Ăn Quân Chuẩn)"
+
+        match_res = play_match(
+            bot_white_fn=candidate_fn,
+            bot_black_fn=opponent_fn,
+            bot_white_name=bot_name,
+            bot_black_name=opponent_name,
+            timeout_sec=2.0,
+            max_moves=60,
+            obstacles=obstacles_list,
+        )
+
+        white_moves = [m for m in match_res.moves if m.get("player") == "W"]
+        if white_moves:
+            durations = [int(m.get("duration_ms", 0)) for m in white_moves]
+            avg_ms = round(sum(durations) / len(durations), 2)
+            max_ms = max(durations)
+        else:
+            avg_ms = 0.0
+            max_ms = 0
+
+        is_obstacle_compliant = True
+        if mode == "obstacle":
+            for m in match_res.moves:
+                if m.get("player") == "W" and "chướng ngại vật" in str(m.get("error", "")).lower():
+                    is_obstacle_compliant = False
+                    break
+            if "chướng ngại vật" in match_res.reason.lower() and match_res.winner == "B":
+                is_obstacle_compliant = False
+
+        is_latency_compliant = (avg_ms <= 200.0)
+
+        return BenchmarkSandboxResponse(
+            status="finished",
+            mode=mode,
+            winner=match_res.winner,
+            end_code=match_res.end_code,
+            total_moves=match_res.total_moves,
+            duration_ms=match_res.duration_ms,
+            average_move_time_ms=avg_ms,
+            max_move_time_ms=max_ms,
+            is_latency_compliant=is_latency_compliant,
+            is_obstacle_compliant=is_obstacle_compliant,
+            obstacles=obstacles_list,
+            reason=match_res.reason,
+            bot_name=bot_name,
+            opponent_name=opponent_name,
+            replay=match_res.to_replay_dict(),
+        )
+
+    finally:
+        if temp_bot_file and os.path.exists(temp_bot_file):
+            try:
+                os.remove(temp_bot_file)
+            except Exception:
+                pass
+
 

@@ -15,11 +15,11 @@ import {
   Award,
   Shield,
   ArrowRight,
+  Cpu,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useAuth } from '@/shared/context/AuthContext.jsx';
 import { useToast } from '@/shared/context/ToastContext.jsx';
-import { BenchmarkObstacleModal } from '@/shared/components/BenchmarkObstacleModal/BenchmarkObstacleModal.jsx';
 import './LookupPage.css';
 
 export function LookupPage() {
@@ -29,7 +29,6 @@ export function LookupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [searchedId, setSearchedId] = useState('');
-  const [isBenchmarkOpen, setIsBenchmarkOpen] = useState(false);
 
   const fetchStudentData = async (idToSearch) => {
     const cleanId = (idToSearch || '').trim();
@@ -356,14 +355,15 @@ export function LookupPage() {
 
             {/* Action Buttons Footer */}
             <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle, #e2e8f0)', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-              <button
+              <Link
+                to="/sandbox"
                 className="btn btn-outline"
-                style={{ borderColor: 'rgba(245, 158, 11, 0.5)', color: '#d97706' }}
-                onClick={() => setIsBenchmarkOpen(true)}
+                style={{ borderColor: 'rgba(59, 130, 246, 0.5)', color: '#2563eb' }}
+                id="btn-goto-sandbox-lookup"
               >
-                <Shield size={16} color="#d97706" />
-                <span>Thử Nghiệm Sandbox Top 32 (Ô Cản)</span>
-              </button>
+                <Cpu size={16} />
+                <span>Đấu Thử Bot (Sandbox Lab)</span>
+              </Link>
 
               <Link to="/submit" className="btn btn-outline">
                 <ExternalLink size={16} />
@@ -373,13 +373,6 @@ export function LookupPage() {
           </div>
         )}
       </div>
-
-      {/* Benchmark Obstacle Modal */}
-      <BenchmarkObstacleModal
-        isOpen={isBenchmarkOpen}
-        onClose={() => setIsBenchmarkOpen(false)}
-        initialStudentId={searchedId || result?.student_id || ''}
-      />
     </div>
   );
 }

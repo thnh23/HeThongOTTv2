@@ -25,7 +25,6 @@ import { apiClient } from '@/shared/api-client/index.js';
 import { useToast } from '@/shared/context/ToastContext.jsx';
 import { GradeReviewModal } from '../../components/GradeReviewModal/GradeReviewModal.jsx';
 import { EditUserModal } from '../../components/EditUserModal/index.js';
-import { BenchmarkObstacleModal } from '@/shared/components/BenchmarkObstacleModal/BenchmarkObstacleModal.jsx';
 import './AdminDashboardPage.css';
 
 
@@ -1168,12 +1167,6 @@ export function AdminDashboardPage() {
           }}
         />
       )}
-
-      {/* Top 32 Obstacle Benchmark Modal */}
-      <BenchmarkObstacleModal
-        isOpen={isBenchmarkOpen}
-        onClose={() => setIsBenchmarkOpen(false)}
-      />
     </div>
   );
 }

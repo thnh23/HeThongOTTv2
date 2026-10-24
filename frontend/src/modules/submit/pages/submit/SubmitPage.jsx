@@ -11,10 +11,10 @@ import {
   FileText,
   Search,
   ArrowRight,
+  Cpu,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { StarterKitModal } from '@/shared/components/StarterKitModal/index.js';
-import { BenchmarkObstacleModal } from '@/shared/components/BenchmarkObstacleModal/BenchmarkObstacleModal.jsx';
 import './SubmitPage.css';
 
 export function SubmitPage() {
@@ -32,7 +32,6 @@ export function SubmitPage() {
   });
 
   const [isStarterKitOpen, setIsStarterKitOpen] = useState(false);
-  const [isBenchmarkOpen, setIsBenchmarkOpen] = useState(false);
 
   // Fetch config from server
   useEffect(() => {
@@ -252,6 +251,10 @@ export function SubmitPage() {
           </div>
         </div>
         <div className="lookup-redirect-actions">
+          <Link to="/sandbox" className="btn btn-secondary" id="btn-goto-sandbox" style={{ marginRight: '0.75rem' }}>
+            <Cpu size={18} />
+            <span>Đấu Thử Bot (Sandbox)</span>
+          </Link>
           <Link to="/lookup" className="btn btn-primary btn-glow" id="btn-goto-lookup">
             <Search size={18} />
             <span>Mở Cổng Tra Cứu Bài Thi</span>
@@ -264,10 +267,6 @@ export function SubmitPage() {
       <StarterKitModal
         isOpen={isStarterKitOpen}
         onClose={() => setIsStarterKitOpen(false)}
-      />
-      <BenchmarkObstacleModal
-        isOpen={isBenchmarkOpen}
-        onClose={() => setIsBenchmarkOpen(false)}
       />
     </div>
   );
