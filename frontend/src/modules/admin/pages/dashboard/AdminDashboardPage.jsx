@@ -20,6 +20,7 @@ import {
   UploadCloud,
   FolderArchive,
   Shield,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useToast } from '@/shared/context/ToastContext.jsx';
