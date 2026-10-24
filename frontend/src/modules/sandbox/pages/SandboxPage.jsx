@@ -30,102 +30,11 @@ import './SandboxPage.css';
 
 const DEFAULT_OBSTACLES = ['d4', 'd6', 'f4', 'f6', 'e5'];
 
-const CODE_TEMPLATES = {
-  random: `from app.services.engine.rules import get_legal_moves
-from app.services.engine.board import square_to_str
-import random
-
-def choose_move(state):
-    """
-    RandomBot: Chọn ngẫu nhiên một nước đi hợp lệ.
-    Phù hợp làm nền tảng kiểm thử tốc độ và cú pháp.
-    """
-    moves = get_legal_moves(state)
-    if not moves:
-        return ("", "")
-    (fc, fr), (tc, tr) = random.choice(moves)
-    return (square_to_str(fc, fr), square_to_str(tc, tr))
-`,
-  greedy: `from app.services.engine.rules import get_legal_moves
-from app.services.engine.board import square_to_str, TARGET_SQUARE
-
-def choose_move(state):
-    """
-    GreedyBot: Ưu tiên tiến vào ô đích W2 và ăn quân đối phương.
-    Mẫu chuẩn mực cho Vòng thi đấu Swiss.
-    """
-    moves = get_legal_moves(state)
-    if not moves:
-        return ("", "")
-
-    player = state.get("current_player", "W")
-    target = TARGET_SQUARE[player]
-
-    # 1. Nếu có nước đi trực tiếp vào ô đích -> Thắng ngay (W2)
-    for (fc, fr), (tc, tr) in moves:
-        if (tc, tr) == target:
-            return (square_to_str(fc, fr), square_to_str(tc, tr))
-
-    # 2. Ưu tiên ăn quân đối phương
-    grid = state.get("grid", {})
-    opponent = "B" if player == "W" else "W"
-    captures = []
-    for (fc, fr), (tc, tr) in moves:
-        dest_val = grid.get((tc, tr)) or grid.get(f"{tc},{tr}")
-        if dest_val and opponent in str(dest_val):
-            captures.append(((fc, fr), (tc, tr)))
-    if captures:
-        (fc, fr), (tc, tr) = captures[0]
-        return (square_to_str(fc, fr), square_to_str(tc, tr))
-
-    # 3. Tiến gần nhất về ô đích của đối thủ
-    def dist(pos):
-        return abs(pos[0] - target[0]) + abs(pos[1] - target[1])
-
-    best_move = min(moves, key=lambda m: dist(m[1]))
-    (fc, fr), (tc, tr) = best_move
-    return (square_to_str(fc, fr), square_to_str(tc, tr))
-`,
-  obstacle: `from app.services.engine.rules import get_legal_moves
-from app.services.engine.board import square_to_str, TARGET_SQUARE
-
-def choose_move(state):
-    """
-    ObstacleBot: Tự động phát hiện và né tránh toàn bộ ô chướng ngại vật.
-    Dành riêng cho Tuần Đệm nâng cấp Bot v2 Top 32.
-    """
-    moves = get_legal_moves(state)
-    if not moves:
-        return ("", "")
-
-    player = state.get("current_player", "W")
-    target = TARGET_SQUARE[player]
-    obstacles = set(state.get("obstacles", []))
-
-    # Lọc các nước đi an toàn không chạm vào ô cản
-    safe_moves = []
-    for (fc, fr), (tc, tr) in moves:
-        sq_str = square_to_str(tc, tr)
-        if sq_str not in obstacles:
-            safe_moves.append(((fc, fr), (tc, tr)))
-
-    valid_candidates = safe_moves if safe_moves else moves
-
-    # Ưu tiên nước gần ô đích nhất
-    def dist(pos):
-        return abs(pos[0] - target[0]) + abs(pos[1] - target[1])
-
-    best_move = min(valid_candidates, key=lambda m: dist(m[1]))
-    (fc, fr), (tc, tr) = best_move
-    return (square_to_str(fc, fr), square_to_str(tc, tr))
-`,
-};
-
 export function SandboxPage() {
   // Mode: 'standard' (Swiss 9x9) | 'obstacle' (Top 32 9x9 with obstacles)
   const [activeTab, setActiveTab] = useState('standard');
   const [standardOpponent, setStandardOpponent] = useState('greedy'); // 'greedy' | 'random'
-  const [botCode, setBotCode] = useState(CODE_TEMPLATES.greedy);
+  const [botCode, setBotCode] = useState('');
   const [obstacles, setObstacles] = useState(DEFAULT_OBSTACLES);
 
   // Execution & Replay states
@@ -136,18 +45,13 @@ export function SandboxPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const playIntervalRef = useRef(null);
 
-  // Handle auto-switch starter template when switching tabs
+  // Reset match results when switching tabs
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
     setResult(null);
     setErrorMsg('');
     setCurrentStepIndex(0);
     setIsPlaying(false);
-    if (newTab === 'obstacle' && botCode === CODE_TEMPLATES.greedy) {
-      setBotCode(CODE_TEMPLATES.obstacle);
-    } else if (newTab === 'standard' && botCode === CODE_TEMPLATES.obstacle) {
-      setBotCode(CODE_TEMPLATES.greedy);
-    }
   };
 
   // Replay auto playback
@@ -289,43 +193,23 @@ export function SandboxPage() {
           <div className="panel-header">
             <div className="panel-title-group">
               <Code2 size={20} className="icon-gold" />
-              <h2>Mã Nguồn Bot (Dán Trực Tiếp)</h2>
+              <h2>Mã Nguồn Bot (Dán Trực Tiếp Từ Máy Cá Nhân)</h2>
             </div>
-            <div className="template-actions">
-              <button
-                type="button"
-                className="btn-template"
-                onClick={() => setBotCode(CODE_TEMPLATES.greedy)}
-                title="Nạp code GreedyBot mẫu"
-              >
-                <Zap size={14} /> Nạp GreedyBot
-              </button>
-              <button
-                type="button"
-                className="btn-template"
-                onClick={() => setBotCode(CODE_TEMPLATES.random)}
-                title="Nạp code RandomBot mẫu"
-              >
-                <FileCode size={14} /> Nạp RandomBot
-              </button>
-              {activeTab === 'obstacle' && (
+            <div className="editor-top-actions">
+              <span className="direct-paste-badge">
+                <Code2 size={13} /> Chỉ nhận code dán trực tiếp
+              </span>
+              {botCode && (
                 <button
                   type="button"
-                  className="btn-template highlight"
-                  onClick={() => setBotCode(CODE_TEMPLATES.obstacle)}
-                  title="Nạp code ObstacleBot mẫu"
+                  className="btn-clear-code"
+                  onClick={() => setBotCode('')}
+                  title="Xóa toàn bộ mã nguồn để dán code mới"
                 >
-                  <Shield size={14} /> Nạp ObstacleBot v2
+                  <Trash2 size={13} />
+                  <span>Xóa code</span>
                 </button>
               )}
-              <button
-                type="button"
-                className="btn-template btn-danger-soft"
-                onClick={() => setBotCode('')}
-                title="Xóa mã nguồn"
-              >
-                <Trash2 size={14} />
-              </button>
             </div>
           </div>
 
@@ -390,7 +274,7 @@ export function SandboxPage() {
               className="code-textarea"
               value={botCode}
               onChange={(e) => setBotCode(e.target.value)}
-              placeholder="Dán toàn bộ mã nguồn bot.py của bạn vào đây (bắt buộc phải có def choose_move(state):)..."
+              placeholder="Dán toàn bộ mã nguồn bot.py từ máy tính cá nhân của bạn vào đây (bắt buộc phải có hàm def choose_move(state):)..."
               spellCheck="false"
               rows={18}
             />

@@ -178,19 +178,33 @@
   color: #fbbf24;
 }
 
-.template-actions {
+.editor-top-actions {
   display: flex;
-  gap: 0.4rem;
+  align-items: center;
+  gap: 0.6rem;
   flex-wrap: wrap;
 }
 
-.btn-template {
+.direct-paste-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: rgba(51, 65, 85, 0.5);
+  background: rgba(30, 41, 59, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
+  color: #94a3b8;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.btn-clear-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
   padding: 0.35rem 0.65rem;
   border-radius: 6px;
   font-size: 0.75rem;
@@ -199,23 +213,10 @@
   transition: all 0.15s ease;
 }
 
-.btn-template:hover {
-  background: rgba(71, 85, 105, 0.8);
-  color: #ffffff;
-}
-
-.btn-template.highlight {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.4);
-  color: #fcd34d;
-}
-
-.btn-template.highlight:hover {
-  background: rgba(245, 158, 11, 0.3);
-}
-
-.btn-danger-soft {
-  color: #f87171;
+.btn-clear-code:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
 }
 
 .btn-danger-soft:hover {
