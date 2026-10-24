@@ -21,4 +21,4 @@ for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5173 ^| findstr LISTENING') 
 echo.
 echo [✓] Đã giải phóng hoàn tất cổng 8000 và 5173!
 echo.
-timeout /t 2 >nul
+powershell -NoProfile -Command "Start-Sleep -Seconds 2" >nul 2>&1
