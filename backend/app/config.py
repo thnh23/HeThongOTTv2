@@ -1,36 +1,28 @@
 """
-Application configuration — đọc từ .env (pydantic v1)
+Cấu hình ứng dụng OTTv2 Platform — Đọc tự động từ biến môi trường (.env)
 """
 
 from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
-    # Database
+    # 1. Cơ sở dữ liệu
     DATABASE_URL: str = "sqlite:///./ottv2.db"
 
-    # JWT
+    # 2. Xác thực JWT
     SECRET_KEY: str = "CHANGE_ME_use_openssl_rand_hex_32"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440   # 24h
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 giờ
 
-    # Sandbox
-    SANDBOX_TIMEOUT_SEC: float = 5.0
-    SANDBOX_MEMORY_MB: int = 128
-
-    # Storage
+    # 3. Lưu trữ tệp tin
     STORAGE_PATH: str = "./storage"
 
-    # Admin
-    ADMIN_EMAIL: str = "admin@example.com"
-
-    # Tournament Submission (Trụ cột 1: GitHub Template + Google Form)
-    GOOGLE_FORM_URL: str = "https://forms.gle/uak6BpK1RExMs41M8"
-    GITHUB_TEMPLATE_URL: str = "https://github.com/uet-network-programming/ottv2-bot-template"
-
-    # CORS
+    # 4. CORS & Địa chỉ Web Client
     FRONTEND_URL: str = "http://localhost:5173"
 
+    # 5. Kênh nộp bài giải đấu (Trụ cột 1)
+    GOOGLE_FORM_URL: str = "https://forms.gle/uak6BpK1RExMs41M8"
+    GITHUB_TEMPLATE_URL: str = "https://github.com/uet-network-programming/ottv2-bot-template"
 
     class Config:
         env_file = ".env"
@@ -39,3 +31,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
