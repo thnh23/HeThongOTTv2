@@ -19,7 +19,7 @@ import './SubmitPage.css';
 export function SubmitPage() {
   const [config, setConfig] = useState({
     submission_mode: 'google_form',
-    google_form_url: 'https://forms.gle/official-ottv2-submission-form',
+    google_form_url: 'https://forms.gle/uak6BpK1RExMs41M8',
     github_template_url: 'https://github.com/lekimlonguet/ottv2-template',
     form_fields: [
       { id: 'fullname', label: 'Họ và tên', description: 'Họ tên đầy đủ theo danh sách lớp UET' },

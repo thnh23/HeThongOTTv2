@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = "admin@example.com"
 
     # Tournament Submission (Trụ cột 1: GitHub Template + Google Form)
-    GOOGLE_FORM_URL: str = "https://docs.google.com/forms/d/e/1FAIpQLSc-ottv2-tournament2026/viewform"
+    GOOGLE_FORM_URL: str = "https://forms.gle/uak6BpK1RExMs41M8"
     GITHUB_TEMPLATE_URL: str = "https://github.com/uet-network-programming/ottv2-bot-template"
 
     # CORS
