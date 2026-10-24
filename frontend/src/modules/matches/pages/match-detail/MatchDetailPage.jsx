@@ -38,11 +38,10 @@ const END_CODE_EXPLANATIONS = {
   B4: 'Đen Thắng do Trắng không còn nước đi hợp lệ',
   B5: 'Đen Thắng do Trắng quá thời gian (Timeout)',
   B6: 'Đen Thắng do Trắng vi phạm quy tắc / ném ngoại lệ',
-  T1: 'Hòa cờ do đạt tối đa 200 nước đi (T1)',
-  T2: 'Hòa cờ do lặp lại trạng thái 3 lần (3-fold repetition)',
-  T3: 'Hòa cờ do cả hai bên không còn khả năng ăn quân đối phương',
+  T1: 'Xử thua phạt T1 (Lỗi cú pháp, crash, bot không hợp lệ)',
+  T2: 'Xử thua phạt T2 (Thời gian tính toán vượt quá 300ms)',
   D1: 'Bên hết nước đi bị xử thua',
-  D2: 'Hòa cờ do lặp thế hoặc quá 200 nước',
+  D2: 'Hòa cờ do vượt quá 200 nước đi hoặc lặp thế 3 lần',
 };
 
 const PIECE_EMOJIS = {
