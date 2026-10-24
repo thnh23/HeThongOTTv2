@@ -29,7 +29,7 @@ class Settings(BaseSettings):
 
     # 5. Kênh nộp bài giải đấu (Trụ cột 1)
     GOOGLE_FORM_URL: str = "https://forms.gle/uak6BpK1RExMs41M8"
-    GITHUB_TEMPLATE_URL: str = "https://github.com/uet-network-programming/ottv2-bot-template"
+    GITHUB_TEMPLATE_URL: str = "https://github.com/thnh23/ottv2-bot-template"
 
     @root_validator(pre=True)
     def ensure_secure_secret_key(cls, values):

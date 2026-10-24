@@ -20,7 +20,7 @@ export function SubmitPage() {
   const [config, setConfig] = useState({
     submission_mode: 'google_form',
     google_form_url: 'https://forms.gle/uak6BpK1RExMs41M8',
-    github_template_url: 'https://github.com/lekimlonguet/ottv2-template',
+    github_template_url: 'https://github.com/thnh23/ottv2-bot-template',
     form_fields: [
       { id: 'fullname', label: 'Họ và tên', description: 'Họ tên đầy đủ theo danh sách lớp UET' },
       { id: 'student_id', label: 'Mã sinh viên (MSSV)', description: '8 chữ số (ví dụ: 22028100)' },
