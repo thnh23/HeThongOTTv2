@@ -36,5 +36,5 @@ Template chính thức dành cho sinh viên tham gia Giải đấu Lập trình 
 
 ## ⚠️ QUY CHẾ GIẢI ĐẤU
 - **Hệ thống KHÔNG tự điền bot hộ:** Mọi trường hợp repository Private, thiếu file `bot.py`, lỗi cú pháp, hoặc crash sẽ bị **xử thua trực tiếp (Forfeit T1)** 0 điểm.
-- **Thời gian tính toán tối đa:** 2.0 giây cho mỗi nước đi.
+- **Thời gian tính toán tối đa:** 300ms (0.3 giây) cho mỗi nước đi. Quá 300ms sẽ bị xử thua do Time Out (T2).
 - **Nghiêm cấm:** Gọi thư viện mạng (`socket`, `requests`, v.v.) hoặc sao chép mã nguồn của thí sinh khác (hệ thống sử dụng AST MOSS để kiểm tra).

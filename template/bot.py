@@ -6,7 +6,7 @@ Môn học: Lập Trình Mạng (INT3304) — Khoa CNTT, Trường ĐH Công ngh
 QUY ĐỊNH BẮT BUỘC:
   1. Thí sinh triển khai logic tại hàm `choose_move(state)`.
   2. Hàm trả về tuple 2 phần tử (tọa độ ô xuất phát, tọa độ ô đích), ví dụ: ('e2', 'e3').
-  3. Thời gian tính toán cho mỗi nước đi tối đa 2.0 giây.
+  3. Thời gian tính toán cho mỗi nước đi tối đa 300ms (0.3 giây). Quá 300ms bị xử thua T2.
   4. TUYỆT ĐỐI KHÔNG sử dụng thư viện mạng (socket, requests, urllib, http, v.v.).
   5. TUYỆT ĐỐI KHÔNG hard-code API key hoặc thông tin nhạy cảm.
 """
