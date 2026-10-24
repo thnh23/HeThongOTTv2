@@ -19,23 +19,30 @@ logger = logging.getLogger("ottv2.api")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Tạo bảng DB khi khởi động nếu chưa có, và tự động nạp/cập nhật bài nộp mẫu nếu thiếu."""
+    """Tạo bảng DB khi khởi động và tự động khởi tạo tài khoản Quản Trị Viên (Admin BTC) nếu chưa có."""
     create_all_tables()
     try:
         from app.database import SessionLocal
         from app.models.user import User
-        from app.models.submission import Submission
-        from seed_demo_data import seed_data
+        from app.routers.auth import hash_password
         with SessionLocal() as db:
-            active_subs_count = db.query(Submission).filter(Submission.is_active == True).count()
-            if db.query(User).count() == 0 or active_subs_count < 9:
-                logger.info(
-                    "Database thiếu bài nộp chuẩn (hiện có %d active) — Tự động cập nhật seed_data()...",
-                    active_subs_count,
+            admin_user = db.query(User).filter(User.is_admin == True).first()
+            if not admin_user:
+                admin_user = User(
+                    id="admin-master",
+                    name="Ban Tổ Chức Giải Đấu (Admin)",
+                    email="admin@uet.vnu.edu.vn",
+                    hashed_password=hash_password("admin123"),
+                    student_id="ADMIN001",
+                    class_name="BTC-INT3304",
+                    is_admin=True,
+                    is_active=True,
                 )
-                seed_data()
+                db.add(admin_user)
+                db.commit()
+                logger.info("Đã khởi tạo tài khoản Admin mặc định: admin@uet.vnu.edu.vn / admin123")
     except Exception as e:
-        logger.warning("Không thể tự động nạp dữ liệu mẫu: %s", e)
+        logger.warning("Không thể tự động nạp tài khoản admin: %s", e)
     yield
 
 

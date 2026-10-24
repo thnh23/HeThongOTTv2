@@ -5,6 +5,7 @@ Admin Sub-router — Pipeline Thẩm Định Toàn Diện & Google Form Ingestio
 import os
 import io
 import csv
+import uuid
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks, Response
 from sqlalchemy.orm import Session
@@ -143,80 +144,45 @@ async def import_google_form_csv(
         raise HTTPException(status_code=400, detail="Nội dung CSV rỗng!")
 
     try:
-        reader = list(csv.reader(io.StringIO(raw_content)))
-        if not reader or len(reader) < 2:
-            raise HTTPException(status_code=400, detail="File CSV không hợp lệ hoặc chỉ có dòng tiêu đề!")
+        from app.services.pipeline_service import parse_google_form_csv_with_dedup
+        from app.models.submission import Submission
+        from app.routers.auth import hash_password
 
-        headers = reader[0]
-
-        def match_header(keywords: List[str]) -> int:
-            for idx, h in enumerate(headers):
-                clean = h.lower().strip()
-                if any(kw in clean for kw in keywords):
-                    return idx
-            return -1
-
-        email_idx = match_header(["email", "địa chỉ", "mail"])
-        name_idx = match_header(["họ và tên", "họ tên", "tên", "full name", "name"])
-        id_idx = match_header(["mã sinh viên", "mssv", "student id", "student_id", "msv"])
-        class_idx = match_header(["lớp", "class"])
-        repo_idx = match_header(["github", "repo", "link", "repository", "url"])
-        bot_idx = match_header(["tên bot", "bot name", "bot"])
+        accepted_records, stats = parse_google_form_csv_with_dedup(raw_content)
+        if not accepted_records:
+            raise HTTPException(status_code=400, detail="File CSV không hợp lệ hoặc không tìm thấy bản ghi sinh viên!")
 
         created_count = 0
         updated_count = 0
         preview_list = []
 
-        for row in reader[1:]:
-            if not row or all(not str(cell).strip() for cell in row):
-                continue
+        for rec in accepted_records:
+            s_id = rec["student_id"]
+            s_email = rec["email"]
+            s_name = rec["name"]
+            s_class = rec["class_name"]
+            s_repo = rec["github_repo_url"]
+            s_bot = rec["bot_name"]
 
-            def get_val(idx: int) -> str:
-                return row[idx].strip() if 0 <= idx < len(row) else ""
-
-            s_email = get_val(email_idx)
-            s_name = get_val(name_idx)
-            s_id = get_val(id_idx)
-            s_class = get_val(class_idx) or "QH-2022-I/CQ"
-            s_repo = get_val(repo_idx)
-            s_bot = get_val(bot_idx) or (f"Bot_{s_id}" if s_id else "OTT_Bot")
-
-            if not s_id and not s_email and not s_name:
-                continue
-
-            query = db.query(User)
-            user = None
-            if s_id:
-                user = query.filter(User.student_id == s_id).first()
-            if not user and s_email:
-                user = db.query(User).filter(User.email == s_email).first()
+            user = db.query(User).filter(
+                (User.student_id == s_id) | (User.email == s_email)
+            ).first()
 
             if user:
-                # Cập nhật thông tin
-                if s_name:
-                    user.name = s_name
-                if s_id:
-                    user.student_id = s_id
-                if s_email and not user.email:
-                    user.email = s_email
-                if s_class:
-                    user.class_name = s_class
-                if s_repo:
-                    user.github_repo_url = s_repo
-                if s_bot:
-                    user.bot_name = s_bot
+                user.name = s_name
+                user.student_id = s_id
+                user.email = s_email
+                user.class_name = s_class
+                user.github_repo_url = s_repo
+                user.bot_name = s_bot
                 updated_count += 1
             else:
-                import uuid
-                from app.routers.auth import hash_password
-
-                gen_email = s_email or f"{s_id or uuid.uuid4().hex[:8]}@vnu.edu.vn"
                 user = User(
                     id=str(uuid.uuid4()),
-                    name=s_name or f"Sinh viên {s_id}",
-                    email=gen_email,
+                    name=s_name,
+                    email=s_email,
                     hashed_password=hash_password("12345678"),
-                    student_id=s_id or gen_email.split("@")[0],
+                    student_id=s_id,
                     class_name=s_class,
                     github_repo_url=s_repo,
                     bot_name=s_bot,
@@ -226,6 +192,23 @@ async def import_google_form_csv(
                 )
                 db.add(user)
                 created_count += 1
+
+            db.flush()
+
+            # Tạo hoặc cập nhật bài nộp Submission tương ứng
+            sub = db.query(Submission).filter(Submission.user_id == user.id).first()
+            if not sub:
+                sub = Submission(
+                    id=str(uuid.uuid4()),
+                    user_id=user.id,
+                    github_repo_url=s_repo,
+                    bot_version="v1",
+                    is_active=True,
+                    status="valid",
+                )
+                db.add(sub)
+            else:
+                sub.github_repo_url = s_repo
 
             if len(preview_list) < 5:
                 preview_list.append({
