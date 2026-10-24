@@ -80,7 +80,19 @@ ottv2-tournament/
 
 ## 🚀 4. Hướng Dẫn Cài Đặt & Chạy Cục Bộ (Local)
 
-### 4.1. Chạy Backend (FastAPI)
+### ⚡ Khởi Chạy 1-Click Cả Backend & Frontend (Khuyên Dùng)
+
+Dự án đã tích hợp sẵn script tự động bật cả Backend (:8000), Frontend (:5173) và mở trình duyệt:
+- **Trên Windows (Double-click)**: Chạy file `start_dev.bat` tại thư mục gốc của dự án.
+- **Hoặc qua PowerShell**:
+  ```powershell
+  .\start_dev.ps1
+  ```
+- **Dừng toàn bộ hệ thống**: Chạy `stop_dev.bat` hoặc tắt 2 cửa sổ terminal vừa mở.
+
+---
+
+### 4.1. Chạy Thủ Công Backend (FastAPI)
 
 ```bash
 # 1. Di chuyển vào thư mục backend
