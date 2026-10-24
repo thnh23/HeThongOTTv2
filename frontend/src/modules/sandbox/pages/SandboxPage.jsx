@@ -11,15 +11,10 @@ import {
   CheckCircle2,
   AlertTriangle,
   RotateCcw,
-  Sparkles,
-  Terminal,
   Code2,
   Cpu,
   Trash2,
-  FileCode,
   Layers,
-  Zap,
-  Info,
   Clock,
   Swords,
   Award,
@@ -31,13 +26,12 @@ import './SandboxPage.css';
 const DEFAULT_OBSTACLES = ['d4', 'd6', 'f4', 'f6', 'e5'];
 
 export function SandboxPage() {
-  // Mode: 'standard' (Swiss 9x9) | 'obstacle' (Top 32 9x9 with obstacles)
-  const [activeTab, setActiveTab] = useState('standard');
+  const [activeTab, setActiveTab] = useState('standard'); // 'standard' | 'obstacle'
   const [standardOpponent, setStandardOpponent] = useState('greedy'); // 'greedy' | 'random'
   const [botCode, setBotCode] = useState('');
   const [obstacles, setObstacles] = useState(DEFAULT_OBSTACLES);
 
-  // Execution & Replay states
+  // Execution & Replay
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
@@ -45,7 +39,6 @@ export function SandboxPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const playIntervalRef = useRef(null);
 
-  // Reset match results when switching tabs
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
     setResult(null);
@@ -54,7 +47,6 @@ export function SandboxPage() {
     setIsPlaying(false);
   };
 
-  // Replay auto playback
   useEffect(() => {
     if (isPlaying) {
       playIntervalRef.current = setInterval(() => {
@@ -73,10 +65,9 @@ export function SandboxPage() {
     return () => clearInterval(playIntervalRef.current);
   }, [isPlaying, result]);
 
-  // Execute test match
   const handleRunTest = async () => {
     if (!botCode.trim()) {
-      setErrorMsg('Vui lòng dán mã nguồn bot.py có hàm choose_move(state) trước khi chạy thử nghiệm.');
+      setErrorMsg('Vui lòng dán mã nguồn bot.py có hàm choose_move(state).');
       return;
     }
 
@@ -98,7 +89,7 @@ export function SandboxPage() {
       setResult(res);
       setCurrentStepIndex(0);
     } catch (err) {
-      setErrorMsg(err.message || 'Không thể thực thi Sandbox. Vui lòng kiểm tra mã nguồn hoặc kết nối máy chủ.');
+      setErrorMsg(err.message || 'Lỗi thực thi. Kiểm tra lại mã nguồn.');
     } finally {
       setIsRunning(false);
     }
@@ -116,7 +107,6 @@ export function SandboxPage() {
     setObstacles(DEFAULT_OBSTACLES);
   };
 
-  // Extract replay state
   const replayStates = result?.replay?.states || [];
   const replayMoves = result?.replay?.moves || [];
   const activeObstacles = activeTab === 'obstacle' ? (result?.obstacles || obstacles) : [];
@@ -139,19 +129,16 @@ export function SandboxPage() {
 
   return (
     <div className="sandbox-page-container">
-      {/* Page Header */}
+      {/* Header */}
       <div className="sandbox-header-banner">
-        <div className="sandbox-badge-wrap">
-          <span className="sandbox-tag">
-            <Cpu size={14} /> Phân Môi Trường Sandbox Cô Lập
-          </span>
+        <div className="sandbox-title-wrap">
+          <h1 className="sandbox-title">Đấu Thử Bot</h1>
           <span className="sandbox-latency-tag">
-            <Clock size={14} /> Tiêu Chuẩn &le; 200ms
+            <Clock size={13} /> ≤ 200ms
           </span>
         </div>
-        <h1 className="sandbox-title">Sân Đấu Thử Nghiệm Sandbox Lab</h1>
         <p className="sandbox-subtitle">
-          Thử nghiệm logic di chuyển, kiểm tra thời gian tính toán và thẩm định tính tuân thủ luật thi đấu trước khi nộp bài chính thức.
+          Kiểm tra tính hợp lệ và độ trễ của bot trước khi thi đấu.
         </p>
 
         {/* Tab Selection */}
@@ -163,11 +150,8 @@ export function SandboxPage() {
             role="tab"
             aria-selected={activeTab === 'standard'}
           >
-            <Swords size={18} />
-            <div className="tab-btn-text">
-              <span className="tab-title">Bàn Cờ Chuẩn 9×9 (Vòng Swiss)</span>
-              <span className="tab-desc">Luật cờ tiêu chuẩn, đấu tập với GreedyBot hoặc RandomBot</span>
-            </div>
+            <Swords size={16} />
+            <span>Bàn cờ chuẩn 9×9</span>
           </button>
 
           <button
@@ -177,75 +161,68 @@ export function SandboxPage() {
             role="tab"
             aria-selected={activeTab === 'obstacle'}
           >
-            <Shield size={18} />
-            <div className="tab-btn-text">
-              <span className="tab-title">Bàn Cờ Ô Cản 9×9 (Tuần Đệm Top 32)</span>
-              <span className="tab-desc">Chướng ngại vật cố định, né vật cản đối đầu ObstacleBot</span>
-            </div>
+            <Shield size={16} />
+            <span>Bàn cờ ô cản 9×9 (Top 32)</span>
           </button>
         </div>
       </div>
 
-      {/* Main Workspace Layout */}
+      {/* Main Workspace */}
       <div className="sandbox-workspace-grid">
-        {/* Left Column: Code Editor & Setup */}
+        {/* Left: Code Editor */}
         <div className="sandbox-editor-panel glass-card">
           <div className="panel-header">
             <div className="panel-title-group">
-              <Code2 size={20} className="icon-gold" />
-              <h2>Mã Nguồn Bot (Dán Trực Tiếp Từ Máy Cá Nhân)</h2>
+              <Code2 size={18} className="icon-navy" />
+              <h2>Mã nguồn bot</h2>
             </div>
             <div className="editor-top-actions">
-              <span className="direct-paste-badge">
-                <Code2 size={13} /> Chỉ nhận code dán trực tiếp
-              </span>
+              <span className="direct-paste-badge">Dán trực tiếp</span>
               {botCode && (
                 <button
                   type="button"
                   className="btn-clear-code"
                   onClick={() => setBotCode('')}
-                  title="Xóa toàn bộ mã nguồn để dán code mới"
+                  title="Xóa mã nguồn"
                 >
                   <Trash2 size={13} />
-                  <span>Xóa code</span>
+                  <span>Xóa</span>
                 </button>
               )}
             </div>
           </div>
 
-          {/* Opponent & Board Config Options */}
+          {/* Config Bar */}
           <div className="config-bar">
             {activeTab === 'standard' ? (
               <div className="opponent-selector-group">
-                <span className="config-label">Chọn Đối Thủ Máy:</span>
+                <span className="config-label">Đối thủ:</span>
                 <button
                   type="button"
                   className={`btn-toggle-choice ${standardOpponent === 'greedy' ? 'active' : ''}`}
                   onClick={() => setStandardOpponent('greedy')}
                 >
-                  <Zap size={14} /> GreedyBot (Chuẩn Mực Ăn Quân)
+                  GreedyBot
                 </button>
                 <button
                   type="button"
                   className={`btn-toggle-choice ${standardOpponent === 'random' ? 'active' : ''}`}
                   onClick={() => setStandardOpponent('random')}
                 >
-                  <FileCode size={14} /> RandomBot (Ngẫu Nhiên)
+                  RandomBot
                 </button>
               </div>
             ) : (
               <div className="obstacle-config-group">
                 <div className="obs-summary">
-                  <span className="config-label">
-                    Ô Chướng Ngại Vật ({obstacles.length} ô):
-                  </span>
+                  <span className="config-label">Ô cản ({obstacles.length}):</span>
                   <div className="obstacle-chips-row">
                     {obstacles.map((sq) => (
                       <span
                         key={sq}
                         className="obs-chip clickable"
                         onClick={() => handleToggleObstacle(sq)}
-                        title="Bấm để gỡ bỏ ô này"
+                        title="Bấm để gỡ bỏ"
                       >
                         {sq.toUpperCase()} ✕
                       </span>
@@ -254,33 +231,31 @@ export function SandboxPage() {
                       type="button"
                       className="btn-reset-obs"
                       onClick={handleResetObstacles}
-                      title="Khôi phục 5 ô cản mặc định"
+                      title="Về 5 ô cản mặc định"
                     >
-                      <RotateCcw size={12} /> Đặt lại
+                      <RotateCcw size={12} /> Mặc định
                     </button>
                   </div>
                 </div>
-                <p className="obs-tip">
-                  💡 Bạn có thể click trực tiếp vào các ô trên bàn cờ bên phải để bật/tắt ô chướng ngại vật.
-                </p>
+                <p className="obs-tip">Click ô trên bàn cờ để bật/tắt ô cản.</p>
               </div>
             )}
           </div>
 
-          {/* Code Textarea Editor */}
+          {/* Code Editor */}
           <div className="code-editor-wrapper">
             <textarea
               id="sandbox-code-editor"
               className="code-textarea"
               value={botCode}
               onChange={(e) => setBotCode(e.target.value)}
-              placeholder="Dán toàn bộ mã nguồn bot.py từ máy tính cá nhân của bạn vào đây (bắt buộc phải có hàm def choose_move(state):)..."
+              placeholder="Dán mã nguồn bot.py (bắt buộc có hàm choose_move)..."
               spellCheck="false"
-              rows={18}
+              rows={17}
             />
           </div>
 
-          {/* Action Trigger Button */}
+          {/* Action Trigger */}
           <div className="editor-footer">
             <button
               id="btn-run-sandbox"
@@ -292,31 +267,30 @@ export function SandboxPage() {
               {isRunning ? (
                 <>
                   <span className="spinner-border" />
-                  Đang Đấu Thử Nghiệm Trong Sandbox...
+                  Đang chạy...
                 </>
               ) : (
                 <>
-                  <Play size={18} fill="currentColor" />
-                  Chạy Thử Nghiệm Ngay (Run Test)
+                  <Play size={16} fill="currentColor" />
+                  Đấu thử
                 </>
               )}
             </button>
             <span className="editor-footer-hint">
-              Tiến trình Sandbox bảo vệ tuyệt đối: Timeout 2s/nước, giới hạn RAM 128MB, ngắt kết nối mạng.
+              Timeout 2s/nước • RAM 128MB • Không mạng
             </span>
           </div>
 
           {errorMsg && (
             <div className="sandbox-error-banner animate-fade-in">
-              <AlertTriangle size={18} />
+              <AlertTriangle size={16} />
               <span>{errorMsg}</span>
             </div>
           )}
         </div>
 
-        {/* Right Column: Results & Interactive SVG Board */}
+        {/* Right: Board & Results */}
         <div className="sandbox-preview-panel glass-card">
-          {/* Header Status & Performance Cards */}
           {result ? (
             <div className="benchmark-results-summary animate-fade-in">
               <div
@@ -330,34 +304,33 @@ export function SandboxPage() {
               >
                 <div className="verdict-icon">
                   {result.winner === 'W' ? (
-                    <Award size={28} />
+                    <Award size={24} />
                   ) : result.winner === 'B' ? (
-                    <AlertTriangle size={28} />
+                    <AlertTriangle size={24} />
                   ) : (
-                    <Swords size={28} />
+                    <Swords size={24} />
                   )}
                 </div>
                 <div className="verdict-text">
-                  <span className="verdict-label">KẾT QUẢ VÁN ĐẤU</span>
-                  <h3 className="verdict-title">
+                  <div className="verdict-title">
                     {result.winner === 'W'
-                      ? 'Thí Sinh Chiến Thắng 🎉'
+                      ? 'Thắng'
                       : result.winner === 'B'
-                      ? `${result.opponent_name} Chiến Thắng`
-                      : 'Hòa Cờ (Draw)'}
-                  </h3>
-                  <p className="verdict-reason">
-                    Mã kết thúc: <strong>{result.end_code}</strong> — {result.reason}
-                  </p>
+                      ? 'Thua'
+                      : 'Hòa'}
+                  </div>
+                  <div className="verdict-reason">
+                    Mã: <strong>{result.end_code}</strong> • {result.reason}
+                  </div>
                 </div>
               </div>
 
-              {/* Metric Cards Row */}
+              {/* Metrics Grid */}
               <div className="metrics-cards-grid">
                 <div className="metric-card">
                   <div className="metric-header">
-                    <Clock size={16} />
-                    <span>Độ Trễ Trung Bình</span>
+                    <Clock size={14} />
+                    <span>Độ trễ TB</span>
                   </div>
                   <div className="metric-value">
                     {result.average_move_time_ms} <span className="unit">ms</span>
@@ -367,47 +340,45 @@ export function SandboxPage() {
                       result.is_latency_compliant ? 'badge-success' : 'badge-danger'
                     }`}
                   >
-                    {result.is_latency_compliant
-                      ? '✓ Đạt chuẩn (≤200ms)'
-                      : '⚠ Nguy cơ Timeout (>200ms)'}
+                    {result.is_latency_compliant ? '✓ Đạt (≤200ms)' : '✕ Quá 200ms'}
                   </span>
                 </div>
 
                 <div className="metric-card">
                   <div className="metric-header">
-                    <Gauge size={16} />
-                    <span>Thời Gian Max</span>
+                    <Gauge size={14} />
+                    <span>Độ trễ Max</span>
                   </div>
                   <div className="metric-value">
                     {result.max_move_time_ms} <span className="unit">ms</span>
                   </div>
-                  <span className="metric-hint">Nước đi lâu nhất</span>
+                  <span className="metric-hint">Nước lâu nhất</span>
                 </div>
 
                 <div className="metric-card">
                   <div className="metric-header">
-                    <Layers size={16} />
-                    <span>Tổng Nước Đi</span>
+                    <Layers size={14} />
+                    <span>Nước đi</span>
                   </div>
                   <div className="metric-value">{result.total_moves}</div>
-                  <span className="metric-hint">Thời gian: {result.duration_ms}ms</span>
+                  <span className="metric-hint">{result.duration_ms}ms</span>
                 </div>
 
                 {activeTab === 'obstacle' && (
                   <div className="metric-card">
                     <div className="metric-header">
-                      <Shield size={16} />
-                      <span>Luật Ô Cản</span>
+                      <Shield size={14} />
+                      <span>Ô cản</span>
                     </div>
-                    <div className="metric-value" style={{ fontSize: '1.1rem', marginTop: '0.2rem' }}>
-                      {result.is_obstacle_compliant ? 'Tuân Thủ 100%' : 'Phạm Luật'}
+                    <div className="metric-value" style={{ fontSize: '1rem', marginTop: '0.2rem' }}>
+                      {result.is_obstacle_compliant ? 'Hợp lệ' : 'Phạm luật'}
                     </div>
                     <span
                       className={`metric-badge ${
                         result.is_obstacle_compliant ? 'badge-success' : 'badge-danger'
                       }`}
                     >
-                      {result.is_obstacle_compliant ? '✓ Hợp lệ' : '✕ Bị xử thua T1'}
+                      {result.is_obstacle_compliant ? '✓ Đạt' : '✕ Thua T1'}
                     </span>
                   </div>
                 )}
@@ -415,17 +386,12 @@ export function SandboxPage() {
             </div>
           ) : (
             <div className="benchmark-placeholder-banner">
-              <Terminal size={24} className="icon-accent" />
-              <div>
-                <h4>Chưa có dữ liệu ván đấu</h4>
-                <p>
-                  Nhấn <strong>"Chạy Thử Nghiệm Ngay"</strong> để khởi chạy ván cờ với đối thủ mẫu và theo dõi toàn bộ nước đi trực quan.
-                </p>
-              </div>
+              <Cpu size={20} className="icon-navy" />
+              <span>Chưa có ván đấu. Bấm <strong>"Đấu thử"</strong> để bắt đầu.</span>
             </div>
           )}
 
-          {/* SVG Board Container */}
+          {/* SVG Board */}
           <div className="board-viewer-card">
             <div className="board-center-wrapper">
               <BoardSVG
@@ -433,11 +399,11 @@ export function SandboxPage() {
                 obstacles={activeObstacles}
                 lastMove={currentMove ? { from: currentMove.from, to: currentMove.to } : null}
                 onSquareClick={activeTab === 'obstacle' ? handleToggleObstacle : () => {}}
-                size={450}
+                size={430}
               />
             </div>
 
-            {/* Replay Controls Toolbar */}
+            {/* Replay Controls */}
             {replayStates.length > 0 && (
               <div className="replay-controls-toolbar">
                 <div className="playback-buttons">
@@ -446,48 +412,48 @@ export function SandboxPage() {
                     className="btn-replay-ctrl"
                     onClick={() => setCurrentStepIndex(0)}
                     disabled={currentStepIndex === 0}
-                    title="Về nước đi đầu tiên"
+                    title="Về đầu"
                   >
-                    <SkipBack size={16} />
+                    <SkipBack size={15} />
                   </button>
                   <button
                     type="button"
                     className="btn-replay-ctrl"
                     onClick={() => setCurrentStepIndex((p) => Math.max(0, p - 1))}
                     disabled={currentStepIndex === 0}
-                    title="Nước trước"
+                    title="Lùi"
                   >
-                    <ChevronLeft size={16} />
+                    <ChevronLeft size={15} />
                   </button>
                   <button
                     type="button"
                     className={`btn-replay-play ${isPlaying ? 'playing' : ''}`}
                     onClick={() => setIsPlaying(!isPlaying)}
-                    title={isPlaying ? 'Tạm dừng' : 'Tự động phát'}
+                    title={isPlaying ? 'Dừng' : 'Phát'}
                   >
-                    {isPlaying ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
+                    {isPlaying ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}
                   </button>
                   <button
                     type="button"
                     className="btn-replay-ctrl"
                     onClick={() => setCurrentStepIndex((p) => Math.min(replayStates.length - 1, p + 1))}
                     disabled={currentStepIndex >= replayStates.length - 1}
-                    title="Nước kế tiếp"
+                    title="Tiếp"
                   >
-                    <ChevronRight size={16} />
+                    <ChevronRight size={15} />
                   </button>
                   <button
                     type="button"
                     className="btn-replay-ctrl"
                     onClick={() => setCurrentStepIndex(replayStates.length - 1)}
                     disabled={currentStepIndex >= replayStates.length - 1}
-                    title="Đến nước cuối cùng"
+                    title="Về cuối"
                   >
-                    <SkipForward size={16} />
+                    <SkipForward size={15} />
                   </button>
                 </div>
 
-                {/* Step Slider */}
+                {/* Slider */}
                 <div className="step-slider-group">
                   <input
                     type="range"
@@ -498,23 +464,23 @@ export function SandboxPage() {
                     className="replay-range-slider"
                   />
                   <span className="step-counter">
-                    {currentStepIndex} / {replayStates.length - 1}
+                    {currentStepIndex}/{replayStates.length - 1}
                   </span>
                 </div>
 
-                {/* Current Move Details */}
+                {/* Current move info */}
                 <div className="current-move-badge">
                   {currentMove ? (
                     <span>
-                      Nước #{currentStepIndex}:{' '}
-                      <strong>{currentMove.player === 'W' ? 'Trắng (Thí sinh)' : 'Đen (Máy)'}</strong>{' '}
+                      Nước {currentStepIndex}:{' '}
+                      <strong>{currentMove.player === 'W' ? 'Trắng' : 'Đen'}</strong>{' '}
                       <code>
                         {currentMove.from} → {currentMove.to}
                       </code>{' '}
                       ({currentMove.duration_ms || 0}ms)
                     </span>
                   ) : (
-                    <span>Bàn cờ ban đầu (Nước 0)</span>
+                    <span>Bàn cờ ban đầu</span>
                   )}
                 </div>
               </div>
