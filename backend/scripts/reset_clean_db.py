@@ -49,6 +49,20 @@ def reset_database():
         print("    - Mật khẩu: admin123")
         print(f"[✓] Cơ sở dữ liệu sạch: 1 User (Admin), 0 Bài nộp, 0 Trận đấu.")
 
+    # 4. Xóa các tệp xuất bản tĩnh cũ nếu có để tránh hiển thị bảng xếp hạng giả
+    published_dirs = [
+        BASE_DIR / "published",
+        BASE_DIR.parent / "frontend" / "public" / "data",
+    ]
+    for pdir in published_dirs:
+        if pdir.exists():
+            for jf in pdir.glob("*.json"):
+                try:
+                    jf.unlink()
+                except Exception:
+                    pass
+            print(f"[✓] Đã dọn sạch các tệp JSON tĩnh tại: {pdir}")
+
 
 if __name__ == "__main__":
     reset_database()

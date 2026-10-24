@@ -62,8 +62,8 @@ def get_leaderboard(
       - Thua:  0 điểm
       - Hệ số phụ: Buchholz Cut 1 và Sonneborn-Berger (SB)
     """
-    # Lấy danh sách toàn bộ thí sinh
-    users = db.query(User).all()
+    # Lấy danh sách toàn bộ thí sinh (bỏ qua tài khoản Admin)
+    users = db.query(User).filter(User.is_admin == False).all()
 
     # Khởi tạo bảng thống kê
     stats = {}
@@ -72,7 +72,7 @@ def get_leaderboard(
             "user_id": u.id,
             "name": u.name,
             "student_id": getattr(u, "student_id", None) or u.email.split("@")[0],
-            "bot_name": f"Bot_{u.name.replace(' ', '_')}",
+            "bot_name": getattr(u, "bot_name", None) or f"Bot_{u.name.replace(' ', '_')}",
             "tier": "SWISS",
             "matches_played": 0,
             "wins": 0,

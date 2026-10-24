@@ -127,30 +127,11 @@ export function LeaderboardPage() {
     try {
       let data = null;
 
-      // 1. Kiểm tra Jamstack Static CDN data trước (Trụ cột 4: 0đ chi phí máy chủ)
-      if (tier === 'SWISS') {
-        try {
-          const staticResp = await fetch('/data/standings.json');
-          if (staticResp.ok) {
-            const staticData = await staticResp.json();
-            if (Array.isArray(staticData) && staticData.length > 0) {
-              data = staticData;
-              setIsJamstackMode(true);
-            }
-          }
-        } catch {
-          // fallback sang API FastAPI
-        }
-      }
-
-      // 2. Nếu chưa có dữ liệu tĩnh, gọi API backend
-      if (!data) {
-        data = await apiClient.get(`/leaderboard?tier=${tier}`);
-        setIsJamstackMode(false);
-      }
+      // 1. Luôn gọi API backend để lấy dữ liệu thực tế thời gian thực
+      data = await apiClient.get(`/leaderboard?tier=${tier}`);
+      setIsJamstackMode(false);
 
       if (data && data.length > 0) {
-        // Map backend response with Swiss attributes if missing
         const formatted = data.map((item, idx) => {
           let grade = '6.5 – 7.0';
           if (item.rank <= 32) grade = '10.0 (A+)';
@@ -170,8 +151,8 @@ export function LeaderboardPage() {
         });
         setStandings(formatted);
       } else {
-        // Use realistic Swiss simulation dataset for smooth demonstration
-        setStandings(SWISS_MOCK_DATA);
+        // Cơ sở dữ liệu chưa có trận đấu nào -> Để trống hiển thị empty state
+        setStandings([]);
       }
 
       if (isManual) {
@@ -183,11 +164,7 @@ export function LeaderboardPage() {
         );
       }
     } catch {
-      // Fallback to mock data so UI remains fully functional even offline
-      setStandings(SWISS_MOCK_DATA);
-      if (isManual) {
-        showToast('Hiển thị dữ liệu giải đấu mô phỏng 13 Vòng Swiss.', 'info');
-      }
+      setStandings([]);
     } finally {
       setIsLoading(false);
     }
