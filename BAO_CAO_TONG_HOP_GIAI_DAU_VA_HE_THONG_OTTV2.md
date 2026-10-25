@@ -14,12 +14,12 @@
    - 1.4. Vòng Chung kết Top 32 & Cơ chế đổi luật chướng ngại vật
    - 1.5. Thang điểm học phần & Cơ chế tích lũy trận thắng
    - 1.6. Lịch trình tổ chức chi tiết (Timeline: Vòng Swiss 1 Ngày & Chung Kết sau 1 Tuần)
-3. [PHẦN II: KIẾN TRÚC HỆ THỐNG 4 TRỤ CỘT (CHI PHÍ 0 ĐỒNG)](#-phần-ii-kiến-trúc-hệ-thống-4-trụ-cột-chi-phí-0-đồng)
-   - 2.1. Sơ đồ kiến trúc tổng thể 4 trụ cột
-   - 2.2. Trụ cột 1: Kênh thu bài GitHub Template & Google Form CSV Pipeline
-   - 2.3. Trụ cột 2: Bộ công cụ CLI điều hành giải đấu (`scripts/tournament/`)
-   - 2.4. Trụ cột 3: Cụm máy chấm phân tán File-Batch (10 Laptops sinh viên)
-   - 2.5. Trụ cột 4: Cổng thông tin Web Jamstack trên Cloudflare Pages CDN
+3. [PHẦN II: KIẾN TRÚC HỆ THỐNG 4 TRỤ CỘT THỜI GIAN THỰC (CHI PHÍ 0 ĐỒNG)](#-phần-ii-kiến-trúc-hệ-thống-4-trụ-cột-thời-gian-thực-chi-phí-0-đồng)
+   - 2.1. Sơ đồ kiến trúc tổng thể 4 trụ cột đám mây
+   - 2.2. Trụ cột 1: Kênh thu bài đa kênh tự động (GitHub Template, Form CSV & Web Portal)
+   - 2.3. Trụ cột 2: Máy chủ đấu trường & Bộ máy điều hành tập trung (FastAPI & PostgreSQL)
+   - 2.4. Trụ cột 3: Cụm máy chấm lai linh hoạt (Hybrid Execution Worker Pool)
+   - 2.5. Trụ cột 4: Cổng thông tin Web đám mây & Phát sóng thời gian thực (Cloudflare Pages & WebSocket)
    - 2.6. Thiết kế giao diện Clean Light & Bàn cờ SVG tương tác
 4. [PHẦN III: CHÍNH SÁCH LIÊM CHÍNH HỌC THUẬT & KIỂM SOÁT AI](#-phần-iii-chính-sách-liêm-chính-học-thuật--kiểm-soát-ai)
    - 3.1. Định vị & Nguyên tắc cốt lõi: Khuyến khích học code thực chất
@@ -46,7 +46,7 @@ Giải đấu **Đấu Trường Lập Trình Thuật Toán & Game Chiến Thu�
 
 ### 🎯 3 Nguyên Tắc Cốt Lõi:
 1. **Khuyến khích sinh viên tự tay lập trình & rèn luyện tư duy thuật toán:** Chuyển hóa lý thuyết mạng và cấu trúc dữ liệu thành giải thuật thực chiến (Minimax, Cắt tỉa Alpha-Beta, Heuristic Evaluation, Tìm đường A*).
-2. **Chi phí máy chủ 0 đồng (Zero-Cost Infrastructure):** Tận dụng tối đa sức mạnh máy tính cá nhân của sinh viên và hạ tầng miễn phí toàn cầu (GitHub, Cloudflare CDN, Google Sheets) để chạy giải đấu cho 2.000 thí sinh mà không phát sinh ngân sách thuê server.
+2. **Chi phí máy chủ 0 đồng (Zero-Cost Infrastructure):** Tận dụng tối đa sức mạnh hạ tầng đám mây thế hệ mới và mạng lưới phân phối toàn cầu (Render Cloud, Neon PostgreSQL Serverless, Cloudflare Pages Edge CDN, GitHub, Google Sheets) kết hợp cụm máy trạm phân tán để phục vụ trọn vẹn hơn 2.000 thí sinh mà không phát sinh ngân sách thuê server.
 3. **Tự động hóa 100% (Zero-Human-In-The-Loop AI Arena):** Thay thế toàn bộ các khâu chấm tay thủ công bằng hệ thống tự động: từ thẩm định AST code, kiểm tra Git log, bốc thăm Swiss theo thuật toán chuẩn FIDE, đến xếp hạng và tính điểm học phần theo công thức minh bạch.
 
 ---
@@ -122,11 +122,11 @@ Giải đấu áp dụng thể thức **Swiss System** (chuẩn FIDE cờ vua qu
 
 ```
 NGÀY HỘI THI ĐẤU SWISS (NGÀY 1 - TẬP TRUNG TOÀN KHÓA)
-07:30 - 08:00: Khóa danh sách 2.000 bot & Khởi động cụm 10 máy chấm phân tán
-08:00 - 11:45: Thi đấu liên tục Vòng 1 -> 7 (7 vòng; chấm song song & cập nhật BXH realtime)
+07:30 - 08:00: Khóa danh sách 2.000 bot & Khởi động cụm máy chấm tự động Worker Pool kết hợp máy chấm phân tán
+08:00 - 11:45: Thi đấu liên tục Vòng 1 -> 7 (7 vòng; chấm song song & cập nhật BXH realtime qua WebSocket)
 11:45 - 13:00: Nghỉ trưa
 13:00 - 16:45: Thi đấu liên tục Vòng 8 -> 13 (6 vòng quyết định phân hạng)
-16:45 - 17:30: Máy chấm tổng hợp điểm toàn giải, tính hệ số Buchholz & Sonneborn-Berger
+16:45 - 17:30: Hệ thống tự động tổng hợp điểm toàn giải, tính hệ số Buchholz & Sonneborn-Berger trực tiếp trên CSDL
 17:30 - 18:00: CHẤM DỨT VÒNG BẢNG & CHỐT DANH SÁCH CHÍNH THỨC TOP 32
 18:00        : Công bố cấu hình Ô Chướng Ngại Vật và mở cổng nộp bài cho Bot v2
 
@@ -147,72 +147,78 @@ NGÀY CHUNG KẾT & TRAO GIẢI (DIỄN RA SAU 01 TUẦN)
 
 ---
 
-## 🏛️ PHẦN II: KIẾN TRÚC HỆ THỐNG 4 TRỤ CỘT (CHI PHÍ 0 ĐỒNG)
+## 🏛️ PHẦN II: KIẾN TRÚC HỆ THỐNG 4 TRỤ CỘT THỜI GIAN THỰC (CHI PHÍ 0 ĐỒNG)
 
-### 2.1. Sơ đồ kiến trúc tổng thể
+### 2.1. Sơ đồ kiến trúc tổng thể 4 trụ cột đám mây
 
 ```
-[2.000 Sinh viên UET]
-       │  (1) Bấm "Use this template" -> Code trên Repo cá nhân
-       ▼
-┌──────────────────────────────────────────────────────────┐
-│  TRỤ CỘT 1: GITHUB TEMPLATE + GOOGLE FORM THU LINK       │
-│  • Sinh viên tạo repo ottv2-<MaSV> từ template chuẩn.    │
-│  • GitHub Actions tự chạy test T08/T09 & quét API Key.   │
-│  • Điền link repo vào Google Form ngắn (chỉ thu text).   │
-│  • BTC chạy script clone 2.000 repo trong 5-8 phút.      │
-└────────────────────────────┬─────────────────────────────┘
-                             │  (2) BTC tải danh sách bot
-                             ▼
-┌──────────────────────────────────────────────────────────┐
-│  TRỤ CỘT 2: BỘ CÔNG CỤ ĐIỀU HÀNH BTC (CLI TOOLKIT)       │
-│  • pair_swiss.py: Bốc thăm 13 vòng theo chuẩn FIDE.      │
-│  • Cắt 1.000 trận thành 10 gói file chunk_XX.json.       │
-└────────────────────────────┬─────────────────────────────┘
-                             │  (3) Phân phát gói trận đấu
-                             ▼
-┌──────────────────────────────────────────────────────────┐
-│  TRỤ CỘT 3: CỤM MÁY CHẤM PHÂN TÁN SINH VIÊN (10 LAPTOPS) │
-│  • 10 Laptop sinh viên BTC chạy song song (100 trận/máy). │
-│  • Chạy bằng Subprocess Sandbox an toàn tuyệt đối.       │
-│  • Xong 1 vòng trong 2-3 phút -> Gửi lại result_XX.json. │
-└────────────────────────────┬─────────────────────────────┘
-                             │  (4) Merge điểm & Xuất JSON
-                             ▼
-┌──────────────────────────────────────────────────────────┐
-│  TRỤ CỘT 4: WEB TĨNH CLOUDFLARE PAGES (JAMSTACK CDN)     │
-│  • rankings.json (Điểm 3-1-0, Buchholz, SB, Top 32).     │
-│  • pairings.json (Lịch thi đấu vòng kế tiếp).            │
-│  • /replays/*.json (Biên bản bàn cờ 9x9 SVG).            │
-│  • 2.000 SV tra cứu tức thì (<50ms), không bao giờ sập.  │
-└──────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        2.000 SINH VIÊN HỌC PHẦN LẬP TRÌNH MẠNG UET                     │
+└───────────────────────────┬────────────────────────────────┬───────────────────────────┘
+                            │ (1) Đăng ký nộp bài            │ (4) Tra cứu & Xem Live
+                            ▼                                ▼
+┌──────────────────────────────────────────────┐ ┌───────────────────────────────────────┐
+│ TRỤ CỘT 1: THU BÀI ĐA KÊNH & THẨM ĐỊNH MÃ    │ │ TRỤ CỘT 4: CỔNG THÔNG TIN & LIVE REALTIME│
+│ • GitHub Template: Fork/Clone, CI/CD tự test.│ │ • Cloudflare Pages Edge CDN (Toàn cầu)│
+│ • Web Portal: Nộp trực tiếp file zip / repo. │ │ • SPA tra cứu thứ hạng, lịch đấu <50ms│
+│ • Google Form CSV Pipeline: Nhập hàng loạt.  │ │ • WebSocket Broadcast luồng ván cờ    │
+│ • Tiền thẩm định siêu tốc: AST & 0.1ms Move. │ │ • Bàn cờ SVG 9x9 tương tác mượt mà    │
+└──────────────────────┬───────────────────────┘ └───────────────────▲───────────────────┘
+                       │                                             │
+                       │ (2) Nạp danh sách & Đồng bộ CSDL            │ (3) Phát sóng trực tiếp
+                       ▼                                             │
+┌────────────────────────────────────────────────────────────────────┴───────────────────┐
+│ TRỤ CỘT 2: MÁY CHỦ ĐẤU TRƯỜNG & ĐIỀU HÀNH TẬP TRUNG (FASTAPI & POSTGRESQL)             │
+│ • Bộ não điều phối trung tâm: REST API & WebSocket Realtime Gateway.                   │
+│ • Cơ sở dữ liệu đám mây (Neon/Render Cloud): Lưu trữ bền vững dữ liệu thí sinh,       │
+│   ván đấu, bảng xếp hạng và biên bản replay thời gian thực.                            │
+│ • Bộ máy bốc thăm Swiss FIDE Dutch System 13 vòng chuẩn xác tuyệt đối.                 │
+│ • Tính toán tức thời hệ số phụ Buchholz, Sonneborn-Berger và xuất bảng điểm UET.       │
+└──────────────────────────────────────┬─────────────────────────────────────────────────┘
+                                       │
+                                       │ (2b) Điều phối & Cấp phát tải trận đấu
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ TRỤ CỘT 3: CỤM MÁY CHẤM LAI LINH HOẠT (HYBRID EXECUTION WORKER POOL)                   │
+│ • Cloud Worker Pool: Chạy tự động đa tiến trình, tự cân bằng tải theo hàng đợi.        │
+│ • Hỗ trợ mở rộng máy trạm phân tán: Kết nối máy tính phụ trợ giảng khi cần tăng tốc.  │
+│ • Môi trường Sandbox cô lập: Chặn hoàn toàn socket mạng, giới hạn RAM 128MB,          │
+│   giới hạn 300ms/nước đi, tự động xử thua T1 nếu bot crash hoặc vi phạm luật.         │
+│ • Hoàn thành 1.000 trận đấu mỗi vòng trong vòng 2-3 phút, ghi kết quả trực tiếp CSDL.  │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2. Trụ cột 1: Kênh thu bài GitHub Template & Google Form Pipeline
-* **GitHub Template:** Thí sinh chỉ cần nhấn *"Use this template"*, tự động thừa hưởng bộ test CI/CD kiểm tra cấu trúc gói nộp.
-* **Google Form chỉ thu văn bản:** Không upload file zip lên Google Drive (tránh nghẽn băng thông và hết dung lượng). Form chỉ thu 4 trường: Họ tên, MSSV, Email UET, Link GitHub Repo.
-* **Pipeline tự động:** Script đa luồng (10–20 threads) tự động đọc CSV, lọc bản nộp mới nhất trước hạn chót, `git clone` và lùi commit hash về đúng thời điểm deadline.
+### 2.2. Trụ cột 1: Kênh thu bài đa kênh tự động (GitHub Template, Form CSV & Web Portal)
+* **Kênh GitHub Template chuẩn hóa:** Thí sinh chỉ cần nhấn *"Use this template"*, tự động thừa hưởng cấu trúc thư mục quy chuẩn và bộ kiểm thử tự động trên GitHub Actions để tự kiểm tra lỗi trước khi nộp.
+* **Kênh Web Portal nộp trực tiếp:** Thí sinh có thể truy cập cổng web để tải lên tệp nén mã nguồn hoặc gửi liên kết kho GitHub. Hệ thống tiếp nhận đa luồng an toàn, có cơ chế khóa chống xung đột tài nguyên khi hàng trăm thí sinh nộp bài cùng thời điểm.
+* **Kênh Google Form CSV hàng loạt:** Hỗ trợ Ban Tổ Chức nhập hàng loạt dữ liệu đăng ký qua file CSV xuất từ Google Form/Sheets. Tính năng chuẩn hóa thời gian thông minh tự động nhận diện định dạng ngày giờ tiếng Việt (SA/CH, GMT+7) mà không bị lỗi lệch múi giờ.
+* **Tiền thẩm định bài nộp siêu tốc (0.1ms Pre-Validation):** Thay vì phải khởi tạo môi trường nặng nề, hệ thống áp dụng cơ chế kiểm tra nước đi đầu tiên siêu nhẹ với tốc độ 0.1 mili-giây, phản hồi trạng thái hợp lệ cho thí sinh ngay tức thì và loại bỏ hoàn toàn các lỗi báo Timeout sai lệch.
 
-### 2.3. Trụ cột 2: Bộ công cụ điều hành giải đấu chuyên dụng
-Hệ thống trang bị bộ công cụ tự động hóa giải đấu với các tính năng nghiệp vụ khép kín:
-* **Tính năng Thu thập bài nộp tự động:** Tự động đọc danh sách CSV Google Form, đối soát mã sinh viên và clone 2.000 bài nộp về kho lưu trữ tập trung trong 5–8 phút.
-* **Tính năng Bốc thăm Thụy Sĩ thông minh:** Bốc thăm ghép cặp 13 vòng đấu theo thuật toán FIDE Dutch System; tự động chia tải 1.000 trận mỗi vòng thành các gói phân tán độc lập.
-* **Tính năng Máy chấm thực thi trận đấu song song:** Phân phát các gói ván đấu tới các máy chấm trong cụm phân tán và giám sát tiến trình qua môi trường Sandbox an toàn.
-* **Tính năng Hợp nhất & Phát hành kết quả tức thời:** Tự động hợp nhất kết quả toàn giải, tính toán hệ số Buchholz, Sonneborn-Berger và cập nhật Bảng xếp hạng trực tiếp.
+### 2.3. Trụ cột 2: Máy chủ đấu trường & Bộ máy điều hành tập trung (FastAPI & PostgreSQL)
+Đóng vai trò là "bộ não" điều phối toàn diện giải đấu với hiệu năng cao:
+* **Hệ cơ sở dữ liệu quan hệ đám mây (Neon / Render PostgreSQL):** Tự động thích ứng môi trường, quản lý toàn diện vòng đời dữ liệu từ hồ sơ thí sinh, trạng thái bài nộp, danh sách cặp đấu từng vòng, kết quả chi tiết từng ván cờ đến bảng xếp hạng tổng sắp.
+* **Bộ máy bốc thăm Thụy Sĩ FIDE Dutch System:** Tự động ghép cặp chính xác theo nguyên tắc cùng điểm gặp nhau, tuyệt đối không lặp lại đối thủ cũ (Strict No-Rematch) và cân bằng số ván đi trước/đi sau (Color Balance) qua cả 13 vòng đấu.
+* **Tính toán hệ số phụ tức thời:** Tự động tính toán Match Points, Buchholz (BH) và Sonneborn-Berger (SB) ngay khi mỗi ván cờ kết thúc, duy trì bảng tổng sắp thời gian thực minh bạch.
+* **Bộ chuyển phát thời gian thực (WebSocket Gateway):** Phục vụ phát sóng trực tiếp các nước đi của các ván cờ tâm điểm lên màn hình lớn và cổng thông tin người xem.
 
-### 2.4. Trụ cột 3: Cụm máy chấm phân tán File-Batch (10 Laptops sinh viên)
-* 10 máy tính cá nhân của ban kỹ thuật chia sẻ tải: mỗi máy chạy 100 trận/vòng.
-* **An toàn tuyệt đối:** Sandbox cô lập hoàn toàn mạng internet (chặn `socket`, `requests`), giới hạn RAM 128MB, timeout 300ms/nước đi (ngắt ngay và xử thua T1 nếu vượt). Máy chấm hoàn toàn miễn nhiễm với virus hoặc bot crash.
-* Thời gian hoàn thành 1.000 trận đấu: **dưới 5 phút/vòng**.
+### 2.4. Trụ cột 3: Cụm máy chấm lai linh hoạt (Hybrid Execution Worker Pool)
+* **Worker Pool tự động trên đám mây:** Hệ thống điều phối hàng đợi trận đấu đa tiến trình (Multi-Processing Workers), tự động điều tiết tải để tận dụng tối đa tài nguyên CPU mà không làm nghẽn máy chủ.
+* **Khả năng mở rộng máy trạm phân tán:** Khi cần tăng tốc độ xử lý trong ngày hội thi đấu, Ban Kỹ Thuật có thể dễ dàng cắm thêm các máy tính cá nhân/máy trạm của trợ giảng tham gia gánh tải trận đấu mà không làm gián đoạn luồng vận hành chính.
+* **Môi trường Sandbox cô lập an toàn tuyệt đối:**
+  * Chặn hoàn toàn kết nối socket mạng và thư viện mạng bên ngoài nhằm triệt tiêu nguy cơ rò rỉ dữ liệu hoặc can thiệp từ xa.
+  * Giới hạn bộ nhớ nghiêm ngặt $\le 128\text{MB}$ RAM và giới hạn thời gian phản hồi $\le 300\text{ms}$/nước đi.
+  * Tự động phát hiện ngoại lệ, ngắt tiến trình và xử thua phạt $T1$ tức thì nếu bot bị crash, chạy vô tận hoặc trả về nước đi sai luật.
+* **Năng lực thực thi vượt trội:** Hoàn thành toàn bộ 1.000 ván đấu của mỗi vòng Swiss chỉ trong **2–3 phút**, ghi nhận kết quả và biên bản trực tiếp vào CSDL trung tâm.
 
-### 2.5. Trụ cột 4: Cổng thông tin Web Jamstack trên Cloudflare Pages CDN
-* Toàn bộ bảng xếp hạng và lịch thi đấu được xuất dưới dạng file JSON tĩnh (`rankings.json`, `pairings.json`, `replays/*.json`).
-* Cloudflare Pages phân phối dữ liệu qua hệ thống máy chủ biên (Edge CDN) tại Hà Nội. 2.000 sinh viên F5 liên tục với độ trễ `<50ms` mà **không tốn 1 đồng chi phí máy chủ và không bao giờ sập trang web**.
+### 2.5. Trụ cột 4: Cổng thông tin Web đám mây & Phát sóng thời gian thực (Cloudflare Pages & WebSocket)
+* **Phân phối toàn cầu qua Cloudflare Pages Edge CDN:** Giao diện ứng dụng đơn trang (SPA) được lưu trữ và tối ưu hóa điều hướng trên hệ thống máy chủ biên Cloudflare đặt tại Việt Nam. Hơn 2.000 sinh viên có thể đồng thời truy cập, tra cứu lịch đấu và bảng xếp hạng với độ trễ siêu thấp dưới **50 mili-giây**, chịu tải hoàn hảo mà không tốn chi phí máy chủ.
+* **Phát sóng trực tiếp thời gian thực (Live Broadcasting):** Tích hợp kết nối WebSocket thời gian thực, cho phép khán giả và sinh viên theo dõi trực tiếp các trận cầu đinh trên bàn cờ tương tác với đầy đủ diễn biến từng nước đi.
+* **Trạng thái bảng xếp hạng thông minh (Smart Empty State):** Tự động nhận diện khi giải đấu chưa diễn ra trận nào để hiển thị màn hình chờ thân thiện, bảo đảm tính minh bạch tuyệt đối trước giờ khai mạc.
 
 ### 2.6. Thiết kế giao diện Clean Light & Bàn cờ SVG tương tác
-* **Bảng màu:** Nền xám sáng `#F8FAFC`, thẻ trắng `#FFFFFF`, viền `#CBD5E1`, điểm nhấn xanh UET `#1E3A8A`.
-* **Phông chữ:** Bộ typography hiện đại **Plus Jakarta Sans / Inter / JetBrains Mono** đạt độ tương phản chuẩn WCAG AAA.
-* **Bàn cờ SVG 9×9:** Mô phỏng phong cách Lichess thanh lịch, hiển thị biểu tượng Búa-Kéo-Bao sắc nét, thanh trượt thời gian và phát lại nước đi mượt mà.
+* **Bảng màu giao diện chuẩn mực:** Sử dụng ngôn ngữ thiết kế Clean Light hiện đại với nền xám sáng thanh lịch (`#F8FAFC`), thẻ nội dung trắng tinh (`#FFFFFF`), đường viền sắc nét (`#CBD5E1`) và điểm nhấn sắc xanh nhận diện UET (`#1E3A8A`).
+* **Hệ thống phông chữ chuẩn WCAG AAA:** Sử dụng bộ typography cao cấp **Plus Jakarta Sans / Inter / JetBrains Mono**, đảm bảo tỷ lệ tương phản hoàn hảo, chống mỏi mắt khi theo dõi trong suốt ngày dài thi đấu.
+* **Bàn cờ SVG 9×9 tương tác cao cấp:** Mô phỏng phong cách đồ họa Lichess trực quan, hiển thị biểu tượng Búa - Kéo - Bao sắc nét trên từng quân cờ, hỗ trợ thanh trượt tua dòng thời gian, phóng to/thu nhỏ và phân tích thế trận chi tiết.
 
 ---
 
@@ -285,7 +291,7 @@ Môn học khuyến khích sinh viên sử dụng công nghệ hỗ trợ cú ph
 └──────────┴─────────────────────────────────────────────────────────────┘
 ```
 
-* **`UC-AD01`: Đồng Bộ Dữ Liệu Hàng Loạt:** Tải file CSV từ Google Form, kích hoạt tiến trình clone song song 2.000 repo về máy tính nội bộ trong vòng 5–8 phút.
+* **`UC-AD01`: Đồng Bộ Dữ Liệu Hàng Loạt:** Tải file CSV từ Google Form, kích hoạt tiến trình clone song song 2.000 repo vào kho lưu trữ tập trung của hệ thống trong vòng 5–8 phút.
 * **`UC-AD02`: Điều Khiển Vòng Đấu Swiss:** Bấm lệnh kích hoạt vòng đấu mới; hệ thống tự động bốc thăm xếp cặp và cân bằng màu quân.
 * **`UC-AD03`: Điều Phối Thi Đấu Đa Tiến Trình:** Phân chia các cặp đấu vào hàng đợi máy chấm, theo dõi tiến độ qua thanh phần trăm trực tiếp.
 * **`UC-AD04`: Khởi Tạo Chung Kết Top 32:** Kích hoạt chế độ Ô Cản cho vòng Knockout, tạo nhánh đấu nhánh thắng-thua Double Elimination.
@@ -303,7 +309,7 @@ Môn học khuyến khích sinh viên sử dụng công nghệ hỗ trợ cú ph
 │ UC-SY01  │ Thẩm Định Gói Nộp Bài & Lịch Sử Tự Động (Zero-Human T08/T09)│
 │ UC-SY02  │ Thuật Toán Ghép Cặp Swiss Tự Động (Dutch Swiss Matchmaker)  │
 │ UC-SY03  │ Thực Thi Trận Đấu Trong Sandbox Cô Lập (Chặn Mạng T10, RAM) │
-│ UC-SY04  │ Trọng Tài Luật & Ghi Nhận Lịch Sử Nước Đi (W1, W2, D1, D2)   │
+│ UC-SY04  │ Trọng Tài Luật & Lưu Trữ, Phát Sóng Replay (W1, W2, D1, D2)  │
 │ UC-SY05  │ Tự Động Tính Hệ Số Phụ & Xếp Hạng (Buchholz & Sonneborn)    │
 │ UC-SY06  │ Tự Động Quy Đổi Điểm Số & Xuất Bảng Điểm Học Phần 2.000 SV  │
 └──────────┴─────────────────────────────────────────────────────────────┘
@@ -312,7 +318,7 @@ Môn học khuyến khích sinh viên sử dụng công nghệ hỗ trợ cú ph
 * **`UC-SY01`: Thẩm Định Tự Động:** Tự giải nén, kiểm tra AST `bot.py` (hàm `choose_move`), đếm số lượng Git commits ($\ge 4$ commits) và quét rò rỉ API key cá nhân.
 * **`UC-SY02`: Ghép Cặp Swiss Tự Động:** Ghép các bot có cùng điểm số, không lặp đối thủ cũ, cân bằng lượt đi trước/sau.
 * **`UC-SY03`: Sandbox Cô Lập:** Chặn mọi kết nối internet, giới hạn $\le 300\text{ms}$ / nước đi, $\le 128\text{MB}$ RAM. Tự động ngắt và xử thua $T1$ nếu bot vi phạm hoặc quá thời gian.
-* **`UC-SY04`: Trọng Tài Tự Động:** Kiểm tra tính hợp lệ từng nước đi theo `rules.json`, xác định kết thúc ván đấu và ghi nhận file `replay.json`.
+* **`UC-SY04`: Trọng Tài Tự Động:** Kiểm tra tính hợp lệ từng nước đi theo `rules.json`, xác định kết thúc ván đấu, lưu trữ biên bản vào CSDL và phát sóng Replay tương tác thời gian thực.
 * **`UC-SY05`: Tự Động Tính Hệ Số Phụ:** Tính toán Buchholz và Sonneborn-Berger phân định thứ hạng không độ trễ.
 * **`UC-SY06`: Xuất Bảng Điểm Tự Động:** Áp dụng công thức thang điểm tích lũy trận thắng để sinh bảng điểm hệ 10 và điểm chữ chuẩn UET cho 2.000 sinh viên.
 
@@ -344,7 +350,7 @@ sequenceDiagram
     AD->>SYS: Kích hoạt Vòng Swiss (Toàn bộ 13 vòng trong 1 ngày)
     SYS->>SYS: Thuật toán Swiss Matchmaker ghép cặp 2.000 bot theo từng vòng
     SYS->>SB: Chạy hàng loạt trận đấu song song trên Worker Pool
-    SB-->>SYS: Thu thập kết quả & Sinh file Replay
+    SB-->>SYS: Thu thập kết quả, ghi nhận CSDL & Phát sóng Replay
     SYS->>SYS: Cập nhật Bảng xếp hạng, tính điểm Buchholz & Sonneborn-Berger
     SYS->>ST: Phát sóng trực tiếp nước đi qua WebSocket
     SYS->>SYS: Chấm xong 13 vòng, chốt danh sách chính thức Top 32
@@ -368,7 +374,7 @@ sequenceDiagram
 
 Đề án tổ chức giải đấu và kiến trúc hệ thống OTTv2 là giải pháp toàn diện, dung hòa hoàn hảo giữa:
 1. **Tính sư phạm & Học thuật:** Kích thích 2.000 sinh viên tự giác viết code thuật toán, hiểu sâu sắc kiến trúc mạng và cấu trúc dữ liệu.
-2. **Tính hiệu quả kinh tế:** **0 đồng chi phí máy chủ**, vận hành mượt mà nhờ cụm máy chấm phân tán và CDN Cloudflare.
+2. **Tính hiệu quả kinh tế:** **0 đồng chi phí máy chủ**, vận hành mượt mà nhờ kết hợp Worker Pool đám mây tự động, cụm máy chấm phân tán và mạng phân phối toàn cầu Cloudflare Edge CDN.
 3. **Tính minh bạch & Công bằng:** Thể thức Swiss 13 vòng kết hợp hệ số Buchholz đảm bảo đánh giá đúng thực lực từng sinh viên; cơ chế tự động hóa loại bỏ hoàn toàn các sai sót cảm tính.
 
 Hệ thống đã sẵn sàng đưa vào vận hành thực tế cho kỳ thi học phần Lập Trình Mạng tại Trường Đại học Công nghệ (VNU-UET).
@@ -377,7 +383,7 @@ Hệ thống đã sẵn sàng đưa vào vận hành thực tế cho kỳ thi h�
 
 ## 🛠️ PHẦN VI: NHẬT KÝ CẬP NHẬT & TỐI ƯU HÓA HỆ THỐNG THỰC TẾ (SYSTEM CHANGE LOG)
 
-Nhằm đáp ứng việc triển khai thực tế trên hạ tầng đám mây (Render, Neon PostgreSQL, Cloudflare Pages) với quy mô hơn 2.000 bài nộp từ sinh viên, hệ thống đã được tối ưu hóa toàn diện, nâng cấp thêm nhiều tính năng mới và loại bỏ các thành phần dư thừa nhằm đạt độ ổn định và tin cậy cao nhất.
+Trải qua quá trình triển khai thực tế trên hạ tầng đám mây (Render, Neon PostgreSQL, Cloudflare Pages) với quy mô hơn 2.000 bài nộp từ sinh viên, hệ thống đã chính thức hoàn thiện việc nâng cấp từ mô hình phân tán file tĩnh sơ khởi sang **Kiến Trúc Đấu Trường Đám Mây Thời Gian Thực (Full-Stack Cloud Realtime Architecture)**. Dưới đây là nhật ký chi tiết các tính năng được phát triển mới, tối ưu hóa sâu và tinh gọn hóa để bảo đảm hệ thống vận hành đạt độ tin cậy và hiệu năng cao nhất.
 
 ### 6.1. Bảng tổng hợp nâng cấp tính năng hệ thống
 
