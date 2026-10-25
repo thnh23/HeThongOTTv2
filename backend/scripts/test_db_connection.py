@@ -9,29 +9,41 @@ hoặc:
 
 import sys
 import os
+import subprocess
 from pathlib import Path
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Tự động chuyển tiếp sang .venv nếu Python hiện tại thiếu thư viện
+venv_python = BASE_DIR / ".venv" / "Scripts" / "python.exe"
+if venv_python.exists() and Path(sys.executable).resolve() != venv_python.resolve():
+    try:
+        import sqlalchemy  # noqa: F401
+        try:
+            import psycopg2  # noqa: F401
+        except ImportError:
+            import psycopg  # noqa: F401
+    except ImportError:
+        res = subprocess.run([str(venv_python), str(Path(__file__).resolve())] + sys.argv[1:])
+        sys.exit(res.returncode)
+
 sys.path.insert(0, str(BASE_DIR))
 
 from sqlalchemy import create_engine, text, inspect
 from app.config import settings
+from app.database import normalize_db_url
 
 
 def test_connection(url: str = None):
-    target_url = url or settings.DATABASE_URL
-    if not target_url:
+    raw_url = url or settings.DATABASE_URL
+    if not raw_url:
         print("[LỖI] Không tìm thấy URL kết nối. Vui lòng truyền URL hoặc điền vào .env")
         return False
 
-    # Chuẩn hóa postgresql prefix nếu dùng postgres://
-    if target_url.startswith("postgres://"):
-        target_url = target_url.replace("postgres://", "postgresql+psycopg2://", 1)
-    elif target_url.startswith("postgresql://") and not target_url.startswith("postgresql+"):
-        target_url = target_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    target_url = normalize_db_url(raw_url)
 
     # Ẩn password khi in ra console
     masked_url = target_url

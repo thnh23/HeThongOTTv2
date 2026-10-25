@@ -19,17 +19,32 @@ import sys
 import stat
 import shutil
 import argparse
+import subprocess
 from pathlib import Path
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-# Thêm thư mục backend vào sys.path
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Tự động chuyển tiếp sang .venv nếu Python hiện tại thiếu thư viện
+venv_python = BASE_DIR / ".venv" / "Scripts" / "python.exe"
+if venv_python.exists() and Path(sys.executable).resolve() != venv_python.resolve():
+    try:
+        import sqlalchemy  # noqa: F401
+        try:
+            import psycopg2  # noqa: F401
+        except ImportError:
+            import psycopg  # noqa: F401
+    except ImportError:
+        res = subprocess.run([str(venv_python), str(Path(__file__).resolve())] + sys.argv[1:])
+        sys.exit(res.returncode)
+
+# Thêm thư mục backend vào sys.path
 sys.path.insert(0, str(BASE_DIR))
 
-from app.database import Base, engine, SessionLocal
-from app.models.user import User
+from app.database import Base, engine, SessionLocal, normalize_db_url
+from app.models import User, Match, Replay, Submission
 from app.features.auth.service import hash_password
 
 
@@ -158,7 +173,12 @@ def clean_storage_files(keep_repos: bool = False, keep_template_cache: bool = Tr
         print("    [✓] Đã làm sạch storage/submissions/ (temp, repos, reports)")
 
 
-def reset_database(keep_repos: bool = False, keep_template_cache: bool = True, custom_db_url: str = None):
+def reset_database(
+    keep_repos: bool = False,
+    keep_template_cache: bool = True,
+    custom_db_url: str = None,
+    clean_local_storage: bool = True,
+):
     target_engine = engine
     target_session_factory = SessionLocal
 
@@ -166,11 +186,7 @@ def reset_database(keep_repos: bool = False, keep_template_cache: bool = True, c
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
 
-        normalized_url = custom_db_url
-        if normalized_url.startswith("postgres://"):
-            normalized_url = normalized_url.replace("postgres://", "postgresql+psycopg2://", 1)
-        elif normalized_url.startswith("postgresql://") and not normalized_url.startswith("postgresql+"):
-            normalized_url = normalized_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        normalized_url = normalize_db_url(custom_db_url)
 
         masked = normalized_url
         if "@" in normalized_url and "://" in normalized_url:
@@ -180,16 +196,24 @@ def reset_database(keep_repos: bool = False, keep_template_cache: bool = True, c
             masked = f"{s}://{u}:***@{h}"
         print(f"[*] Đang kết nối tới Cơ sở dữ liệu: {masked}")
 
-        target_engine = create_engine(
-            normalized_url,
-            pool_pre_ping=True,
-            connect_args={"check_same_thread": False} if "sqlite" in normalized_url else {},
-        )
+        is_sqlite = "sqlite" in normalized_url
+        engine_kwargs = {
+            "echo": False,
+        }
+        if is_sqlite:
+            engine_kwargs["connect_args"] = {"check_same_thread": False}
+        else:
+            engine_kwargs["pool_pre_ping"] = True
+            engine_kwargs["pool_recycle"] = 300
+            engine_kwargs["pool_size"] = 5
+            engine_kwargs["max_overflow"] = 10
+
+        target_engine = create_engine(normalized_url, **engine_kwargs)
         target_session_factory = sessionmaker(autocommit=False, autoflush=False, bind=target_engine)
 
     print("[*] Đang xóa sạch toàn bộ các bảng trong cơ sở dữ liệu...")
     Base.metadata.drop_all(bind=target_engine)
-    print("[*] Đang tái tạo cấu trúc bảng mới...")
+    print("[*] Đang tái tạo cấu trúc bảng mới (users, matches, replays, submissions)...")
     Base.metadata.create_all(bind=target_engine)
 
     with target_session_factory() as db:
@@ -215,11 +239,14 @@ def reset_database(keep_repos: bool = False, keep_template_cache: bool = True, c
         print(f"[✓] Cơ sở dữ liệu sạch: {user_count} Users ({admin_count} Admin, {student_count} Thí sinh).")
         print("    [!] Không tự nạp dữ liệu mẫu: Thí sinh sẽ được nhập tự động qua Pipeline từ Google Form (CSV).")
 
-    # Xóa xuất bản tĩnh cục bộ
-    clean_published_files()
+    if clean_local_storage:
+        # Xóa xuất bản tĩnh cục bộ
+        clean_published_files()
 
-    # Xóa storage cục bộ
-    clean_storage_files(keep_repos=keep_repos, keep_template_cache=keep_template_cache)
+        # Xóa storage cục bộ
+        clean_storage_files(keep_repos=keep_repos, keep_template_cache=keep_template_cache)
+    else:
+        print("[i] Bỏ qua dọn dẹp storage cục bộ (--skip-local-storage được kích hoạt).")
 
     print("\n[✓] HOÀN TẤT: Hệ thống đã được đưa về trạng thái sạch (Clean State) hoàn toàn!")
 
@@ -242,12 +269,18 @@ if __name__ == "__main__":
         action="store_true",
         help="Xóa luôn cả bộ nhớ đệm template repository (.template_cache)",
     )
+    parser.add_argument(
+        "--skip-local-storage",
+        action="store_true",
+        help="Chỉ reset CSDL từ xa, bỏ qua việc xóa tệp storage và published trên máy cục bộ",
+    )
     args = parser.parse_args()
 
     reset_database(
         keep_repos=args.keep_repos,
         keep_template_cache=not args.wipe_template_cache,
         custom_db_url=args.db_url,
+        clean_local_storage=not args.skip_local_storage,
     )
 
 

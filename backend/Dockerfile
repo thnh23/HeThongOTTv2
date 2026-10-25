@@ -2,6 +2,11 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Cài git và công cụ cần thiết cho pipeline clone repository
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
 # Cài dependencies trước để tận dụng Docker cache
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

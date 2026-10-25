@@ -140,22 +140,34 @@ global_pipeline_progress = PipelineProgressManager()
 # ─────────────────────────────────────────────────────────────────────────────
 
 def parse_flexible_datetime(dt_str: str) -> Optional[datetime]:
-    """Phân tích chuỗi ngày giờ từ Google Form hoặc input người dùng."""
+    """Phân tích chuỗi ngày giờ từ Google Form hoặc input người dùng (hỗ trợ cả định dạng tiếng Việt SA/CH, GMT+7)."""
     if not dt_str or not str(dt_str).strip():
         return None
 
     cleaned = str(dt_str).strip()
+
+    # Chuẩn hóa định dạng tiếng Việt từ Google Form: SA -> AM, CH -> PM, bỏ múi giờ GMT+7
+    cleaned = re.sub(r"\s+GMT\+7|\s+UTC.*|\s+\+07:?00", "", cleaned, flags=re.IGNORECASE).strip()
+    cleaned = re.sub(r"\bSA\b", "AM", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bCH\b", "PM", cleaned, flags=re.IGNORECASE)
+
     formats = [
+        "%Y/%m/%d %I:%M:%S %p",
+        "%Y/%m/%d %H:%M:%S",
+        "%Y/%m/%d %I:%M %p",
+        "%Y/%m/%d %H:%M",
         "%Y-%m-%dT%H:%M:%S",
         "%Y-%m-%dT%H:%M",
         "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %I:%M:%S %p",
         "%Y-%m-%d %H:%M",
+        "%d/%m/%Y %I:%M:%S %p",
         "%d/%m/%Y %H:%M:%S",
         "%d/%m/%Y %H:%M",
+        "%m/%d/%Y %I:%M:%S %p",
         "%m/%d/%Y %H:%M:%S",
         "%m/%d/%Y %H:%M",
-        "%Y/%m/%d %H:%M:%S",
-        "%Y/%m/%d %H:%M",
+        "%Y/%m/%d",
         "%Y-%m-%d",
         "%d/%m/%Y",
     ]
@@ -326,6 +338,9 @@ def parse_google_form_csv_with_dedup(
 # 4. Git Cloner Song Song & Khóa Thời Gian (Time Freeze)
 # ─────────────────────────────────────────────────────────────────────────────
 
+_template_cache_lock = threading.Lock()
+
+
 def clone_and_freeze_single_repo(
     student: Dict[str, Any],
     dest_dir: str,
@@ -389,9 +404,15 @@ def clone_and_freeze_single_repo(
     if is_template_repo:
         template_bot = os.path.join(cache_dir, "bot.py")
         if not os.path.exists(template_bot):
-            os.makedirs(cache_dir, exist_ok=True)
-            cmd_tmpl = ["git", "clone", "--filter=blob:none", repo_url, cache_dir]
-            subprocess.run(cmd_tmpl, capture_output=True, text=True, timeout=timeout_sec, env=safe_env)
+            with _template_cache_lock:
+                if not os.path.exists(template_bot):
+                    os.makedirs(cache_dir, exist_ok=True)
+                    cmd_tmpl = ["git", "clone", "--filter=blob:none", repo_url, cache_dir]
+                    try:
+                        subprocess.run(cmd_tmpl, capture_output=True, text=True, timeout=timeout_sec, env=safe_env)
+                    except Exception as e:
+                        res_data["error_code"] = "GIT_NOT_FOUND_OR_FAILED"
+                        res_data["error_message"] = f"Lỗi khi thực thi git clone template: {str(e)[:150]}"
 
         if os.path.exists(template_bot):
             try:
@@ -682,45 +703,67 @@ def run_batch_import_pipeline(
     from app.models.submission import Submission
     from app.features.auth.service import hash_password
 
+    # Giới hạn số luồng tối đa an toàn (tránh OOM container trên Cloud/Render)
+    effective_workers = min(max_workers, 8)
+
     db = SessionLocal()
     try:
         def process_one(st: Dict[str, Any]) -> Tuple[Dict[str, Any], ValidationResult]:
-            # Nếu bản ghi bị đánh dấu nộp muộn hoàn toàn
-            if st.get("late_rejected"):
-                val_res = ValidationResult(
-                    is_valid=False,
-                    details={"bot_py": False, "choose_move_fn": False, "report_md": False, "git_log": False},
-                    errors=[f"Bài thi nộp muộn sau hạn chót ({deadline_str})."],
-                    commit_count=0
+            try:
+                # Nếu bản ghi bị đánh dấu nộp muộn hoàn toàn
+                if st.get("late_rejected"):
+                    val_res = ValidationResult(
+                        is_valid=False,
+                        details={"bot_py": False, "choose_move_fn": False, "report_md": False, "git_log": False},
+                        errors=[f"Bài thi nộp muộn sau hạn chót ({deadline_str})."],
+                        commit_count=0
+                    )
+                    clone_res = {
+                        "student_id": st["student_id"],
+                        "error_code": "SUBMITTED_AFTER_DEADLINE",
+                        "commit_count": 0,
+                        "commit_hash": None,
+                        "clone_success": False,
+                    }
+                    return clone_res, val_res
+
+                # Clone & Freeze
+                clone_res = clone_and_freeze_single_repo(st, dest_dir, deadline_dt)
+                if not clone_res["clone_success"]:
+                    val_res = ValidationResult(
+                        is_valid=False,
+                        details={"bot_py": False, "choose_move_fn": False, "report_md": False, "git_log": False},
+                        errors=[clone_res.get("error_message") or "Lỗi khi tải repository."],
+                        commit_count=0
+                    )
+                    return clone_res, val_res
+
+                # Thẩm định
+                val_res = validate_cloned_repo(
+                    clone_res["target_path"],
+                    st["student_id"],
+                    commit_count=clone_res["commit_count"]
                 )
+                return clone_res, val_res
+            except Exception as e:
+                # Bắt tất cả lỗi không mong muốn để đảm bảo thí sinh luôn được lưu vào CSDL
                 clone_res = {
                     "student_id": st["student_id"],
-                    "error_code": "SUBMITTED_AFTER_DEADLINE",
+                    "error_code": "PIPELINE_EXCEPTION",
+                    "error_message": f"Ngoại lệ khi xử lý: {str(e)[:150]}",
                     "commit_count": 0,
                     "commit_hash": None,
+                    "clone_success": False,
                 }
-                return clone_res, val_res
-
-            # Clone & Freeze
-            clone_res = clone_and_freeze_single_repo(st, dest_dir, deadline_dt)
-            if not clone_res["clone_success"]:
                 val_res = ValidationResult(
                     is_valid=False,
                     details={"bot_py": False, "choose_move_fn": False, "report_md": False, "git_log": False},
-                    errors=[clone_res.get("error_message") or "Lỗi khi tải repository."],
+                    errors=[f"Lỗi hệ thống khi thẩm định: {str(e)[:150]}"],
                     commit_count=0
                 )
                 return clone_res, val_res
 
-            # Thẩm định
-            val_res = validate_cloned_repo(
-                clone_res["target_path"],
-                st["student_id"],
-                commit_count=clone_res["commit_count"]
-            )
-            return clone_res, val_res
-
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        with ThreadPoolExecutor(max_workers=effective_workers) as executor:
             future_to_student = {
                 executor.submit(process_one, st): st
                 for st in accepted_students

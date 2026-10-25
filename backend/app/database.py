@@ -7,16 +7,43 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from app.config import settings
 
-db_url = settings.DATABASE_URL
-if db_url.startswith("sqlite:///.") or db_url == "sqlite:///./ottv2.db":
-    from app.config import BASE_DIR
-    rel_path = db_url.replace("sqlite:///./", "").replace("sqlite:///", "")
-    abs_path = (BASE_DIR / rel_path).resolve().as_posix()
-    db_url = f"sqlite:///{abs_path}"
-elif db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
-elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+"):
-    db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+def normalize_db_url(url: str) -> str:
+    """
+    Chuẩn hóa URL CSDL:
+    - Chuyển đổi SQLite đường dẫn tương đối thành tuyệt đối.
+    - Hỗ trợ postgres:// và postgresql:// với driver tự động fallback (psycopg2 hoặc psycopg v3).
+    """
+    if not url:
+        return url
+
+    if url.startswith("sqlite:///.") or url == "sqlite:///./ottv2.db":
+        from app.config import BASE_DIR
+        rel_path = url.replace("sqlite:///./", "").replace("sqlite:///", "")
+        abs_path = (BASE_DIR / rel_path).resolve().as_posix()
+        return f"sqlite:///{abs_path}"
+
+    if url.startswith("postgres://") or (url.startswith("postgresql://") and not url.startswith("postgresql+")):
+        # Chọn driver PostgreSQL tương thích: ưu tiên psycopg2 nếu có, fallback sang psycopg (v3)
+        driver = "psycopg2"
+        try:
+            import psycopg2  # noqa: F401
+            driver = "psycopg2"
+        except ImportError:
+            try:
+                import psycopg  # noqa: F401
+                driver = "psycopg"
+            except ImportError:
+                driver = "psycopg2"
+
+        prefix = f"postgresql+{driver}://"
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", prefix, 1)
+        return url.replace("postgresql://", prefix, 1)
+
+    return url
+
+
+db_url = normalize_db_url(settings.DATABASE_URL)
 
 is_sqlite = "sqlite" in db_url
 engine_kwargs = {
