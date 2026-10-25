@@ -20,6 +20,10 @@ backend/storage/submissions/*
 backend/storage/replays/*
 !backend/storage/replays/.gitkeep
 backend/storage/tournament/
+backend/published/*.json
+!backend/published/.gitkeep
+frontend/public/data/*.json
+!frontend/public/data/.gitkeep
 
 # Node & Frontend
 node_modules/

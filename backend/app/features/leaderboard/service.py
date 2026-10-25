@@ -18,15 +18,19 @@ def compute_swiss_leaderboard(db: Session, top32_only: bool = False) -> list[Lea
       - Thắng: 3 điểm, Hòa: 1 điểm, Thua: 0 điểm
       - Hệ số phụ: Buchholz Cut 1 và Sonneborn-Berger (SB)
       - Luôn loại bỏ hoàn toàn các tài khoản Admin (User.is_admin == False).
+      - Nếu chưa có trận đấu nào diễn ra (0 trận hoàn thành): Trả về danh sách rỗng [] để hiển thị trạng thái chờ giải đấu khởi tranh.
     """
     import os
     import json
 
+    # 1. Kiểm tra số lượng trận đấu đã hoàn thành
+    done_matches_count = db.query(Match).filter(Match.status == "done").count()
+
     base_backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     published_file = os.path.join(base_backend_dir, "published", "standings.json")
 
-    # Ưu tiên dữ liệu bảng xếp hạng đã xuất bản chính thức từ giải Swiss
-    if os.path.exists(published_file):
+    # Ưu tiên dữ liệu bảng xếp hạng đã xuất bản chính thức từ giải Swiss (chỉ áp dụng khi giải đấu thực sự đã có trận đấu)
+    if done_matches_count > 0 and os.path.exists(published_file):
         try:
             with open(published_file, "r", encoding="utf-8") as pf:
                 pub_data = json.load(pf)
@@ -64,6 +68,10 @@ def compute_swiss_leaderboard(db: Session, top32_only: bool = False) -> list[Lea
                 return results
         except Exception:
             pass
+
+    # Nếu chưa có trận đấu nào hoàn thành trong CSDL -> Trả về danh sách rỗng (Chưa bắt đầu giải đấu)
+    if done_matches_count == 0:
+        return []
 
     users = db.query(User).filter(User.is_admin == False).all()
 
