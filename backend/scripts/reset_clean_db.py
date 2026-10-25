@@ -158,13 +158,41 @@ def clean_storage_files(keep_repos: bool = False, keep_template_cache: bool = Tr
         print("    [✓] Đã làm sạch storage/submissions/ (temp, repos, reports)")
 
 
-def reset_database(keep_repos: bool = False, keep_template_cache: bool = True):
-    print("[*] Đang xóa sạch toàn bộ các bảng trong cơ sở dữ liệu...")
-    Base.metadata.drop_all(bind=engine)
-    print("[*] Đang tái tạo cấu trúc bảng mới...")
-    Base.metadata.create_all(bind=engine)
+def reset_database(keep_repos: bool = False, keep_template_cache: bool = True, custom_db_url: str = None):
+    target_engine = engine
+    target_session_factory = SessionLocal
 
-    with SessionLocal() as db:
+    if custom_db_url:
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+
+        normalized_url = custom_db_url
+        if normalized_url.startswith("postgres://"):
+            normalized_url = normalized_url.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif normalized_url.startswith("postgresql://") and not normalized_url.startswith("postgresql+"):
+            normalized_url = normalized_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+        masked = normalized_url
+        if "@" in normalized_url and "://" in normalized_url:
+            s, r = normalized_url.split("://", 1)
+            c, h = r.split("@", 1)
+            u = c.split(":", 1)[0] if ":" in c else c
+            masked = f"{s}://{u}:***@{h}"
+        print(f"[*] Đang kết nối tới Cơ sở dữ liệu: {masked}")
+
+        target_engine = create_engine(
+            normalized_url,
+            pool_pre_ping=True,
+            connect_args={"check_same_thread": False} if "sqlite" in normalized_url else {},
+        )
+        target_session_factory = sessionmaker(autocommit=False, autoflush=False, bind=target_engine)
+
+    print("[*] Đang xóa sạch toàn bộ các bảng trong cơ sở dữ liệu...")
+    Base.metadata.drop_all(bind=target_engine)
+    print("[*] Đang tái tạo cấu trúc bảng mới...")
+    Base.metadata.create_all(bind=target_engine)
+
+    with target_session_factory() as db:
         admin_user = User(
             id="admin-master",
             name="Ban Tổ Chức Giải Đấu (Admin)",
@@ -187,10 +215,10 @@ def reset_database(keep_repos: bool = False, keep_template_cache: bool = True):
         print(f"[✓] Cơ sở dữ liệu sạch: {user_count} Users ({admin_count} Admin, {student_count} Thí sinh).")
         print("    [!] Không tự nạp dữ liệu mẫu: Thí sinh sẽ được nhập tự động qua Pipeline từ Google Form (CSV).")
 
-    # Xóa xuất bản tĩnh
+    # Xóa xuất bản tĩnh cục bộ
     clean_published_files()
 
-    # Xóa storage
+    # Xóa storage cục bộ
     clean_storage_files(keep_repos=keep_repos, keep_template_cache=keep_template_cache)
 
     print("\n[✓] HOÀN TẤT: Hệ thống đã được đưa về trạng thái sạch (Clean State) hoàn toàn!")
@@ -198,6 +226,12 @@ def reset_database(keep_repos: bool = False, keep_template_cache: bool = True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script dọn sạch CSDL và Storage giải đấu (Trạng thái sạch hoàn toàn)")
+    parser.add_argument(
+        "--db-url",
+        type=str,
+        default=None,
+        help="Chuỗi kết nối DB tùy chọn (vd: link Neon Postgres trên Production)",
+    )
     parser.add_argument(
         "--keep-repos",
         action="store_true",
@@ -213,6 +247,7 @@ if __name__ == "__main__":
     reset_database(
         keep_repos=args.keep_repos,
         keep_template_cache=not args.wipe_template_cache,
+        custom_db_url=args.db_url,
     )
 
 
