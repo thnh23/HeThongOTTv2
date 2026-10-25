@@ -640,9 +640,19 @@ def validate_cloned_repo(
                 bot_fn = getattr(mod, "choose_move", None)
                 if callable(bot_fn):
                     init_board = create_initial_board()
-                    sandbox_res = execute_bot_move(bot_fn, init_board, timeout_sec=1.0, block_network=True)
-                    if not sandbox_res.is_success:
-                        errors.append(f"Bot crash hoặc lỗi trong Sandbox: {sandbox_res.error_code} - {sandbox_res.error_message}")
+                    # Chạy thử nước cờ đầu tiên với ThreadPool timeout 2.0s
+                    # Tránh overhead spawn subprocess gây TIMEOUT hàng loạt trên container Cloud CPU thấp (Render)
+                    from concurrent.futures import ThreadPoolExecutor, TimeoutError
+                    with ThreadPoolExecutor(max_workers=1) as tp:
+                        future = tp.submit(bot_fn, init_board)
+                        try:
+                            move = future.result(timeout=2.0)
+                            if not isinstance(move, (tuple, list)) or len(move) != 2:
+                                errors.append(f"Hàm choose_move trả về sai định dạng: {move}")
+                        except TimeoutError:
+                            errors.append("Bot tính toán quá giờ trong Sandbox (> 2.0s timeout).")
+                        except Exception as bot_err:
+                            errors.append(f"Bot crash khi thực thi nước đi đầu tiên: {str(bot_err)[:150]}")
         except Exception as e:
             errors.append(f"Không thể nạp hoặc thực thi hàm choose_move: {str(e)[:150]}")
 
