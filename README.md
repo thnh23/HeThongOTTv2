@@ -6,7 +6,7 @@
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI_0.103-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/Frontend-React_18_+_Vite-61DAFB?style=flat&logo=react)](https://react.dev/)
 [![WebSocket](https://img.shields.io/badge/Realtime-WebSocket_Streaming-orange?style=flat)](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)
-[![Tests](https://img.shields.io/badge/Pytest-73%2F73_Passed_(100%25)-brightgreen?style=flat&logo=pytest)](https://docs.pytest.org/)
+[![Tests](https://img.shields.io/badge/Pytest-106%2F106_Passed_(100%25)-brightgreen?style=flat&logo=pytest)](https://docs.pytest.org/)
 [![Docker](https://img.shields.io/badge/Deployment-Docker_&_Render_Cloud-2496ED?style=flat&logo=docker)](https://render.com)
 
 ---
@@ -27,8 +27,10 @@
 
 * **BoardSVG & Replay Player:** Bàn cờ vector 9×9 trực quan, mượt mà. Trình chiếu phát lại toàn bộ lịch sử nước đi với thanh trượt tiến độ, điều chỉnh tốc độ (1x–4x) và xuất file replay JSON.
 * **WebSocket Live Streaming:** Cập nhật bảng xếp hạng và phát sóng trực tiếp ván đấu đang diễn ra theo thời gian thực không cần tải lại trang.
+* **Pipeline Thu Bài Google Form Tự Động:** Tự động đọc file CSV nộp bài của hàng trăm/hàng nghìn sinh viên, clone repo GitHub, kiểm tra cấu trúc mã nguồn, đo thời gian phản hồi nước đi đầu tiên trong Sandbox siêu tốc.
 * **Thẩm định gói bài nộp tự động (Validator T08/T09):** Tự động kiểm tra cấu trúc gói `.zip` (`bot.py`, `REPORT.md`, `git_log.txt` với $\ge 4$ commits) và quét rò rỉ mã bí mật API Key.
-* **Sandbox cô lập an toàn (Sandbox T10):** Chạy code bot trong môi trường kiểm soát, chặn truy cập mạng trái phép và xử lý bot crash/timeout mà không làm ảnh hưởng máy chủ.
+* **Sandbox cô lập an toàn (Sandbox T10 & In-Process Executor):** Chạy code bot trong môi trường kiểm soát, chặn truy cập mạng trái phép và xử lý bot crash/timeout mà không làm ảnh hưởng máy chủ (tối ưu hoạt động siêu nhẹ trên Cloud Render/Neon).
+* **Multi-Driver Database Auto-Fallback:** Hỗ trợ linh hoạt cả SQLite cục bộ lẫn PostgreSQL trên Cloud (Render/Neon) với cơ chế tự động tương thích giữa `psycopg2-binary` và `psycopg` v3.
 * **Admin BTC & Hội Đồng Chấm Điểm:** Giao diện chấm thi chuyên dụng cho Hội đồng: duyệt trực tiếp mã nguồn bot, tiến trình tự lập trình qua lịch sử Git commit, báo cáo ý tưởng thuật toán, tự động tính điểm theo trọng số Bảng điểm Swiss 13 Vòng & Top 32 và điều hành giải đấu tập trung.
 * **Bảo vệ toàn diện:** Middleware Rate Limiting trượt cửa sổ chống DoS/brute-force, `ErrorBoundary` ngăn chặn sập giao diện, giao diện tối ưu 100% trên thiết bị di động.
 
@@ -41,8 +43,8 @@ ottv2-tournament/
 ├── backend/                        # Máy chủ FastAPI + Engine Referee
 │   ├── app/
 │   │   ├── main.py                 # Ứng dụng chính, CORS, Rate Limit, Lifespan
-│   │   ├── config.py               # Cấu hình môi trường (Pydantic)
-│   │   ├── database.py             # Kết nối SQLAlchemy (SQLite / PostgreSQL)
+│   │   ├── config.py               # Cấu hình môi trường (Pydantic Settings)
+│   │   ├── database.py             # Kết nối SQLAlchemy (Hỗ trợ SQLite, PostgreSQL đa driver)
 │   │   ├── middleware/             # Rate Limiting Sliding-window
 │   │   ├── models/                 # ORM Models (User, Match, Replay, Submission)
 │   │   ├── routers/                # API Endpoints: auth, submit, matches, leaderboard, admin
@@ -50,20 +52,25 @@ ottv2-tournament/
 │   │   │   ├── engine/             # Engine OTTv2: board.py, rules.py, referee.py
 │   │   │   ├── sandbox.py          # Môi trường chạy bot an toàn
 │   │   │   ├── validator.py        # Thẩm định gói nộp T08 & Scanner T09
+│   │   │   ├── pipeline_service.py # Xử lý tự động batch nộp bài từ Google Form CSV
 │   │   │   └── starter_bots/       # Bot mẫu: RandomBot, GreedyBot, FaultyBots
 │   │   └── websocket/              # Quản lý kết nối WebSocket thời gian thực
-│   ├── tests/                      # Bộ kiểm thử 85 unit tests (T01–T10, API, Pipeline Swiss)
-│   ├── scripts/                    # Kịch bản load test 50-100 bot
+│   ├── tests/                      # Bộ kiểm thử 106 unit tests (T01–T10, API, Swiss, Pipeline)
+│   ├── scripts/                    # Công cụ quản trị & Kịch bản thi đấu
+│   │   ├── reset_clean_db.py       # Reset sạch CSDL và đồng bộ tài khoản Admin BTC
+│   │   ├── test_db_connection.py   # Kiểm tra độ trễ & cấu trúc bảng CSDL
+│   │   ├── load_test_tournament.py # Kịch bản load test 50-100 bot đồng thời
+│   │   └── run_full_tournament_pipeline.py # Điều hành giải đấu tự động phân tán
 │   ├── seed_demo_data.py           # Khởi tạo tài khoản và ván đấu mẫu
-│   ├── requirements.txt            # Thư viện Python
-│   └── Dockerfile                  # Đóng gói Docker Backend
+│   ├── requirements.txt            # Thư viện Python (FastAPI, SQLAlchemy, psycopg,...)
+│   └── Dockerfile                  # Đóng gói Docker Backend (Đã tích hợp Git & tối ưu Python slim)
 ├── frontend/                       # Giao diện Web (React 18 + Vite)
 │   ├── src/
 │   │   ├── app/                    # Router và cấu hình ứng dụng
 │   │   ├── modules/
 │   │   │   ├── home/               # Trang chủ giới thiệu giải đấu
 │   │   │   ├── rules/              # Trang luật thi đấu chi tiết
-│   │   │   ├── leaderboard/        # Bảng xếp hạng real-time theo Tier
+│   │   │   ├── leaderboard/        # Bảng xếp hạng real-time theo Tier & Điểm Swiss
 │   │   │   ├── matches/            # Danh sách ván đấu, Replay & Live Board
 │   │   │   ├── submit/             # Cổng nộp bài và kiểm tra gói zip
 │   │   │   ├── auth/               # Đăng nhập & Đăng ký
@@ -73,7 +80,8 @@ ottv2-tournament/
 ├── docker-compose.yml              # Khởi chạy toàn bộ hệ thống bằng Docker
 ├── render.yaml                     # Cấu hình Blueprint deploy 1-click lên Render
 ├── rules.json                      # Đặc tả luật máy đọc công khai
-└── RENDER_DEPLOY_GUIDE.md          # Hướng dẫn chi tiết triển khai Cloud
+├── RENDER_DEPLOY_GUIDE.md          # Hướng dẫn chi tiết triển khai Cloud
+└── BAO_CAO_TONG_HOP_GIAI_DAU_VA_HE_THONG_OTTV2.md # Báo cáo đề án toàn diện
 ```
 
 ---
@@ -117,7 +125,24 @@ uvicorn app.main:app --reload --reload-dir app --port 8000
 * API Docs: `http://localhost:8000/docs`
 * Kiểm tra Health: `http://localhost:8000/health`
 
-### 4.2. Chạy Frontend (React + Vite)
+### 4.2. Tiện Ích Quản Trị CSDL & Kiểm Tra Kết Nối
+
+Backend cung cấp các script CLI mạnh mẽ hỗ trợ quản trị viên:
+```bash
+cd backend
+
+# Kiểm tra kết nối CSDL hiện tại (SQLite cục bộ hoặc PostgreSQL trên Cloud)
+python scripts/test_db_connection.py
+
+# Kiểm tra với chuỗi kết nối Cloud cụ thể (ví dụ Neon / Render)
+python scripts/test_db_connection.py --db-url "postgresql+psycopg2://user:pass@ep-host.region.neon.tech/neondb?sslmode=require"
+
+# Reset sạch sẽ toàn bộ CSDL và tạo sẵn tài khoản Admin BTC:
+# Lưu ý: Thêm cờ --skip-local-storage khi reset DB Cloud từ xa để không xóa nhầm file local storage
+python scripts/reset_clean_db.py --db-url "postgresql+psycopg2://user:pass@ep-host.region.neon.tech/neondb?sslmode=require" --skip-local-storage
+```
+
+### 4.3. Chạy Frontend (React + Vite)
 
 Mở một cửa sổ dòng lệnh mới:
 ```bash
@@ -136,11 +161,11 @@ npm run dev
 
 ## 🔑 5. Tài Khoản Thử Nghiệm Mẫu
 
-Sau khi chạy lệnh `seed_demo_data.py`, hệ thống đã có sẵn các tài khoản sau:
+Sau khi chạy lệnh `seed_demo_data.py` hoặc `reset_clean_db.py`, hệ thống đã có sẵn các tài khoản sau:
 
 | Vai trò | Email đăng nhập | Mật khẩu | Quyền hạn |
 | :--- | :--- | :--- | :--- |
-| **Ban Tổ Chức (Admin)** | `admin@uet.vnu.edu.vn` | `admin123` | Toàn quyền Admin BTC, khởi chạy giải, chấm điểm |
+| **Ban Tổ Chức (Admin)** | `admin@uet.vnu.edu.vn` | `admin123` | Toàn quyền Admin BTC, khởi chạy giải, quản lý bài nộp, chấm điểm |
 | **Thí sinh Bảng A** | `studentA@uet.vnu.edu.vn` | `pass123` | Nộp bài, theo dõi kết quả thi đấu |
 | **Thí sinh Bảng A** | `studentB@uet.vnu.edu.vn` | `pass123` | Nộp bài, theo dõi kết quả thi đấu |
 | **Thí sinh Bảng A** | `studentC@uet.vnu.edu.vn` | `pass123` | Nộp bài, theo dõi kết quả thi đấu |
@@ -166,12 +191,15 @@ Dự án hỗ trợ triển khai hoàn chỉnh lên **Render Cloud** với CSDL 
 
 ## 🧪 7. Kiểm Thử & Đảm Bảo Chất Lượng
 
-### Chạy Unit Tests Engine & Referee (85/85 Tests Passed):
+### Chạy Unit Tests Toàn Diện (106/106 Tests Passed - 100%):
 ```bash
 cd backend
 pytest -v
 ```
-Toàn bộ các ca kiểm thử T01–T10 (Bàn cờ, Nước đi, Ăn quân, W1/W2, D1/D2, Timeout T1, Sandbox mạng, Validator gói nộp, Scanner API key) đều đạt **100% tỷ lệ vượt qua**.
+Toàn bộ 106 ca kiểm thử bao gồm:
+* **T01–T06:** Khởi tạo bàn cờ 9x9, sinh nước đi hợp lệ, cơ chế ăn quân Oẳn Tù Tì, điều kiện thắng W1 (hết quân) & W2 (chuồng đối phương), điều kiện hòa D1 (200 nước) & D2 (lặp cờ 3 lần).
+* **T07–T10:** Phạt thua bot T1 (Timeout, Crash, Nước đi sai), cơ chế Sandbox chặn socket mạng & an toàn hệ thống, Thẩm định gói nộp T08 và Scanner rò rỉ API key T09.
+* **Pipeline & DB Multi-driver:** Kiểm thử tự động chuẩn hóa chuỗi kết nối CSDL, parse ngày giờ Google Form tiếng Việt (`SA`/`CH`, múi giờ `GMT+7`), và thuật toán bốc thăm Swiss System FIDE.
 
 ### Chạy Kịch Bản Kiểm Thử Chịu Tải (50 Bot — 100 Trận Đồng Thời):
 ```bash
@@ -193,6 +221,7 @@ python scripts/load_test_tournament.py
 | **Sprint 4** | BoardSVG tương tác + Replay Player 9×9 + WebSocket Live Stream | ✅ **Hoàn thành** |
 | **Sprint 5** | Admin Dashboard + Runner giải đấu Round-Robin + Chấm điểm hồ sơ AI | ✅ **Hoàn thành** |
 | **Sprint 6** | Tối ưu Mobile + ErrorBoundary + Rate Limiting + Deploy Docker/Render | ✅ **Hoàn thành** |
+| **Sprint 7** | Batch CSV Pipeline + Multi-driver PostgreSQL + Swiss 13 Vòng + 106 Tests | ✅ **Hoàn thành** |
 
 ---
 

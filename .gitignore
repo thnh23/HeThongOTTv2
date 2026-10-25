@@ -44,3 +44,7 @@ yarn-error.log*
 *.swo
 .DS_Store
 Thumbs.db
+
+# Admin Internal Documentation (Không đưa lên GitHub)
+HUONG_DAN_ADMIN_VAN_HANH_GIAI_DAU.md
+ADMIN_OPERATIONS_MANUAL.md
