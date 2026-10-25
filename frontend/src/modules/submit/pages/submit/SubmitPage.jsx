@@ -4,7 +4,6 @@ import {
   ExternalLink,
   FileCode,
   Sparkles,
-  ShieldAlert,
   GitBranch,
   GitCommit,
   FileText,
@@ -60,70 +59,55 @@ export function SubmitPage() {
           Cổng Nộp Bài &amp; <span className="gradient-text">Quy Chế</span>
         </h1>
         <p className="submit-subtitle">
-          Nộp link GitHub qua Google Form. Hệ thống <strong>không tự điền bot hộ</strong>; vi phạm sẽ bị xử thua T1.
+          Nộp đường dẫn GitHub Repository qua Google Form chính thức trước hạn chót của ban tổ chức.
         </p>
 
-        {/* Action Buttons */}
+        {/* Action Buttons with Vanguard Button-in-Button Architecture */}
         <div className="submit-cta-row">
           <a
             href={config.google_form_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-primary btn-glow"
+            className="btn-island btn-island-primary"
             id="btn-open-google-form"
           >
-            <ExternalLink size={16} />
-            <span>Mở Google Form</span>
+            <span className="btn-island-text">Mở Google Form Nộp Bài</span>
+            <span className="btn-island-badge">
+              <ExternalLink size={14} />
+            </span>
           </a>
 
           <a
             href={config.github_template_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-outline"
+            className="btn-island btn-island-secondary"
             id="btn-github-template"
           >
-            <GitBranch size={16} />
-            <span>GitHub Template</span>
+            <span className="btn-island-text">GitHub Template</span>
+            <span className="btn-island-badge">
+              <GitBranch size={14} />
+            </span>
           </a>
 
           <button
-            className="btn btn-starter-kit"
+            type="button"
+            className="btn-island btn-island-secondary"
             onClick={() => setIsStarterKitOpen(true)}
             id="btn-view-starter-kit"
           >
-            <FileCode size={16} />
-            <span>Starter Kit</span>
+            <span className="btn-island-text">Starter Kit (.ZIP)</span>
+            <span className="btn-island-badge">
+              <FileCode size={14} />
+            </span>
           </button>
 
-          <Link to="/sandbox" className="btn btn-outline" id="btn-goto-sandbox-top">
-            <Cpu size={16} />
-            <span>Đấu Thử Bot</span>
+          <Link to="/sandbox" className="btn-island btn-island-secondary" id="btn-goto-sandbox-top">
+            <span className="btn-island-text">Đấu Thử Bot</span>
+            <span className="btn-island-badge">
+              <Cpu size={14} />
+            </span>
           </Link>
-        </div>
-      </div>
-
-      {/* ── RULE BANNER (KHÔNG ĐIỀN HỘ BOT) ── */}
-      <div className="forfeit-rule-card">
-        <div className="forfeit-icon-wrap">
-          <ShieldAlert size={28} />
-        </div>
-        <div className="forfeit-content">
-          <div className="forfeit-title-row">
-            <h3>Quy định: Không tự điền bot hộ</h3>
-            <span className="forfeit-tag">Xử thua T1</span>
-          </div>
-          <ul className="forfeit-list">
-            <li>
-              <strong>Không cấp bot thay thế:</strong> Không nộp bài, repo Private, thiếu <code>bot.py</code> hoặc không có hàm <code>choose_move</code> &rarr; không cấp bot dự phòng.
-            </li>
-            <li>
-              <strong>Xử thua phạt T1:</strong> Lỗi cú pháp, crash, phạm luật hoặc tính toán quá 300ms &rarr; xử thua ngay 0 điểm.
-            </li>
-            <li>
-              <strong>Kênh nộp duy nhất:</strong> Nộp đường dẫn GitHub Repository qua Google Form chính thức trước deadline.
-            </li>
-          </ul>
         </div>
       </div>
 

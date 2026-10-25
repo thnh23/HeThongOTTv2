@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Trophy,
@@ -9,85 +9,13 @@ import {
   Crown,
   TrendingUp,
   User,
+  X,
 } from 'lucide-react';
 import { apiClient, getWebSocketUrl } from '@/shared/api-client/index.js';
 import { useAuth } from '@/shared/context/AuthContext.jsx';
 import { useToast } from '@/shared/context/ToastContext.jsx';
 
 import './LeaderboardPage.css';
-
-// Realistic Swiss 13-Round fallback dataset when backend has no matches yet
-const SWISS_MOCK_DATA = Array.from({ length: 35 }, (_, idx) => {
-  const rank = idx + 1;
-  const wins = Math.max(0, 13 - Math.floor(idx * 0.35) - (idx % 2));
-  const draws = idx % 3 === 0 ? 1 : 0;
-  const losses = Math.max(0, 13 - wins - draws);
-  const points = wins * 3 + draws * 1;
-  const buchholz = Number((48 - idx * 0.7 + (idx % 3) * 0.5).toFixed(1));
-  const sonnebornBerger = Number((points * 2.1 - idx * 0.4).toFixed(1));
-  const winRate = Number(((wins / 13) * 100).toFixed(1));
-
-  const names = [
-    'Nguyễn Đức Anh', 'Trần Bảo Long', 'Lê Minh Khôi', 'Phạm Hoàng Nam', 'Vũ Tuấn Kiệt',
-    'Đỗ Quang Huy', 'Bùi Gia Bảo', 'Hoàng Thái Sơn', 'Đinh Hữu Phước', 'Ngô Đình Trọng',
-    'Dương Văn Quyết', 'Lý Hải Đăng', 'Chu Tuấn Anh', 'Võ Trọng Nghĩa', 'Phan Đăng Khoa',
-    'Mai Văn Hoàng', 'Hồ Tấn Tài', 'Lâm Nhật Nam', 'Trịnh Bá Phong', 'Tạ Minh Triết',
-    'Đoàn Văn Hậu', 'Trương Gia Huy', 'Lương Xuân Tú', 'Phùng Thế Vinh', 'Đặng Quốc Bảo',
-    'Nghiêm Xuân Trường', 'Quách Thành Danh', 'Ân Thiên Phúc', 'Từ Nguyên Giáp', 'Cù Minh Tuấn',
-    'Bạch Đình Luân', 'Văn Tiến Dũng', 'Lưu Quốc Cường', 'Vương Đình Huệ', 'Tạ Quang Bửu',
-  ];
-
-  const studentIds = [
-    '21020001', '21020015', '22020456', '21020089', '22021005',
-    '23021999', '21020112', '22020567', '21020220', '23020034',
-    '22020789', '21020301', '22020114', '23021200', '21020445',
-    '22020678', '21020556', '23020118', '22020890', '21020667',
-    '22020999', '23020225', '21020778', '22020334', '21020889',
-    '23020336', '22020445', '21020990', '23020447', '22020556',
-    '21021001', '23020558', '22020667', '21021112', '23020779',
-  ];
-
-  const botNames = [
-    'AlphaOtt_v3', 'Minimax_Prune_X', 'DeepSearch_9x9', 'HeuristicKing', 'BitboardOtt',
-    'UET_Champion_Bot', 'SwiftScissors', 'RockDominator', 'PaperShield', 'OmegaTactics',
-    'GreedyFalcon', 'NeuralTactician', 'MatrixHunter', 'StormBreaker', 'VNU_Knight',
-    'ShadowMove', 'ApexPredator', 'IronDefense', 'ZeroLossEngine', 'TacticalBeast',
-    'DragonTooth', 'CyberSamurai', 'HyperLogic', 'QuantumThinker', 'VectorStrike',
-    'DynamicPulse', 'EchoEngine', 'NexusPawn', 'Vortex9x9', 'TitanBot',
-    'PhantomRider', 'BlazeRunner', 'StealthMaster', 'CoreDefender', 'FinalGambit',
-  ];
-
-  let gradeProjection = '6.5 – 7.0';
-  if (rank <= 32) {
-    gradeProjection = '10.0 (A+)';
-  } else if (wins >= 10) {
-    gradeProjection = '9.5';
-  } else if (wins >= 8) {
-    gradeProjection = '9.0';
-  } else if (wins >= 6) {
-    gradeProjection = '8.5';
-  } else if (wins >= 4) {
-    gradeProjection = '7.5';
-  }
-
-  return {
-    rank,
-    user_id: `user_${studentIds[idx] || idx}`,
-    name: names[idx] || `Thí Sinh ${rank}`,
-    student_id: studentIds[idx] || `2202${String(idx).padStart(4, '0')}`,
-    bot_name: botNames[idx] || `Bot_${rank}`,
-    tier: rank <= 12 ? 'C' : rank <= 24 ? 'B' : 'A',
-    matches_played: 13,
-    wins,
-    draws,
-    losses,
-    points,
-    buchholz,
-    sonneborn_berger: sonnebornBerger,
-    win_rate: winRate,
-    grade_projection: gradeProjection,
-  };
-});
 
 export function LeaderboardPage() {
   const { user } = useAuth();
@@ -158,7 +86,7 @@ export function LeaderboardPage() {
       if (isManual) {
         showToast(
           tier === 'SWISS'
-            ? 'Đã cập nhật Bảng Tổng Sắp 13 Vòng Thụy Sĩ!'
+            ? 'Đã cập nhật Bảng Tổng Sắp Thụy Sĩ!'
             : `Đã làm mới bảng xếp hạng Bảng ${tier}!`,
           'success'
         );
@@ -174,6 +102,11 @@ export function LeaderboardPage() {
 
   useEffect(() => {
     fetchLeaderboard(activeTier);
+  }, [activeTier]);
+
+  const activeTierRef = useRef(activeTier);
+  useEffect(() => {
+    activeTierRef.current = activeTier;
   }, [activeTier]);
 
   // WebSocket Live Standings listener
@@ -199,7 +132,7 @@ export function LeaderboardPage() {
           const data = JSON.parse(event.data);
           if (data.type === 'MATCH_COMPLETED') {
             showToast('Một trận đấu vòng Swiss vừa hoàn tất! Đang đồng bộ...', 'info');
-            fetchLeaderboard(activeTier);
+            fetchLeaderboard(activeTierRef.current);
           }
         } catch {}
       };
@@ -212,7 +145,7 @@ export function LeaderboardPage() {
       clearInterval(pingInterval);
       if (ws) ws.close();
     };
-  }, [activeTier, showToast]);
+  }, [showToast]);
 
   // Filter & sort standings based on search query & sort setting
   const filteredStandings = useMemo(() => {
@@ -250,6 +183,23 @@ export function LeaderboardPage() {
     return list;
   }, [standings, searchQuery, sortBy, activeTier]);
 
+  // Pagination & UI Load Balancing (Eliminates lag for 1,930+ participants)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+
+  // Reset to page 1 whenever search, sort, or active tier changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sortBy, activeTier]);
+
+  const totalFilteredCount = filteredStandings.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredCount / pageSize));
+
+  const paginatedStandings = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredStandings.slice(start, start + pageSize);
+  }, [filteredStandings, currentPage, pageSize]);
+
   // Podium top 3
   const top1 = standings.find((s) => s.rank === 1);
   const top2 = standings.find((s) => s.rank === 2);
@@ -262,14 +212,13 @@ export function LeaderboardPage() {
         <div>
           <div className="leaderboard-badge">
             <Trophy size={14} />
-            <span>HỆ THỐNG THỤY SĨ (SWISS SYSTEM) • 13 VÒNG ĐẤU</span>
+            <span>HỆ THỐNG THỤY SĨ • VÒNG LOẠI TOÀN KHÓA</span>
           </div>
           <h1 className="leaderboard-title">
             Bảng Xếp Hạng <span className="gradient-text">OTTv2 Toàn Khóa</span>
           </h1>
           <p className="leaderboard-subtitle">
-            Bảng tổng sắp cờ thuật toán 13 vòng đấu Thụy Sĩ Khoa CNTT - VNU-UET. Điểm trận đấu: Thắng (+3đ) • Hòa (+1đ) • Thua (0đ).
-            Hệ số phụ quốc tế: Buchholz Cut-1 &amp; Sonneborn-Berger.
+            Bảng xếp hạng giải đấu cờ thuật toán OTTv2 — Khoa CNTT, Trường ĐH Công nghệ (VNU-UET).
           </p>
         </div>
 
@@ -282,7 +231,7 @@ export function LeaderboardPage() {
               className={`tier-tab-btn ${activeTier === 'SWISS' ? 'active' : ''}`}
               onClick={() => setActiveTier('SWISS')}
             >
-              Tổng Sắp 13 Vòng Swiss
+              Bảng Tổng Sắp Swiss
             </button>
             <button
               id="tab-tier-top32"
@@ -291,15 +240,10 @@ export function LeaderboardPage() {
               className={`tier-tab-btn ${activeTier === 'TOP32' ? 'active' : ''}`}
               onClick={() => setActiveTier('TOP32')}
             >
-              Top 32 Hạt Giống (Chung Kết)
+              Hạt Giống Playoff
             </button>
           </div>
 
-          {isJamstackMode && (
-            <span className="live-standings-pill" style={{ background: 'rgba(34, 211, 238, 0.1)', color: 'var(--cyan-400)', border: '1px solid rgba(34, 211, 238, 0.3)' }} title="Đang nạp từ CDN tĩnh Cloudflare Pages (Chi phí 0đ)">
-              ⚡ CDN Jamstack Mode
-            </span>
-          )}
           {isWsConnected && !isJamstackMode && (
             <span className="live-standings-pill" title="Đang kết nối WebSocket trực tiếp">
               <span className="live-dot-green animate-ping"></span> Live Sync
@@ -308,13 +252,16 @@ export function LeaderboardPage() {
 
           <button
             id="btn-refresh-leaderboard"
-            className="btn btn-outline btn-sm"
+            className="btn-island btn-island-secondary"
             onClick={() => fetchLeaderboard(activeTier, true)}
             title="Làm mới dữ liệu bảng xếp hạng"
             disabled={isLoading}
+            style={{ padding: '0.45rem 0.65rem 0.45rem 1.15rem' }}
           >
-            <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
-            <span>Làm mới</span>
+            <span className="btn-island-text">Làm mới</span>
+            <span className="btn-island-badge" style={{ width: '28px', height: '28px' }}>
+              <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            </span>
           </button>
         </div>
       </div>
@@ -324,12 +271,12 @@ export function LeaderboardPage() {
         <div className="scoring-hint-item">
           <TrendingUp size={16} color="var(--primary-600)" />
           <span>
-            <strong>Thứ tự ưu tiên xếp hạng Swiss:</strong> 1. Match Points (MP) ➔ 2. Buchholz Cut-1 (BH-1) ➔ 3. Sonneborn-Berger (SB) ➔ 4. Số trận thắng
+            <strong>Tiêu chí xếp hạng Swiss:</strong> 1. Match Points (MP) &gt; 2. Buchholz Cut-1 (BH-1) &gt; 3. Sonneborn-Berger (SB) &gt; 4. Số trận thắng
           </span>
         </div>
         <div className="scoring-badges-wrap">
           <span className="scoring-formula-pill">Win: +3đ | Draw: +1đ | Loss: 0đ</span>
-          <span className="top32-target-pill">Top 32 ➔ Vòng Chung Kết</span>
+          <span className="top32-target-pill">Top 32 vào Chung kết</span>
         </div>
       </div>
 
@@ -342,7 +289,7 @@ export function LeaderboardPage() {
         <div className="glass-card loading-card">
           <RefreshCw className="animate-spin" size={32} style={{ color: 'var(--primary-600)', margin: '0 auto 1rem' }} />
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
-            Đang tổng hợp dữ liệu 13 vòng đấu Swiss...
+            Đang tổng hợp dữ liệu bảng xếp hạng...
           </p>
         </div>
       ) : standings.length === 0 ? (
@@ -430,7 +377,7 @@ export function LeaderboardPage() {
                   onClick={() => handleSearchChange('')}
                   aria-label="Xóa tìm kiếm"
                 >
-                  ✕
+                  <X size={14} />
                 </button>
               )}
             </div>
@@ -478,7 +425,8 @@ export function LeaderboardPage() {
             </div>
 
             <div className="standings-count">
-              Hiển thị <strong>{filteredStandings.length}</strong> / {standings.length} thí sinh
+              Tìm thấy <strong>{totalFilteredCount.toLocaleString('vi-VN')}</strong> / {standings.length.toLocaleString('vi-VN')} thí sinh
+              {totalPages > 1 && ` • Trang ${currentPage}/${totalPages}`}
             </div>
           </div>
 
@@ -488,25 +436,32 @@ export function LeaderboardPage() {
               <table className="styled-table" aria-label="Bảng xếp hạng giải đấu">
                 <thead>
                   <tr>
-                    <th style={{ width: '70px', textAlign: 'center' }}>Hạng</th>
-                    <th style={{ minWidth: '220px' }}>Thí Sinh &amp; Mã SV</th>
-                    <th style={{ minWidth: '130px' }}>Tên Bot</th>
-                    <th style={{ textAlign: 'center', width: '80px' }}>Vòng Đấu</th>
-                    <th style={{ textAlign: 'center', color: 'var(--emerald-600)', width: '80px' }}>Thắng</th>
-                    <th style={{ textAlign: 'center', color: 'var(--text-muted)', width: '70px' }}>Hòa</th>
-                    <th style={{ textAlign: 'center', color: 'var(--rose-600)', width: '70px' }}>Thua</th>
-                    <th style={{ textAlign: 'right', minWidth: '100px' }}>Điểm MP</th>
-                    <th style={{ textAlign: 'center', minWidth: '90px' }} title="Buchholz Cut-1 (Tổng điểm đối thủ trừ đối thủ thấp nhất)">BH-1</th>
-                    <th style={{ textAlign: 'center', minWidth: '80px' }} title="Sonneborn-Berger">SB</th>
-                    <th style={{ minWidth: '130px' }}>Tỉ Lệ Thắng</th>
-                    <th style={{ textAlign: 'center', minWidth: '110px' }}>Điểm HP</th>
+                    <th style={{ width: '50px', textAlign: 'center' }}>Hạng</th>
+                    <th style={{ minWidth: '160px' }}>Thí Sinh &amp; Mã SV</th>
+                    <th style={{ minWidth: '100px' }}>Tên Bot</th>
+                    <th style={{ textAlign: 'center', width: '60px' }}>Vòng</th>
+                    <th style={{ textAlign: 'center', color: 'var(--emerald-600)', width: '50px' }}>Thắng</th>
+                    <th style={{ textAlign: 'center', color: 'var(--text-muted)', width: '45px' }}>Hòa</th>
+                    <th style={{ textAlign: 'center', color: 'var(--rose-600)', width: '45px' }}>Thua</th>
+                    <th style={{ textAlign: 'right', width: '75px' }}>Điểm MP</th>
+                    <th style={{ textAlign: 'center', width: '60px' }} title="Buchholz Cut-1 (Tổng điểm đối thủ trừ đối thủ thấp nhất)">BH-1</th>
+                    <th style={{ textAlign: 'center', width: '55px' }} title="Sonneborn-Berger">SB</th>
+                    <th style={{ width: '105px' }}>Tỉ Lệ Thắng</th>
+                    <th style={{ textAlign: 'center', width: '85px' }}>Điểm HP</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStandings.map((entry) => {
-                    const isCurrentUser = user && (entry.user_id === user.id || entry.user_id === user.student_id);
-                    const isTop32 = entry.rank <= 32;
-                    const showCutoffLine = !searchQuery && entry.rank === 32 && filteredStandings.length > 32;
+                  {paginatedStandings.length === 0 ? (
+                    <tr>
+                      <td colSpan={12} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                        Không tìm thấy thí sinh nào khớp với tiêu chí tìm kiếm.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedStandings.map((entry) => {
+                      const isCurrentUser = user && (entry.user_id === user.id || entry.user_id === user.student_id);
+                      const isTop32 = entry.rank <= 32;
+                      const showCutoffLine = !searchQuery && entry.rank === 32 && totalFilteredCount > 32;
 
                     return (
                       <React.Fragment key={entry.user_id || entry.rank}>
@@ -516,7 +471,7 @@ export function LeaderboardPage() {
                           {/* Rank */}
                           <td style={{ textAlign: 'center' }}>
                             <span className={`rank-badge ${entry.rank <= 3 ? `rank-${entry.rank}` : isTop32 ? 'rank-top32' : 'rank-other'}`}>
-                              {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : entry.rank}
+                              {entry.rank}
                             </span>
                           </td>
 
@@ -615,9 +570,127 @@ export function LeaderboardPage() {
                         )}
                       </React.Fragment>
                     );
-                  })}
+                  }))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Pagination Controls & UI Load Balancing */}
+            <div className="table-pagination-bar">
+              <div className="pagination-info">
+                <span>
+                  Hiển thị <strong>{totalFilteredCount === 0 ? 0 : (currentPage - 1) * pageSize + 1}</strong> –{' '}
+                  <strong>{Math.min(currentPage * pageSize, totalFilteredCount)}</strong> trên tổng số{' '}
+                  <strong>{totalFilteredCount.toLocaleString('vi-VN')}</strong> thí sinh
+                </span>
+                <div className="page-size-selector">
+                  <label htmlFor="select-lb-page-size">Số dòng:</label>
+                  <select
+                    id="select-lb-page-size"
+                    className="page-size-select"
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    aria-label="Chọn số lượng hiển thị mỗi trang"
+                  >
+                    <option value={25}>25 / trang</option>
+                    <option value={50}>50 / trang</option>
+                    <option value={100}>100 / trang</option>
+                    <option value={200}>200 / trang</option>
+                  </select>
+                </div>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="pagination-nav">
+                  <button
+                    type="button"
+                    className="pagination-btn"
+                    onClick={() => {
+                      setCurrentPage(1);
+                      document.querySelector('.leaderboard-table-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    disabled={currentPage === 1}
+                    title="Trang đầu"
+                    aria-label="Về trang đầu"
+                  >
+                    «
+                  </button>
+                  <button
+                    type="button"
+                    className="pagination-btn"
+                    onClick={() => {
+                      setCurrentPage((p) => Math.max(1, p - 1));
+                      document.querySelector('.leaderboard-table-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    disabled={currentPage === 1}
+                    title="Trang trước"
+                    aria-label="Trang trước"
+                  >
+                    ‹
+                  </button>
+
+                  <div className="pagination-page-chips">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+                      .reduce((acc, p, idx, arr) => {
+                        if (idx > 0 && p - arr[idx - 1] > 1) {
+                          acc.push(-idx);
+                        }
+                        acc.push(p);
+                        return acc;
+                      }, [])
+                      .map((p, idx) =>
+                        p < 0 ? (
+                          <span key={`ellipsis-${idx}`} className="pagination-ellipsis">…</span>
+                        ) : (
+                          <button
+                            key={p}
+                            type="button"
+                            className={`pagination-num-btn ${currentPage === p ? 'active' : ''}`}
+                            onClick={() => {
+                              setCurrentPage(p);
+                              document.querySelector('.leaderboard-table-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }}
+                            aria-label={`Trang ${p}`}
+                            aria-current={currentPage === p ? 'page' : undefined}
+                          >
+                            {p}
+                          </button>
+                        )
+                      )}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="pagination-btn"
+                    onClick={() => {
+                      setCurrentPage((p) => Math.min(totalPages, p + 1));
+                      document.querySelector('.leaderboard-table-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    disabled={currentPage === totalPages}
+                    title="Trang sau"
+                    aria-label="Trang sau"
+                  >
+                    ›
+                  </button>
+                  <button
+                    type="button"
+                    className="pagination-btn"
+                    onClick={() => {
+                      setCurrentPage(totalPages);
+                      document.querySelector('.leaderboard-table-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    disabled={currentPage === totalPages}
+                    title="Trang cuối"
+                    aria-label="Đến trang cuối"
+                  >
+                    »
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </>

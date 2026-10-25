@@ -19,6 +19,17 @@ import {
   ArrowRight,
   TrendingUp,
   LogIn,
+  Check,
+  X,
+  GitBranch,
+  Edit3,
+  Key,
+  BookOpen,
+  Cpu,
+  ExternalLink,
+  Lock,
+  Info,
+  Radio,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useAuth } from '@/shared/context/AuthContext.jsx';
@@ -26,20 +37,34 @@ import { useToast } from '@/shared/context/ToastContext.jsx';
 import { StatusBadge } from '@/shared/components/StatusBadge/StatusBadge.jsx';
 import './ProfilePage.css';
 
-const TOURNAMENT_WEIGHTS = { bot: 40, ai: 20, interview: 25, report: 15 };
-
 export function ProfilePage() {
-  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading, reloadUser, updateProfile, changePassword } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState('matches'); // 'matches' | 'submissions'
+  const [activeTab, setActiveTab] = useState('matches'); // 'matches' | 'submissions' | 'rules'
+  const [matchFilter, setMatchFilter] = useState('all'); // 'all' | 'win' | 'draw' | 'loss' | 'finals'
   const [matchHistory, setMatchHistory] = useState([]);
   const [submissionHistory, setSubmissionHistory] = useState([]);
   const [tierStanding, setTierStanding] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
-  const weights = TOURNAMENT_WEIGHTS;
+  // Edit Profile / Change Password Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState('profile'); // 'profile' | 'password'
+  const [isSaving, setIsSaving] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    student_id: '',
+    class_name: '',
+    bot_name: '',
+    github_repo_url: '',
+  });
+  const [passwordForm, setPasswordForm] = useState({
+    old_password: '',
+    new_password: '',
+    confirm_password: '',
+  });
 
   const loadUserData = async () => {
     if (!user?.id) return;
@@ -71,6 +96,13 @@ export function ProfilePage() {
   useEffect(() => {
     if (isAuthenticated && user?.id) {
       loadUserData();
+      setProfileForm({
+        name: user.name || '',
+        student_id: user.student_id || '',
+        class_name: user.class_name || '',
+        bot_name: user.bot_name || '',
+        github_repo_url: user.github_repo_url || '',
+      });
     }
   }, [isAuthenticated, user?.id]);
 
@@ -100,15 +132,91 @@ export function ProfilePage() {
     return submissionHistory.find((s) => s.is_active) || submissionHistory[0] || null;
   }, [submissionHistory]);
 
-  // Rating badge based on final score
-  const finalScore = user?.final_score ?? 0;
+  // Projected grade based on Swiss tournament performance & Top 32
+  const projectedGrade = useMemo(() => {
+    if (user?.projected_grade_10) return user.projected_grade_10;
+    if (user?.is_top32) return '10.0 (A+)';
+    const wins = user?.swiss_wins || matchStats.wins || 0;
+    if (wins >= 10) return '9.5 (A+)';
+    if (wins >= 8) return '9.0 (A)';
+    if (wins >= 6) return '8.5 (B+)';
+    if (wins >= 4) return '7.5 (B)';
+    return '6.5 – 7.0 (C+/B)';
+  }, [user, matchStats.wins]);
+
   const gradeRating = useMemo(() => {
-    if (finalScore >= 90) return { label: 'Xuất Sắc', color: 'var(--emerald-400)' };
-    if (finalScore >= 80) return { label: 'Giỏi', color: 'var(--cyan-400)' };
-    if (finalScore >= 70) return { label: 'Khá', color: 'var(--primary-400)' };
-    if (finalScore >= 50) return { label: 'Đạt', color: 'var(--amber-400)' };
-    return { label: 'Đang Chấm', color: 'var(--text-muted)' };
-  }, [finalScore]);
+    if (user?.is_top32) return { label: 'Top 32 Chung Kết (A+)', color: 'var(--amber-400)' };
+    const wins = user?.swiss_wins || matchStats.wins || 0;
+    if (wins >= 10) return { label: 'Xuất Sắc (9.5)', color: 'var(--emerald-400)' };
+    if (wins >= 8) return { label: 'Giỏi (9.0)', color: 'var(--cyan-400)' };
+    if (wins >= 6) return { label: 'Khá Giỏi (8.5)', color: 'var(--primary-400)' };
+    if (wins >= 4) return { label: 'Khá (7.5)', color: 'var(--amber-400)' };
+    return { label: 'Đạt Chuẩn (6.5 – 7.0)', color: 'var(--text-muted)' };
+  }, [user, matchStats.wins]);
+
+  // Filtered match history
+  const filteredMatches = useMemo(() => {
+    if (matchFilter === 'all') return matchHistory;
+    if (matchFilter === 'finals') {
+      return matchHistory.filter(
+        (m) =>
+          m.round_label?.toLowerCase().includes('chung kết') ||
+          /^(R32_|R16_|QF_|SF_|FINAL_)/.test(m.match_id || '')
+      );
+    }
+    return matchHistory.filter((m) => m.result === matchFilter);
+  }, [matchHistory, matchFilter]);
+
+  // Handle Save Profile
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      if (updateProfile) {
+        await updateProfile(profileForm);
+      } else {
+        await apiClient.put('/auth/profile', profileForm);
+        if (reloadUser) await reloadUser();
+      }
+      showToast('Cập nhật thông tin hồ sơ thành công!', 'success');
+      setIsModalOpen(false);
+    } catch (err) {
+      showToast(err.message || 'Không thể cập nhật hồ sơ', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle Change Password
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (passwordForm.new_password !== passwordForm.confirm_password) {
+      showToast('Mật khẩu xác nhận không khớp!', 'error');
+      return;
+    }
+    if (passwordForm.new_password.length < 6) {
+      showToast('Mật khẩu mới phải có tối thiểu 6 ký tự!', 'error');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      if (changePassword) {
+        await changePassword(passwordForm.old_password, passwordForm.new_password);
+      } else {
+        await apiClient.post('/auth/change-password', {
+          old_password: passwordForm.old_password,
+          new_password: passwordForm.new_password,
+        });
+      }
+      showToast('Đổi mật khẩu thành công!', 'success');
+      setPasswordForm({ old_password: '', new_password: '', confirm_password: '' });
+      setIsModalOpen(false);
+    } catch (err) {
+      showToast(err.message || 'Không thể đổi mật khẩu', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (isAuthLoading) {
     return (
@@ -125,16 +233,16 @@ export function ProfilePage() {
         <div className="glass-card" style={{ textAlign: 'center', padding: '3.5rem 1.5rem', maxWidth: '580px', margin: '2rem auto' }}>
           <User size={48} color="var(--primary-400)" style={{ margin: '0 auto 1rem' }} />
           <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Yêu Cầu Đăng Nhập</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.75rem', lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
             Vui lòng đăng nhập bằng tài khoản sinh viên UET để xem hồ sơ cá nhân, kết quả phân hạng, lịch sử thi đấu và điểm tổng kết.
           </p>
+          <div style={{ background: 'var(--bg-surface-elevated)', border: '1px dashed var(--border-bright)', padding: '0.65rem 0.85rem', marginBottom: '1.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            💡 Tài khoản được cấp tự động từ Google Form nộp bài. Tên đăng nhập &amp; mật khẩu mặc định là <strong>MSSV</strong>.
+          </div>
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
             <Link to="/login" className="btn btn-primary">
               <LogIn size={16} />
               <span>Đăng Nhập Ngay</span>
-            </Link>
-            <Link to="/register" className="btn btn-outline">
-              <span>Đăng Ký Tài Khoản</span>
             </Link>
           </div>
         </div>
@@ -142,18 +250,22 @@ export function ProfilePage() {
     );
   }
 
+  const isTop32 = Boolean(user?.is_top32);
+
   return (
     <div className="profile-page animate-fade-in">
       {/* Profile Header Card */}
-      <div className="glass-card profile-hero-card">
+      <div className={`glass-card profile-hero-card ${isTop32 ? 'hero-top32' : ''}`}>
         <div className="profile-hero-content">
           <div className="profile-avatar-wrap">
-            <div className="profile-avatar-circle">
+            <div className={`profile-avatar-circle ${isTop32 ? 'avatar-gold' : ''}`}>
               <span className="profile-avatar-emoji">
-                ⚔️
+                {isTop32 ? <Trophy size={32} color="var(--amber-400)" /> : <Swords size={28} color="var(--cyan-400)" />}
               </span>
             </div>
-            <span className="profile-tier-badge tier-A">13 Vòng Swiss</span>
+            <span className={`profile-tier-badge ${isTop32 ? 'tier-top32' : 'tier-A'}`}>
+              {isTop32 ? '🏆 HẠT GIỐNG TOP 32' : '⚔️ 13 VÒNG SWISS'}
+            </span>
           </div>
 
           <div className="profile-identity">
@@ -162,26 +274,68 @@ export function ProfilePage() {
               {user?.is_admin && (
                 <span className="admin-pill">
                   <ShieldCheck size={13} />
-                  <span>Ban Tổ Chức</span>
+                  <span>Ban Tổ Chức (Admin)</span>
+                </span>
+              )}
+              {isTop32 && (
+                <span className="gold-pill">
+                  <Sparkles size={13} />
+                  <span>Chung Kết BO2</span>
                 </span>
               )}
             </div>
+
             <p className="profile-email">
               <code>{user?.email}</code>
             </p>
+
+            {/* Academic & Bot Identity Tags */}
             <div className="profile-meta-tags">
               <span className="profile-meta-item">
-                <Calendar size={14} />
-                <span>Gia nhập: {new Date(user?.registered_at).toLocaleDateString('vi-VN')}</span>
+                <User size={14} color="var(--primary-400)" />
+                <span>MSSV: <strong>{user?.student_id || 'Chưa cập nhật'}</strong></span>
               </span>
               <span className="profile-meta-item">
-                <Sparkles size={14} color="var(--cyan-400)" />
-                <span>
-                  Điểm Test Đầu Vào:{' '}
-                  <strong style={{ color: '#fff' }}>
-                    {user?.test_score !== null && user?.test_score !== undefined ? `${user.test_score} đ` : 'Chưa thi'}
-                  </strong>
+                <BookOpen size={14} color="var(--purple-400)" />
+                <span>Lớp: <strong>{user?.class_name || 'INT3304 (Lập trình mạng)'}</strong></span>
+              </span>
+              <span className="profile-meta-item">
+                <Cpu size={14} color="var(--cyan-400)" />
+                <span>Tên Bot: <strong>{user?.bot_name || 'Bot_' + (user?.name || '').replace(/\s+/g, '_')}</strong></span>
+              </span>
+              {user?.github_repo_url ? (
+                <a
+                  href={user.github_repo_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="profile-meta-item profile-repo-link"
+                  title="Mở repository GitHub của thí sinh"
+                >
+                  <GitBranch size={14} />
+                  <span>{user.github_repo_url.replace(/^https?:\/\/github\.com\//, '')}</span>
+                  <ExternalLink size={11} />
+                </a>
+              ) : (
+                <span className="profile-meta-item text-muted">
+                  <GitBranch size={14} />
+                  <span>Chưa cấu hình Repo GitHub</span>
                 </span>
+              )}
+            </div>
+
+            {/* Integrity & Code Audit Indicators */}
+            <div className="profile-audit-tags">
+              <span className={`audit-badge ${user?.commit_count >= 4 ? 'audit-pass' : 'audit-warn'}`} title="Yêu cầu tối thiểu 4 commits trong quá trình phát triển">
+                <GitBranch size={12} />
+                <span>{user?.commit_count || 0} commits Git</span>
+              </span>
+              <span className="audit-badge audit-neutral" title="Tỷ lệ trùng lặp mã nguồn theo thuật toán MOSS AST">
+                <ShieldCheck size={12} />
+                <span>MOSS AST: {user?.moss_similarity ? `${user.moss_similarity}%` : '0.0%'}</span>
+              </span>
+              <span className="audit-badge audit-neutral">
+                <Calendar size={12} />
+                <span>Gia nhập: {user?.registered_at ? new Date(user.registered_at).toLocaleDateString('vi-VN') : 'Kỳ thi 2026'}</span>
               </span>
             </div>
           </div>
@@ -189,21 +343,73 @@ export function ProfilePage() {
 
         <div className="profile-hero-actions">
           <button
+            id="btn-profile-edit"
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              setProfileForm({
+                name: user?.name || '',
+                student_id: user?.student_id || '',
+                class_name: user?.class_name || '',
+                bot_name: user?.bot_name || '',
+                github_repo_url: user?.github_repo_url || '',
+              });
+              setModalTab('profile');
+              setIsModalOpen(true);
+            }}
+          >
+            <Edit3 size={14} />
+            <span>Chỉnh Sửa Hồ Sơ</span>
+          </button>
+          <button
             id="btn-profile-refresh"
             className="btn btn-outline btn-sm"
-            onClick={loadUserData}
+            onClick={() => {
+              loadUserData();
+              if (reloadUser) reloadUser();
+            }}
             disabled={isLoadingData}
             title="Làm mới dữ liệu hồ sơ"
           >
             <RefreshCw size={14} className={isLoadingData ? 'animate-spin' : ''} />
             <span>Làm mới</span>
           </button>
-          <Link to="/submit" className="btn btn-primary btn-sm">
+          <Link to="/submit" className="btn btn-outline btn-sm">
             <Upload size={14} />
             <span>Cổng Nộp Bot</span>
           </Link>
+          <Link to="/sandbox" className="btn btn-outline btn-sm">
+            <Cpu size={14} />
+            <span>Đấu Thử Sandbox</span>
+          </Link>
         </div>
       </div>
+
+      {/* Special Top 32 Qualification Callout */}
+      {isTop32 && (
+        <div className="glass-card top32-qualified-banner animate-slide-down">
+          <div className="top32-banner-header">
+            <Trophy size={28} className="gold-text" />
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--amber-400)' }}>
+                Chúc mừng bạn đã xuất sắc lọt vào Vòng Chung Kết Top 32!
+              </h3>
+              <p style={{ margin: '0.35rem 0 0', fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                Bạn được bảo lưu mức điểm học phần tối đa <strong>10.0 (A+)</strong>. Theo đúng quy chế, bạn có <strong>01 tuần làm việc độc lập</strong> để nghiên cứu bản đồ Ô chướng ngại vật, nâng cấp giải thuật tìm đường và nộp phiên bản <strong>"Bot v2"</strong> thi đấu đối kháng BO2 đổi phe.
+              </p>
+            </div>
+          </div>
+          <div className="top32-banner-actions">
+            <Link to="/matches?round_num=finals" className="btn btn-primary btn-sm">
+              <Swords size={14} />
+              <span>Xem Cây Nhánh Top 32</span>
+            </Link>
+            <Link to="/sandbox" className="btn btn-outline btn-sm" style={{ borderColor: 'var(--amber-500)', color: 'var(--amber-400)' }}>
+              <Cpu size={14} />
+              <span>Môi Trường Thử Nghiệm Ô Cản</span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Performance & Scores Grid */}
       <div className="profile-metrics-grid">
@@ -229,7 +435,7 @@ export function ProfilePage() {
             </div>
             <div className="kpi-box">
               <span className="kpi-label">Tổng Điểm</span>
-              <span className="kpi-value cyan-text">{matchStats.points}</span>
+              <span className="kpi-value cyan-text">{matchStats.points} pts</span>
             </div>
             <div className="kpi-box">
               <span className="kpi-label">Tỉ Lệ Thắng</span>
@@ -250,12 +456,12 @@ export function ProfilePage() {
           </div>
         </div>
 
-        {/* Official Grading & Composite Score Card */}
+        {/* Official Swiss Tournament Achievement & Projected Grade */}
         <div className="glass-card metric-panel grade-panel">
           <div className="metric-panel-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Award size={18} color="var(--emerald-400)" />
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Điểm Thành Phần (Hội Đồng Chấm)</h3>
+              <Award size={18} color="var(--amber-400)" />
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Điểm Học Phần Đề Xuất (Swiss)</h3>
             </div>
             <span className="grade-rating-pill" style={{ color: gradeRating.color }}>
               ● {gradeRating.label}
@@ -264,63 +470,75 @@ export function ProfilePage() {
 
           <div className="composite-score-row">
             <div>
-              <span className="composite-label">Điểm Tổng Kết Học Phần</span>
+              <span className="composite-label">Điểm Dự Phóng Học Phần UET</span>
               <div className="composite-number-wrap">
-                <span className="composite-number">{finalScore}</span>
-                <span className="composite-max">/ 100</span>
+                <span className="composite-number">{projectedGrade}</span>
+                <span className="composite-max">/ 10</span>
               </div>
             </div>
             <div className="tier-weights-indicator">
-              <span>Trọng số học phần:</span>
-              <code>Bot {weights.bot}% • AI {weights.ai}% • Vấn đáp {weights.interview}% • Báo cáo {weights.report}%</code>
+              <span>Tiêu chuẩn xếp loại:</span>
+              <code>Lũy tiến theo số trận thắng 13 vòng Swiss &amp; Top 32</code>
             </div>
           </div>
 
           <div className="sub-scores-bars">
             <div className="sub-score-item">
               <div className="sub-score-info">
-                <span>1. Hiệu quả Bot ({weights.bot}%)</span>
-                <strong>{user?.score_bot || 0} / 100</strong>
+                <span>1. Số trận thắng Swiss</span>
+                <strong>{user?.swiss_wins || matchStats.wins || 0} / 13 vòng</strong>
               </div>
               <div className="progress-track">
-                <div className="progress-fill cyan-fill" style={{ width: `${user?.score_bot || 0}%` }}></div>
+                <div
+                  className="progress-fill cyan-fill"
+                  style={{ width: `${Math.min(100, (((user?.swiss_wins || matchStats.wins || 0) / 13) * 100))}%` }}
+                ></div>
               </div>
             </div>
 
             <div className="sub-score-item">
               <div className="sub-score-info">
-                <span>2. Tiến Trình Code &amp; Lịch Sử Git ({weights.ai}%)</span>
-                <strong>{user?.score_ai_profile || 0} / 100</strong>
+                <span>2. Điểm tích lũy Swiss</span>
+                <strong>{user?.swiss_points || matchStats.points || 0} pts</strong>
               </div>
               <div className="progress-track">
-                <div className="progress-fill purple-fill" style={{ width: `${user?.score_ai_profile || 0}%` }}></div>
+                <div
+                  className="progress-fill purple-fill"
+                  style={{ width: `${Math.min(100, (((user?.swiss_points || matchStats.points || 0) / 39) * 100))}%` }}
+                ></div>
               </div>
             </div>
 
             <div className="sub-score-item">
               <div className="sub-score-info">
-                <span>3. Vấn đáp hiểu code 10p ({weights.interview}%)</span>
-                <strong>{user?.score_interview || 0} / 100</strong>
+                <span>3. Hệ số Buchholz Cut-1</span>
+                <strong>{user?.buchholz || 0}</strong>
               </div>
               <div className="progress-track">
-                <div className="progress-fill emerald-fill" style={{ width: `${user?.score_interview || 0}%` }}></div>
+                <div
+                  className="progress-fill emerald-fill"
+                  style={{ width: `${Math.min(100, (user?.buchholz || 0))}%` }}
+                ></div>
               </div>
             </div>
 
             <div className="sub-score-item">
               <div className="sub-score-info">
-                <span>4. Báo cáo tự đánh giá ({weights.report}%)</span>
-                <strong>{user?.score_report || 0} / 100</strong>
+                <span>4. Hệ số Sonneborn-Berger</span>
+                <strong>{user?.sonneborn_berger || 0}</strong>
               </div>
               <div className="progress-track">
-                <div className="progress-fill amber-fill" style={{ width: `${user?.score_report || 0}%` }}></div>
+                <div
+                  className="progress-fill amber-fill"
+                  style={{ width: `${Math.min(100, (user?.sonneborn_berger || 0))}%` }}
+                ></div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs Navigation: Matches History vs Submissions */}
+      {/* Tabs Navigation: Matches History vs Submissions vs Tournament Rules */}
       <div className="profile-tabs-wrap">
         <button
           className={`profile-tab-btn ${activeTab === 'matches' ? 'active' : ''}`}
@@ -336,65 +554,137 @@ export function ProfilePage() {
           <Upload size={16} />
           <span>Lịch Sử Nộp Bài ({submissionHistory.length})</span>
         </button>
+        <button
+          className={`profile-tab-btn ${activeTab === 'rules' ? 'active' : ''}`}
+          onClick={() => setActiveTab('rules')}
+        >
+          <BookOpen size={16} />
+          <span>Quy Chế Điểm &amp; Lộ Trình</span>
+        </button>
       </div>
 
       {/* Tab 1 Content: Matches History */}
       {activeTab === 'matches' && (
         <div className="tab-pane animate-fade-in">
-          {matchHistory.length === 0 ? (
+          {/* Sub-filter Bar for matches */}
+          <div className="match-subfilter-bar">
+            {[
+              { id: 'all', label: `Tất cả (${matchHistory.length})` },
+              { id: 'win', label: `Chiến thắng (${matchHistory.filter((m) => m.result === 'win').length})` },
+              { id: 'draw', label: `Hòa cờ (${matchHistory.filter((m) => m.result === 'draw').length})` },
+              { id: 'loss', label: `Thất bại (${matchHistory.filter((m) => m.result === 'loss').length})` },
+              {
+                id: 'finals',
+                label: `Chung kết (${
+                  matchHistory.filter(
+                    (m) =>
+                      m.round_label?.toLowerCase().includes('chung kết') ||
+                      /^(R32_|R16_|QF_|SF_|FINAL_)/.test(m.match_id || '')
+                  ).length
+                })`,
+              },
+            ].map((f) => (
+              <button
+                key={f.id}
+                className={`filter-tab-btn ${matchFilter === f.id ? 'active' : ''}`}
+                onClick={() => setMatchFilter(f.id)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {filteredMatches.length === 0 ? (
             <div className="glass-card empty-tab-card">
               <Swords size={40} color="var(--text-muted)" style={{ margin: '0 auto 1rem', opacity: 0.6 }} />
-              <h4>Chưa có trận đấu nào được ghi nhận</h4>
+              <h4>Không tìm thấy trận đấu nào phù hợp</h4>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '480px', margin: '0.5rem auto 1.5rem' }}>
-                Khi Ban tổ chức khởi chạy các vòng đấu Swiss, các trận đấu của bot bạn sẽ tự động xuất hiện tại đây.
+                {matchFilter === 'all'
+                  ? 'Khi Ban tổ chức khởi chạy các vòng đấu Swiss, các trận đấu của bot bạn sẽ tự động xuất hiện tại đây.'
+                  : 'Không có trận đấu nào khớp với bộ lọc đã chọn.'}
               </p>
-              <Link to="/matches" className="btn btn-outline btn-sm">
-                <span>Khám phá các trận đấu khác</span>
-              </Link>
+              {matchFilter !== 'all' ? (
+                <button className="btn btn-outline btn-sm" onClick={() => setMatchFilter('all')}>
+                  <span>Xem tất cả trận đấu</span>
+                </button>
+              ) : (
+                <Link to="/matches" className="btn btn-outline btn-sm">
+                  <span>Khám phá các trận đấu khác</span>
+                </Link>
+              )}
             </div>
           ) : (
             <div className="profile-matches-list">
-              {matchHistory.map((m) => (
-                <div key={m.match_id} className="glass-card match-history-card">
-                  <div className="match-history-main">
-                    <span className={`result-tag result-${m.result}`}>
-                      {m.result === 'win' ? 'CHIẾN THẮNG' : m.result === 'loss' ? 'THẤT BẠI' : 'HÒA CỜ'}
-                    </span>
+              {filteredMatches.map((m) => {
+                const isFinals =
+                  m.round_label?.toLowerCase().includes('chung kết') ||
+                  /^(R32_|R16_|QF_|SF_|FINAL_)/.test(m.match_id || '');
 
-                    <div className="match-players-flow">
-                      <span className="side-badge">
-                        Phe: <strong>{m.played_as === 'White' ? '⚪ Trắng' : '🔴 Đen'}</strong>
-                      </span>
-                      <span className="vs-sign">vs</span>
-                      <span className="opponent-name">
-                        Đối thủ: <strong>{m.opponent_name}</strong>
-                      </span>
+                return (
+                  <div key={m.match_id} className={`glass-card match-history-card ${isFinals ? 'match-finals-card' : ''}`}>
+                    <div className="match-history-main">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span className={`result-tag result-${m.result}`}>
+                          {m.result === 'win' ? 'CHIẾN THẮNG (+3Đ)' : m.result === 'loss' ? 'THẤT BẠI (0Đ)' : 'HÒA CỜ (+1Đ)'}
+                        </span>
+                        <span className={`round-tag ${isFinals ? 'round-tag-finals' : ''}`}>
+                          {m.round_label || 'Vòng Swiss'}
+                        </span>
+                        <span className="history-match-id">{m.match_id}</span>
+                      </div>
+
+                      <div className="match-players-flow">
+                        <span className="side-badge">
+                          Phe:{' '}
+                          <strong style={{ color: m.played_as === 'White' ? '#FFFFFF' : 'var(--cyan-400)' }}>
+                            {m.played_as === 'White' ? 'Trắng (W)' : 'Đen (B)'}
+                          </strong>
+                        </span>
+                        <span className="vs-sign">vs</span>
+                        <span className="opponent-name">
+                          Đối thủ: <strong>{m.opponent_name}</strong>
+                        </span>
+                      </div>
+
+                      <div className="match-specs">
+                        <StatusBadge status={m.end_code || 'done'} />
+                        <span className="spec-item">
+                          <Clock size={13} />
+                          <span>{m.total_moves} nước</span>
+                        </span>
+                        {m.played_at && (
+                          <span className="spec-item">
+                            <span>
+                              {new Date(m.played_at).toLocaleTimeString('vi-VN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="match-specs">
-                      <StatusBadge status={m.end_code || 'done'} />
-                      <span className="spec-item">
-                        <Clock size={13} />
-                        <span>{m.total_moves} nước</span>
-                      </span>
-                      {m.played_at && (
-                        <span className="spec-item">
-                          <span>{new Date(m.played_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
-                        </span>
-                      )}
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <Link
+                        id={`btn-profile-replay-${m.match_id}`}
+                        to={`/matches/${m.match_id}`}
+                        className="btn btn-outline btn-sm btn-replay"
+                      >
+                        <PlayCircle size={15} />
+                        <span>Xem Replay</span>
+                      </Link>
+                      <Link
+                        to={`/matches/${m.match_id}/live`}
+                        className="btn btn-outline btn-xs"
+                        title="Xem lại giao diện phát sóng Live"
+                      >
+                        <Radio size={13} />
+                      </Link>
                     </div>
                   </div>
-
-                  <Link
-                    id={`btn-profile-replay-${m.match_id}`}
-                    to={`/matches/${m.match_id}`}
-                    className="btn btn-outline btn-sm btn-replay"
-                  >
-                    <PlayCircle size={15} />
-                    <span>Xem Replay</span>
-                  </Link>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -408,7 +698,7 @@ export function ProfilePage() {
               <Upload size={40} color="var(--text-muted)" style={{ margin: '0 auto 1rem', opacity: 0.6 }} />
               <h4>Bạn chưa nộp gói bài thi nào</h4>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '480px', margin: '0.5rem auto 1.5rem' }}>
-                Chuẩn bị gói nén <code>.ZIP</code> gồm <code>bot.py</code>, <code>REPORT.md</code> và <code>git_log.txt</code> (hoặc <code>.git</code>) để nộp bài.
+                Chuẩn bị gói nén <code>.ZIP</code> gồm <code>bot.py</code>, <code>REPORT.md</code> và <code>git_log.txt</code> (hoặc đường link GitHub repo) để nộp bài.
               </p>
               <Link to="/submit" className="btn btn-primary btn-sm">
                 <Upload size={14} />
@@ -417,21 +707,32 @@ export function ProfilePage() {
             </div>
           ) : (
             <div className="profile-subs-list">
-              {submissionHistory.map((s, idx) => {
+              {submissionHistory.map((s) => {
                 const isValid = s.status === 'valid' || s.is_valid;
                 const v = s.validation || {};
                 return (
                   <div key={s.id} className={`glass-card sub-card ${s.is_active ? 'sub-active' : ''}`}>
                     <div className="sub-card-header">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
                         <span className={`sub-status-pill ${isValid ? 'valid' : 'invalid'}`}>
                           {isValid ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
                           <span>{isValid ? 'Hợp Lệ (T08/T09)' : 'Chưa Hợp Lệ'}</span>
                         </span>
                         {s.is_active && (
                           <span className="active-sub-tag">
-                            ★ Gói thi đấu chính thức
+                            ⭐ Gói thi đấu chính thức
                           </span>
+                        )}
+                        {s.github_url && (
+                          <a
+                            href={s.github_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="sub-repo-link"
+                          >
+                            <GitBranch size={13} />
+                            <span>{s.github_url.replace(/^https?:\/\/github\.com\//, '')}</span>
+                          </a>
                         )}
                       </div>
                       <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
@@ -439,19 +740,19 @@ export function ProfilePage() {
                       </span>
                     </div>
 
-                    {/* File validation chips */}
+                    {/* File validation checklist */}
                     <div className="sub-checklist-chips">
                       <span className={`file-chip ${v.bot_py ? 'ok' : 'fail'}`}>
-                        {v.bot_py ? '✓' : '✕'} bot.py
+                        {v.bot_py ? <Check size={12} /> : <X size={12} />} bot.py
                       </span>
                       <span className={`file-chip ${v.choose_move_fn ? 'ok' : 'fail'}`}>
-                        {v.choose_move_fn ? '✓' : '✕'} choose_move(state)
+                        {v.choose_move_fn ? <Check size={12} /> : <X size={12} />} choose_move(state)
                       </span>
                       <span className={`file-chip ${v.report_md ? 'ok' : 'fail'}`}>
-                        {v.report_md ? '✓' : '✕'} REPORT.md (Ý Tưởng)
+                        {v.report_md ? <Check size={12} /> : <X size={12} />} REPORT.md (Ý Tưởng)
                       </span>
                       <span className={`file-chip ${v.git_log ? 'ok' : 'fail'}`}>
-                        {v.git_log ? '✓' : '✕'} Git History (≥4 commits)
+                        {v.git_log ? <Check size={12} /> : <X size={12} />} Git History (≥4 commits)
                       </span>
                     </div>
 
@@ -471,6 +772,237 @@ export function ProfilePage() {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Tab 3 Content: Official Grading Policy & Roadmap */}
+      {activeTab === 'rules' && (
+        <div className="tab-pane animate-fade-in">
+          <div className="glass-card rules-card">
+            <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--primary-400)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <BookOpen size={20} />
+              <span>Thang Điểm Học Phần &amp; Tiêu Chuẩn Xếp Loại UET</span>
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', marginBottom: '1.25rem', lineHeight: 1.6 }}>
+              Áp dụng theo quy chế thi môn Lập trình mạng (INT3304) — Trường Đại học Công nghệ, ĐHQGHN. Điểm môn học được lũy tiến theo số trận thắng qua 13 vòng Swiss và thành tích tại Vòng Chung Kết Top 32.
+            </p>
+
+            <div className="rules-table-wrap">
+              <table className="rules-table">
+                <thead>
+                  <tr>
+                    <th>Số trận thắng Swiss</th>
+                    <th>Điểm Hệ 10</th>
+                    <th>Điểm Chữ UET</th>
+                    <th>Ý Nghĩa Học Vụ &amp; Trình Độ Heuristic</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Dưới 4 thắng (thi đấu đủ 13 vòng)</strong></td>
+                    <td><strong className="cyan-text">6.5 – 7.0</strong></td>
+                    <td><strong>C+ / B</strong></td>
+                    <td>Điểm sàn: Hoàn thành đúng hạn, tuân thủ liêm chính &amp; thi đấu nghiêm túc</td>
+                  </tr>
+                  <tr>
+                    <td><strong>4 – 5 trận thắng</strong></td>
+                    <td><strong className="cyan-text">7.5</strong></td>
+                    <td><strong>B</strong></td>
+                    <td>Đạt yêu cầu môn học, bot có heuristic kiểm soát bàn cờ cơ bản</td>
+                  </tr>
+                  <tr>
+                    <td><strong>6 – 7 trận thắng</strong></td>
+                    <td><strong className="cyan-text">8.0 – 8.5</strong></td>
+                    <td><strong>B+ / A</strong></td>
+                    <td>Khá giỏi: Bot có Minimax cắt tỉa Alpha-Beta và chiến thuật tốt</td>
+                  </tr>
+                  <tr>
+                    <td><strong>8 – 9 trận thắng</strong></td>
+                    <td><strong className="cyan-text">9.0</strong></td>
+                    <td><strong>A</strong></td>
+                    <td>Xuất sắc: Kiểm soát 4 ô góc (W2), cơ chế lật quân sâu và tối ưu thời gian</td>
+                  </tr>
+                  <tr>
+                    <td><strong>10 – 11 trận thắng</strong></td>
+                    <td><strong className="emerald-text">9.5</strong></td>
+                    <td><strong>A+</strong></td>
+                    <td>Đỉnh cao: Thuật toán có chiều sâu, đánh bại hầu hết đối thủ trong toàn khóa</td>
+                  </tr>
+                  <tr className="row-top32">
+                    <td><strong>🏆 Lọt vào Top 32</strong></td>
+                    <td><strong className="gold-text">10.0 Tối đa</strong></td>
+                    <td><strong className="gold-text">A+</strong></td>
+                    <td>Điểm 10 tuyệt đối + Vinh danh bảng vàng UET + Thi đấu Vòng Chung Kết BO2</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="rules-notes-box">
+              <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.95rem', color: 'var(--amber-400)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Info size={16} />
+                <span>Tiêu chuẩn liêm chính học thuật &amp; Xác thực tác quyền:</span>
+              </h4>
+              <ul style={{ margin: 0, paddingLeft: '1.25rem', color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.7 }}>
+                <li><strong>Git History:</strong> Bắt buộc có tối thiểu 4 commits ghi nhận tiến độ phát triển để chứng minh sinh viên tự viết mã nguồn.</li>
+                <li><strong>MOSS AST:</strong> Hệ thống kiểm tra chống sao chép cấu trúc mã nguồn. Tỷ lệ tương đồng an toàn là dưới 30%.</li>
+                <li><strong>Phỏng vấn vấn đáp Top 32:</strong> 32 thí sinh lọt vào vòng Chung kết sẽ có buổi phỏng vấn 5 phút trước Hội đồng Chấm thi để giải thích thuật toán trước khi công nhận kết quả trao giải.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile & Change Password Modal */}
+      {isModalOpen && (
+        <div className="modal-backdrop animate-fade-in" onClick={() => setIsModalOpen(false)}>
+          <div className="modal-content glass-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {modalTab === 'profile' ? <Edit3 size={18} color="var(--primary-400)" /> : <Key size={18} color="var(--amber-400)" />}
+                <h3 style={{ margin: 0, fontSize: '1.15rem' }}>
+                  {modalTab === 'profile' ? 'Cập Nhật Thông Tin Cá Nhân' : 'Đổi Mật Khẩu'}
+                </h3>
+              </div>
+              <button className="modal-close-btn" onClick={() => setIsModalOpen(false)} aria-label="Đóng">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Tab Switcher */}
+            <div className="modal-tabs">
+              <button
+                className={`modal-tab-btn ${modalTab === 'profile' ? 'active' : ''}`}
+                onClick={() => setModalTab('profile')}
+              >
+                <User size={14} />
+                <span>Hồ Sơ Sinh Viên</span>
+              </button>
+              <button
+                className={`modal-tab-btn ${modalTab === 'password' ? 'active' : ''}`}
+                onClick={() => setModalTab('password')}
+              >
+                <Lock size={14} />
+                <span>Đổi Mật Khẩu</span>
+              </button>
+            </div>
+
+            {modalTab === 'profile' ? (
+              <form onSubmit={handleSaveProfile} className="modal-form">
+                <div className="form-group">
+                  <label>Họ và Tên Thí Sinh</label>
+                  <input
+                    type="text"
+                    required
+                    value={profileForm.name}
+                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                    placeholder="Nguyễn Văn A"
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Mã Số Sinh Viên (MSSV)</label>
+                    <input
+                      type="text"
+                      value={profileForm.student_id}
+                      onChange={(e) => setProfileForm({ ...profileForm, student_id: e.target.value })}
+                      placeholder="2202xxxx"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Lớp Khóa Học</label>
+                    <input
+                      type="text"
+                      value={profileForm.class_name}
+                      onChange={(e) => setProfileForm({ ...profileForm, class_name: e.target.value })}
+                      placeholder="INT3304 2"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Tên Bot Thi Đấu</label>
+                  <input
+                    type="text"
+                    value={profileForm.bot_name}
+                    onChange={(e) => setProfileForm({ ...profileForm, bot_name: e.target.value })}
+                    placeholder="AlphaOtt_v2"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Đường Link GitHub Repository</label>
+                  <input
+                    type="url"
+                    value={profileForm.github_repo_url}
+                    onChange={(e) => setProfileForm({ ...profileForm, github_repo_url: e.target.value })}
+                    placeholder="https://github.com/username/ottv2-bot"
+                  />
+                  <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
+                    Repo công khai hoặc đã cấp quyền cho tài khoản máy chấm BTC.
+                  </small>
+                </div>
+
+                <div className="modal-actions">
+                  <button type="button" className="btn btn-outline btn-sm" onClick={() => setIsModalOpen(false)}>
+                    <span>Hủy</span>
+                  </button>
+                  <button type="submit" className="btn btn-primary btn-sm" disabled={isSaving}>
+                    {isSaving ? <RefreshCw size={14} className="animate-spin" /> : <Check size={14} />}
+                    <span>{isSaving ? 'Đang lưu...' : 'Lưu Thay Đổi'}</span>
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleChangePassword} className="modal-form">
+                <div className="form-group">
+                  <label>Mật Khẩu Hiện Tại</label>
+                  <input
+                    type="password"
+                    required
+                    value={passwordForm.old_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, old_password: e.target.value })}
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Mật Khẩu Mới (Tối thiểu 6 ký tự)</label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={passwordForm.new_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Xác Nhận Mật Khẩu Mới</label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={passwordForm.confirm_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                <div className="modal-actions">
+                  <button type="button" className="btn btn-outline btn-sm" onClick={() => setIsModalOpen(false)}>
+                    <span>Hủy</span>
+                  </button>
+                  <button type="submit" className="btn btn-primary btn-sm" disabled={isSaving}>
+                    {isSaving ? <RefreshCw size={14} className="animate-spin" /> : <Lock size={14} />}
+                    <span>{isSaving ? 'Đang cập nhật...' : 'Đổi Mật Khẩu'}</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       )}
     </div>

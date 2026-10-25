@@ -3,6 +3,7 @@ Rate Limiting Middleware for FastAPI
 Sliding window rate limiter per client IP address.
 """
 
+import os
 import time
 import threading
 from typing import Dict, List, Tuple
@@ -25,7 +26,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Sensitive routes get stricter limits (e.g. login, submit)
         self.sensitive_limits = sensitive_limits or {
             "/api/auth/login": 30,
-            "/api/auth/register": 20,
             "/api/submit": 25,
         }
         # In-memory store: { ip: [(timestamp, path), ...] }
@@ -69,8 +69,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         ):
             return await call_next(request)
 
-        # Allow test bypass header
-        if request.headers.get("X-Test-Bypass") == "1":
+        # Cho phép bypass rate limit chỉ khi đang trong môi trường chạy test tự động nội bộ
+        if os.environ.get("TESTING") == "1" and request.headers.get("X-Test-Bypass") == "1":
             return await call_next(request)
 
         client_ip = self._get_client_ip(request)

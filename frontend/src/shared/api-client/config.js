@@ -31,7 +31,15 @@ export function getWebSocketUrl(path) {
     }
   }
 
-  // 3. Fallback cho Localhost / Same-Origin reverse proxy
+  // 3. Nếu đang chạy local dev trên Vite dev server (port 5173), kết nối trực tiếp backend FastAPI port 8000
+  // Giúp tối ưu độ trễ cho Live Match và tránh lỗi socket ECONNABORTED từ proxy Node.js của Vite khi reload trang
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    if (window.location.port === '5173') {
+      return `ws://${window.location.hostname}:8000${cleanPath}`;
+    }
+  }
+
+  // 4. Fallback cho Môi trường Production / Same-Origin reverse proxy (Docker, Nginx, Render)
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${protocol}//${window.location.host}${cleanPath}`;
 }

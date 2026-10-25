@@ -165,6 +165,20 @@ class BoardState:
             "obstacles": [square_to_str(c, r) for c, r in sorted(self.obstacles)],
         }
 
+    def get_legal_moves_for(self, player: Optional[str] = None) -> list[tuple[tuple[int, int], tuple[int, int]]]:
+        """
+        Trả về danh sách các nước đi hợp lệ ((from_col, from_row), (to_col, to_row))
+        cho quân của `player` ('W' hoặc 'B'). Nếu player là None, lấy cho current_player.
+        """
+        from app.services.engine.rules import get_legal_moves
+        target_player = player or self.current_player
+        old_player = self.current_player
+        self.current_player = target_player
+        try:
+            return get_legal_moves(self)
+        finally:
+            self.current_player = old_player
+
 
 # ────────────────────────────────────────────────
 # Notation helpers

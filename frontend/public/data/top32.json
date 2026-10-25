@@ -1,0 +1,994 @@
+[
+  {
+    "id": "26108624-0232-4e96-b7c3-05825adb2a0f",
+    "student_id": "22021143",
+    "name": "Dương Thanh Mai",
+    "bot_name": "BetaBreaker_Pro",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "37182e87-03ba-4289-a20a-b4bd315c64b1"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "37182e87-03ba-4289-a20a-b4bd315c64b1",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 1,
+    "user_id": "26108624-0232-4e96-b7c3-05825adb2a0f",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "f9e0d7f9-166f-43e0-8a30-c9bb8417d49b",
+    "student_id": "22021153",
+    "name": "Trịnh Hữu Nga",
+    "bot_name": "ZenithSolver_X",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 1,
+    "black_count": 0,
+    "history": [
+      "8ffe3fdd-dfb9-40b6-a5eb-3743c60f37f6"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "8ffe3fdd-dfb9-40b6-a5eb-3743c60f37f6",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 2,
+    "user_id": "f9e0d7f9-166f-43e0-8a30-c9bb8417d49b",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "8d8be756-5739-4873-972c-46c517f51d0c",
+    "student_id": "22021118",
+    "name": "Dương Minh Bích",
+    "bot_name": "FrostStriker_Prime",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 1,
+    "black_count": 0,
+    "history": [
+      "0aa4ee47-1aa2-47d1-8bc3-bb06ca9ae6ba"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "0aa4ee47-1aa2-47d1-8bc3-bb06ca9ae6ba",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 3,
+    "user_id": "8d8be756-5739-4873-972c-46c517f51d0c",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "a61a070e-8de8-48a2-a685-b9a4590193c8",
+    "student_id": "22021169",
+    "name": "Hồ Thành Tú",
+    "bot_name": "BlazeBreaker_Max",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 1,
+    "black_count": 0,
+    "history": [
+      "3b9aba28-dc28-4ecd-9767-f8288ef31e42"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "3b9aba28-dc28-4ecd-9767-f8288ef31e42",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 4,
+    "user_id": "a61a070e-8de8-48a2-a685-b9a4590193c8",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "129308c0-03cb-45f3-8425-84332a94433a",
+    "student_id": "22021070",
+    "name": "Đỗ Bảo Khoa",
+    "bot_name": "AlphaEngine_v2",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "312aa231-58a5-4599-9b23-3aace1708896"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "312aa231-58a5-4599-9b23-3aace1708896",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 5,
+    "user_id": "129308c0-03cb-45f3-8425-84332a94433a",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "1e5403b1-b275-4d9f-9bd7-2e6fd1d52fde",
+    "student_id": "22021119",
+    "name": "Võ Thanh Châu",
+    "bot_name": "NexusHunter_Lite",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 1,
+    "black_count": 0,
+    "history": [
+      "b10e956a-4bf6-477e-9137-0b3df1b487bf"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "b10e956a-4bf6-477e-9137-0b3df1b487bf",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 6,
+    "user_id": "1e5403b1-b275-4d9f-9bd7-2e6fd1d52fde",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "c3405c57-d7f1-43ea-83f6-d466b4bc64fd",
+    "student_id": "22021055",
+    "name": "Hoàng Gia Huy",
+    "bot_name": "ViperThinker_v2",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "acfa65c0-53fd-4f98-87fb-f62dde7959a2"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "acfa65c0-53fd-4f98-87fb-f62dde7959a2",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 7,
+    "user_id": "c3405c57-d7f1-43ea-83f6-d466b4bc64fd",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "c00594cc-ae88-4022-b9b0-b76d45693e91",
+    "student_id": "22021071",
+    "name": "Hồ Quốc Phong",
+    "bot_name": "MysticThinker_Pro",
+    "bot_type": "greedy",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "827122e4-5c99-48aa-8640-aba9de6697fe"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "827122e4-5c99-48aa-8640-aba9de6697fe",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 8,
+    "user_id": "c00594cc-ae88-4022-b9b0-b76d45693e91",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "978f606c-4b22-45e3-8fd3-b65da23baff0",
+    "student_id": "22021158",
+    "name": "Đinh Gia Đạt",
+    "bot_name": "VortexGuard_Lite",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "121c3557-20c2-4b5c-a259-2bc4a0b61c10"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "121c3557-20c2-4b5c-a259-2bc4a0b61c10",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 9,
+    "user_id": "978f606c-4b22-45e3-8fd3-b65da23baff0",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "85dba092-5824-4357-be1c-24f28c913e12",
+    "student_id": "22021188",
+    "name": "Võ Văn Thắng",
+    "bot_name": "TigerMaster_Prime",
+    "bot_type": "greedy",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "f8ce2da2-f0eb-4f4c-90ec-038363956471"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "f8ce2da2-f0eb-4f4c-90ec-038363956471",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 10,
+    "user_id": "85dba092-5824-4357-be1c-24f28c913e12",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "55af814f-141e-442a-9e3e-814e2d7a3405",
+    "student_id": "22021176",
+    "name": "Lý Trọng Cường",
+    "bot_name": "MegaBreaker_Prime",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "b2b4d924-0c56-4b09-913d-0ae925e7579e"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "b2b4d924-0c56-4b09-913d-0ae925e7579e",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 11,
+    "user_id": "55af814f-141e-442a-9e3e-814e2d7a3405",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "2c063d99-b6f4-45ae-9a55-9ab7b8594927",
+    "student_id": "22021183",
+    "name": "Võ Thành Tài",
+    "bot_name": "DragonAgent_X_Final",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "3ea7f3bb-5071-4540-9a24-63b7b3880056"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "3ea7f3bb-5071-4540-9a24-63b7b3880056",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 12,
+    "user_id": "2c063d99-b6f4-45ae-9a55-9ab7b8594927",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "19fe2503-0b06-4782-a4b6-c27ccf6d695e",
+    "student_id": "22021009",
+    "name": "Mai Gia Thắng",
+    "bot_name": "BlazeKnight_v1",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "3a0e2f24-6451-4104-927f-c1ab778a9468"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "3a0e2f24-6451-4104-927f-c1ab778a9468",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 13,
+    "user_id": "19fe2503-0b06-4782-a4b6-c27ccf6d695e",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "3f5c0a59-c588-473f-85ab-e4d107a000fb",
+    "student_id": "22021089",
+    "name": "Đinh Thành Đức",
+    "bot_name": "DeepTactician_Lite",
+    "bot_type": "greedy",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "b7949547-2be3-42be-aac2-8d0a1f7801c8"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "b7949547-2be3-42be-aac2-8d0a1f7801c8",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 14,
+    "user_id": "3f5c0a59-c588-473f-85ab-e4d107a000fb",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "b680da7e-aaaa-4e19-885e-a468c181ad8b",
+    "student_id": "22021112",
+    "name": "Phạm Quang Hậu",
+    "bot_name": "NeoBot_Pro",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "01162c79-f323-4af3-ad98-af3a4797e5fa"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "01162c79-f323-4af3-ad98-af3a4797e5fa",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 15,
+    "user_id": "b680da7e-aaaa-4e19-885e-a468c181ad8b",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "fe6b8195-e3fb-4fe6-a161-eba29916bd82",
+    "student_id": "22021051",
+    "name": "Mai Đức Giáp",
+    "bot_name": "NeoStriker_Pro",
+    "bot_type": "greedy",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "0fda4955-7b03-4eca-8e3c-dab317f2e655"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "0fda4955-7b03-4eca-8e3c-dab317f2e655",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 16,
+    "user_id": "fe6b8195-e3fb-4fe6-a161-eba29916bd82",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "f5247306-2f87-4638-ad21-f1e7bd575658",
+    "student_id": "22021180",
+    "name": "Vũ Xuân Giáp",
+    "bot_name": "ChronoAgent_v2",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "685f3eae-4c40-4284-9d95-4318fb759110"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "685f3eae-4c40-4284-9d95-4318fb759110",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 17,
+    "user_id": "f5247306-2f87-4638-ad21-f1e7bd575658",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "ff0c86af-e0fb-4139-8d39-f771ead5708f",
+    "student_id": "22021141",
+    "name": "Phạm Hải Nghĩa",
+    "bot_name": "ChronoKnight_v2",
+    "bot_type": "greedy",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "d91280a2-e581-47f1-8bd8-0bcc58165fe9"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "d91280a2-e581-47f1-8bd8-0bcc58165fe9",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 18,
+    "user_id": "ff0c86af-e0fb-4139-8d39-f771ead5708f",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "66fad027-4eab-4409-9d15-09579d410f81",
+    "student_id": "22021110",
+    "name": "Hoàng Thế Khôi",
+    "bot_name": "HyperGuard_Prime",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "d281ae9f-7372-4b56-9f8a-358b2aabc429"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "d281ae9f-7372-4b56-9f8a-358b2aabc429",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 19,
+    "user_id": "66fad027-4eab-4409-9d15-09579d410f81",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "85f3b76a-1045-42fd-9a91-5057acdf1bd6",
+    "student_id": "22021068",
+    "name": "Ngô Tuấn Phong",
+    "bot_name": "OmegaAI_v1",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "a2210967-dcc7-4093-97b0-04f36f010bbc"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "a2210967-dcc7-4093-97b0-04f36f010bbc",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 20,
+    "user_id": "85f3b76a-1045-42fd-9a91-5057acdf1bd6",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "8cd27891-3799-469d-905f-5d0052aa6c88",
+    "student_id": "22021122",
+    "name": "Hồ Quốc An",
+    "bot_name": "MiniMaxSolver_v2",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "d1905ced-7ee2-4897-9e2a-de8e21b1f8f7"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "d1905ced-7ee2-4897-9e2a-de8e21b1f8f7",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 21,
+    "user_id": "8cd27891-3799-469d-905f-5d0052aa6c88",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "5a9e767b-2c05-4c77-8006-9f71adf4e719",
+    "student_id": "22021154",
+    "name": "Bùi Quốc Long",
+    "bot_name": "FalconHunter_Prime",
+    "bot_type": "greedy",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "274950c7-b0b8-4bfc-8107-384069db3c21"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "274950c7-b0b8-4bfc-8107-384069db3c21",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 22,
+    "user_id": "5a9e767b-2c05-4c77-8006-9f71adf4e719",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "5067203b-3386-4367-85f1-c64f933509e2",
+    "student_id": "22021069",
+    "name": "Hồ Thị Mai",
+    "bot_name": "HyperCore_X",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 1,
+    "black_count": 0,
+    "history": [
+      "2b3d3a4d-ed00-4ce3-9d29-6d019b3bcc15"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "2b3d3a4d-ed00-4ce3-9d29-6d019b3bcc15",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 23,
+    "user_id": "5067203b-3386-4367-85f1-c64f933509e2",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "43b76243-fb80-432a-b674-c0e9deb15fbe",
+    "student_id": "22021078",
+    "name": "Đinh Bảo Giáp",
+    "bot_name": "PhoenixAI_Pro",
+    "bot_type": "greedy",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "68e90ed0-9387-4153-bdec-270690a85ad4"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "68e90ed0-9387-4153-bdec-270690a85ad4",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 24,
+    "user_id": "43b76243-fb80-432a-b674-c0e9deb15fbe",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "d06ed4a6-f724-47db-8953-0a6055b2894e",
+    "student_id": "22021187",
+    "name": "Trịnh Bảo Triết",
+    "bot_name": "GreedyEngine_X",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "b05d835f-3676-4dbe-aba2-c13d43052634"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "b05d835f-3676-4dbe-aba2-c13d43052634",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 25,
+    "user_id": "d06ed4a6-f724-47db-8953-0a6055b2894e",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "b55feb60-7d03-4f6d-b740-26fbfdc139af",
+    "student_id": "22021086",
+    "name": "Lê Thành Giáp",
+    "bot_name": "HyperAI_Prime",
+    "bot_type": "greedy",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "91d53e02-2bc3-4f64-941a-e7b2e29c1f0b"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "91d53e02-2bc3-4f64-941a-e7b2e29c1f0b",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 26,
+    "user_id": "b55feb60-7d03-4f6d-b740-26fbfdc139af",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "e760a073-ae17-409b-a505-f5ab502a6638",
+    "student_id": "22021140",
+    "name": "Trịnh Hữu Hậu",
+    "bot_name": "GhostBot_Max",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 1,
+    "black_count": 0,
+    "history": [
+      "9b3aba5c-f157-4dab-ad22-15d54abff60e"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "9b3aba5c-f157-4dab-ad22-15d54abff60e",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 27,
+    "user_id": "e760a073-ae17-409b-a505-f5ab502a6638",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "de718dff-885c-4480-b529-06e9410f653b",
+    "student_id": "22021109",
+    "name": "Nguyễn Tuấn Tuấn",
+    "bot_name": "GhostSniper_v2",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 1,
+    "black_count": 0,
+    "history": [
+      "089e5240-25c1-4a85-a875-e2ca1cc3a56a"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "089e5240-25c1-4a85-a875-e2ca1cc3a56a",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 28,
+    "user_id": "de718dff-885c-4480-b529-06e9410f653b",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "0dd4ea97-45f7-4210-8e69-701c624d8e3e",
+    "student_id": "22021096",
+    "name": "Hoàng Minh Khoa",
+    "bot_name": "BlazeSniper_Prime",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 1,
+    "black_count": 0,
+    "history": [
+      "a044b1ce-cec6-4efe-9cf4-6b553f8a6d14"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "a044b1ce-cec6-4efe-9cf4-6b553f8a6d14",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 29,
+    "user_id": "0dd4ea97-45f7-4210-8e69-701c624d8e3e",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "20ee2c45-2ef4-4232-ad1d-eeed9e530859",
+    "student_id": "22021060",
+    "name": "Trần Đức Bích",
+    "bot_name": "BetaBot_Pro",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "6d6e64e8-892d-4ef8-84ca-11a5652dedb0"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "6d6e64e8-892d-4ef8-84ca-11a5652dedb0",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 30,
+    "user_id": "20ee2c45-2ef4-4232-ad1d-eeed9e530859",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "8eb909da-a184-4189-9eed-4abc17b8e129",
+    "student_id": "22021030",
+    "name": "Đinh Thanh Bích",
+    "bot_name": "TigerStriker_Lite",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "2612c83f-9de2-4298-96f0-1c09161caa39"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "2612c83f-9de2-4298-96f0-1c09161caa39",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 31,
+    "user_id": "8eb909da-a184-4189-9eed-4abc17b8e129",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  },
+  {
+    "id": "a13c53f4-45bd-49a4-a908-bdaf76ad2a34",
+    "student_id": "22021124",
+    "name": "Võ Trọng Nam",
+    "bot_name": "HyperKnight_v2",
+    "bot_type": "random",
+    "points": 3,
+    "white_count": 0,
+    "black_count": 1,
+    "history": [
+      "2fd0b1f1-dded-4422-ac39-752ab0c5c192"
+    ],
+    "results": [],
+    "opponents_history": [
+      [
+        "2fd0b1f1-dded-4422-ac39-752ab0c5c192",
+        "win"
+      ]
+    ],
+    "matches_played": 1,
+    "wins": 1,
+    "draws": 0,
+    "losses": 0,
+    "buchholz": 0.0,
+    "sonneborn_berger": 0.0,
+    "rank": 32,
+    "user_id": "a13c53f4-45bd-49a4-a908-bdaf76ad2a34",
+    "win_rate": 100.0,
+    "grade_projection": "10.0 (A+)",
+    "is_top32": true
+  }
+]

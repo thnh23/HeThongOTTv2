@@ -19,7 +19,10 @@ async function request(method, path, body = undefined, options = {}) {
 
   const isFormData = body instanceof FormData;
   const isUrlSearchParams = body instanceof URLSearchParams;
-  if (!isFormData && !isUrlSearchParams && body !== undefined && !headers.has('Content-Type')) {
+  if (isFormData) {
+    // Bắt buộc xóa Content-Type thủ công để trình duyệt tự động sinh multipart boundary chuẩn
+    headers.delete('Content-Type');
+  } else if (!isUrlSearchParams && body !== undefined && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 

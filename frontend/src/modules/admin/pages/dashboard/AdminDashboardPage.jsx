@@ -1,139 +1,83 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import {
-  ShieldCheck,
   Users,
   Trophy,
-  RotateCcw,
-  Search,
-  CheckCircle2,
   RefreshCw,
   Award,
   Laptop,
-  Check,
   Zap,
-  ExternalLink,
-  Download,
-  Edit2,
-  GitBranch,
-  Bot,
-  UploadCloud,
-  FolderArchive,
-  Shield,
-  FileSpreadsheet,
+  ChevronRight,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { useToast } from '@/shared/context/ToastContext.jsx';
-import { GradeReviewModal } from '../../components/GradeReviewModal/GradeReviewModal.jsx';
 import { EditUserModal } from '../../components/EditUserModal/index.js';
+import {
+  Phase01Import,
+  Phase02Students,
+  Phase03Swiss,
+  Phase04Top32,
+} from '../../components/phases/index.js';
 import './AdminDashboardPage.css';
-
 
 export function AdminDashboardPage() {
   const { showToast } = useToast();
 
-  // Active Admin Tab: 'tournament' | 'import' | 'students' | 'top32'
-  const [activeAdminTab, setActiveAdminTab] = useState('tournament');
+  // 4 Chronological Admin Phases:
+  // Step 1: 'import' -> Step 2: 'students' -> Step 3: 'tournament' -> Step 4: 'top32'
+  const [activeAdminTab, setActiveAdminTab] = useState('import');
 
+  // Global Core State
   const [swissStatus, setSwissStatus] = useState(null);
   const [usersList, setUsersList] = useState([]);
-  const [submissionFilter, setSubmissionFilter] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Tournament Controller: Swiss 13 Vòng
-  const [selectedSwissRound, setSelectedSwissRound] = useState(1);
-  const [isPairingSwiss, setIsPairingSwiss] = useState(false);
-  const [isPublishingSwiss, setIsPublishingSwiss] = useState(false);
-  const [isSyncingData, setIsSyncingData] = useState(false);
-
-  // Chunks & Machine Results State
-  const [resultsStatus, setResultsStatus] = useState(null);
-  const [isUploadingResult, setIsUploadingResult] = useState(false);
-
-  // Google Form Import State
+  // Phase 01: Pipeline & CSV Ingestion State
   const [csvFile, setCsvFile] = useState(null);
   const [csvText, setCsvText] = useState('');
-  const [isImporting, setIsImporting] = useState(false);
-  const [importResult, setImportResult] = useState(null);
-  const fileInputRef = useRef(null);
-
-  // Pipeline Ingestion & Time Freeze State
   const [deadlineInput, setDeadlineInput] = useState('');
   const [pipelineStatus, setPipelineStatus] = useState(null);
   const [isPipelineRunning, setIsPipelineRunning] = useState(false);
+  const fileInputRef = useRef(null);
 
-  // Polling pipeline status when on import tab
-  useEffect(() => {
-    let timer = null;
-    if (activeAdminTab === 'import') {
-      const checkStatus = async () => {
-        try {
-          const st = await apiClient.get('/admin/pipeline/status');
-          setPipelineStatus(st);
-          if (st.status === 'running') {
-            setIsPipelineRunning(true);
-          } else {
-            setIsPipelineRunning(false);
-          }
-        } catch {
-          // ignore
-        }
-      };
+  // Phase 02: Students Roster & Filter State
+  const [submissionFilter, setSubmissionFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState(null);
 
-      checkStatus();
-      timer = setInterval(checkStatus, 2500);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [activeAdminTab, isPipelineRunning]);
+  // Phase 03: Swiss 13 Vòng & 4 Chunks State
+  const [selectedSwissRound, setSelectedSwissRound] = useState(1);
+  const [isPairingSwiss, setIsPairingSwiss] = useState(false);
+  const [isPublishingSwiss, setIsPublishingSwiss] = useState(false);
+  const [resultsStatus, setResultsStatus] = useState(null);
+  const [isUploadingResult, setIsUploadingResult] = useState(false);
 
-  const handleStartPipeline = async () => {
-    if (!csvFile && !csvText.trim()) {
-      showToast('Vui lòng chọn file CSV hoặc dán nội dung CSV từ Google Form!', 'error');
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      if (csvFile) formData.append('file', csvFile);
-      if (csvText.trim()) formData.append('csv_text', csvText.trim());
-      if (deadlineInput) formData.append('deadline', deadlineInput);
-
-      showToast('Đang khởi động Pipeline: Khử trùng lặp, Clone song song & Khóa commit...', 'info');
-      const res = await apiClient.post('/admin/pipeline/start', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      setIsPipelineRunning(true);
-      showToast(res.message || 'Pipeline đang chạy bất đồng bộ trong nền!', 'success');
-    } catch (err) {
-      showToast(err.message || 'Lỗi khi khởi động Pipeline', 'error');
-    }
-  };
-
-  const handleExportValidationReport = () => {
-    window.open('/api/admin/pipeline/export-report', '_blank');
-  };
-
-  // Top 32 Obstacles Config State
+  // Phase 04: Top 32 Knockout & Obstacles State
   const [top32Obstacles, setTop32Obstacles] = useState(['d4', 'd6', 'f4', 'f6', 'e5']);
   const [top32Announcement, setTop32Announcement] = useState('');
   const [top32Seeds, setTop32Seeds] = useState([]);
   const [isSavingObstacles, setIsSavingObstacles] = useState(false);
-  const [isBenchmarkOpen, setIsBenchmarkOpen] = useState(false);
+  const [isFinalizingSeeds, setIsFinalizingSeeds] = useState(false);
+  const [bracketData, setBracketData] = useState(null);
+  const [isRunningRound, setIsRunningRound] = useState(false);
 
-  // Modals state
-  const [selectedUserForReview, setSelectedUserForReview] = useState(null);
-  const [selectedUserForEdit, setSelectedUserForEdit] = useState(null);
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
 
-
+  // ────────────────────────────────────────────────────────────
+  // DATA FETCHING HOOKS
+  // ────────────────────────────────────────────────────────────
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
       const [swissRes, usersRes] = await Promise.all([
-        apiClient.get('/admin/swiss/status').catch(() => null),
+        apiClient.get(`/admin/swiss/status?round_num=${selectedSwissRound}`).catch(() => null),
         apiClient.get('/admin/users').catch(() => []),
       ]);
       setSwissStatus(swissRes);
@@ -165,21 +109,69 @@ export function AdminDashboardPage() {
     }
   };
 
+  const fetchTop32Bracket = async () => {
+    try {
+      const res = await apiClient.get('/admin/top32/bracket');
+      if (res) setBracketData(res);
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
+  // Polling pipeline status when on import tab
+  useEffect(() => {
+    let timer = null;
+    if (activeAdminTab === 'import') {
+      const checkStatus = async () => {
+        try {
+          const st = await apiClient.get('/admin/pipeline/status');
+          setPipelineStatus(st);
+          if (st.status === 'running') {
+            setIsPipelineRunning(true);
+          } else {
+            setIsPipelineRunning(false);
+          }
+        } catch {
+          // ignore
+        }
+      };
+
+      checkStatus();
+      timer = setInterval(checkStatus, 2500);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [activeAdminTab, isPipelineRunning]);
+
+  // Tab-specific initial load
   useEffect(() => {
     if (activeAdminTab === 'tournament') {
       fetchChunksAndResults(selectedSwissRound);
     } else if (activeAdminTab === 'top32') {
       fetchTop32Config();
+      fetchTop32Bracket();
     }
   }, [activeAdminTab, selectedSwissRound]);
 
-  // Filter students list by search and submission status
+  // Reset pagination on search / filter
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, submissionFilter]);
+
+  // ────────────────────────────────────────────────────────────
+  // MEMOIZED DERIVED VALUES (EXCLUDE ADMINS FROM PARTICIPANTS)
+  // ────────────────────────────────────────────────────────────
+  const studentList = useMemo(() => {
+    return (usersList || []).filter((u) => !u.is_admin);
+  }, [usersList]);
+
   const filteredUsers = useMemo(() => {
-    return usersList.filter((u) => {
+    return studentList.filter((u) => {
       const matchSubmission =
         !submissionFilter ||
         (submissionFilter === 'submitted' ? u.has_submission : !u.has_submission);
@@ -193,17 +185,69 @@ export function AdminDashboardPage() {
         u.class_name?.toLowerCase().includes(query);
       return matchSubmission && matchSearch;
     });
-  }, [usersList, submissionFilter, searchQuery]);
+  }, [studentList, submissionFilter, searchQuery]);
 
-  // 1. Handle Swiss Pairing
+  const totalRoundMatches = Math.floor(studentList.length / 2);
+  const avgMatchesPerChunk = totalRoundMatches > 0 ? Math.ceil(totalRoundMatches / 4) : 0;
+
+  const totalFilteredUsers = filteredUsers.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredUsers / pageSize));
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredUsers.slice(start, start + pageSize);
+  }, [filteredUsers, currentPage, pageSize]);
+
+  // ────────────────────────────────────────────────────────────
+  // PHASE 01 HANDLERS
+  // ────────────────────────────────────────────────────────────
+  const handleStartPipeline = async () => {
+    if (!csvFile && !csvText.trim()) {
+      showToast('Vui lòng chọn file CSV hoặc dán nội dung CSV từ Google Form!', 'error');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      if (csvFile) formData.append('file', csvFile);
+      if (csvText.trim()) formData.append('csv_text', csvText.trim());
+      if (deadlineInput) formData.append('deadline', deadlineInput);
+
+      showToast('Đang khởi động Pipeline: Khử trùng lặp, Clone song song & Khóa commit...', 'info');
+      const res = await apiClient.post('/admin/pipeline/start', formData);
+
+      setIsPipelineRunning(true);
+      showToast(res.message || 'Pipeline đang chạy bất đồng bộ trong nền!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi khởi động Pipeline', 'error');
+    }
+  };
+
+  const handleExportValidationReport = () => {
+    window.open('/api/admin/pipeline/export-report', '_blank');
+  };
+
+  // ────────────────────────────────────────────────────────────
+  // PHASE 03 HANDLERS
+  // ────────────────────────────────────────────────────────────
   const handleTriggerSwissPair = async () => {
+    if (usersList.length < 2) {
+      showToast(
+        'Chưa có dữ liệu thí sinh trong hệ thống! Vui lòng nạp danh sách thí sinh từ Google Form (CSV) tại Bước 01.',
+        'error'
+      );
+      return;
+    }
+
     setIsPairingSwiss(true);
     try {
-      showToast(`Đang bốc thăm ghép cặp Vòng ${selectedSwissRound} (2.000 SV) và cắt 10 Chunks...`, 'info');
+      showToast(
+        `Đang ghép cặp Vòng ${selectedSwissRound} (${usersList.length} thí sinh, ${totalRoundMatches} trận), chia đều 4 máy chấm...`,
+        'info'
+      );
       const res = await apiClient.post('/admin/swiss/pair', {
         round_num: Number(selectedSwissRound),
-        num_chunks: 10,
-        player_count: 2000,
+        num_chunks: 4,
+        player_count: usersList.length,
       });
       showToast(res.message || `Đã ghép cặp thành công Vòng ${selectedSwissRound}!`, 'success');
       fetchDashboardData();
@@ -215,7 +259,6 @@ export function AdminDashboardPage() {
     }
   };
 
-  // 2. Handle Swiss Publish
   const handleTriggerSwissPublish = async () => {
     setIsPublishingSwiss(true);
     try {
@@ -233,30 +276,27 @@ export function AdminDashboardPage() {
     }
   };
 
-  // 3. Download All Chunks ZIP
   const handleDownloadAllChunksZip = () => {
     window.open(`/api/admin/swiss/chunks/${selectedSwissRound}/download-zip`, '_blank');
-    showToast(`Đang tải file ZIP 10 chunks Vòng ${selectedSwissRound}...`, 'info');
+    showToast(`Đang tải file ZIP 4 chunks Vòng ${selectedSwissRound}...`, 'info');
   };
 
-  // 4. Download Single Chunk
   const handleDownloadSingleChunk = (chunkId) => {
     window.open(`/api/admin/swiss/chunks/${selectedSwissRound}/${chunkId}/download`, '_blank');
   };
 
-  // 5. Handle Upload Machine Result File (JSON or ZIP)
-  const handleUploadResultFile = async (file) => {
+  const handleUploadResultFile = async (file, chunkId = null) => {
     if (!file) return;
     setIsUploadingResult(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('round_num', selectedSwissRound);
+      if (chunkId) {
+        formData.append('chunk_id', chunkId);
+      }
 
-      const res = await apiClient.post('/admin/swiss/upload-result', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
+      const res = await apiClient.post('/admin/swiss/upload-result', formData);
       showToast(res.message || 'Tiếp nhận file kết quả thành công!', 'success');
       fetchChunksAndResults(selectedSwissRound);
       fetchDashboardData();
@@ -267,40 +307,38 @@ export function AdminDashboardPage() {
     }
   };
 
-  // 6. Handle Google Form CSV Import
-  const handleImportGoogleForm = async (e) => {
-    e.preventDefault();
-    if (!csvFile && !csvText.trim()) {
-      showToast('Vui lòng chọn file CSV hoặc dán nội dung CSV từ Google Form!', 'error');
+  const handleResetRoundResults = async () => {
+    if (
+      !window.confirm(
+        `Bạn có chắc chắn muốn đặt lại toàn bộ kết quả đã nộp của Vòng ${selectedSwissRound}? Tất cả các máy chấm sẽ chuyển về trạng thái Chờ nộp.`
+      )
+    ) {
       return;
     }
-
-    setIsImporting(true);
     try {
-      const formData = new FormData();
-      if (csvFile) {
-        formData.append('file', csvFile);
-      }
-      if (csvText.trim()) {
-        formData.append('csv_text', csvText.trim());
-      }
-
-      showToast('Đang phân tích dữ liệu Google Form và nạp thí sinh...', 'info');
-      const res = await apiClient.post('/admin/import/google-form', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      setImportResult(res);
-      showToast(res.message || 'Nạp danh sách thí sinh từ Google Form thành công!', 'success');
+      const res = await apiClient.delete(`/admin/swiss/results/${selectedSwissRound}`);
+      showToast(res.message || 'Đã đặt lại trạng thái chờ nộp cho tất cả các máy chấm!', 'success');
+      fetchChunksAndResults(selectedSwissRound);
       fetchDashboardData();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi nhập dữ liệu từ Google Form', 'error');
-    } finally {
-      setIsImporting(false);
+      showToast(err.message || 'Lỗi khi đặt lại kết quả', 'error');
     }
   };
 
-  // 7. Toggle Top 32 Obstacle Cell
+  const handleDeleteChunkResult = async (chunkId) => {
+    try {
+      const res = await apiClient.delete(`/admin/swiss/results/${selectedSwissRound}/${chunkId}`);
+      showToast(res.message || `Đã hủy kết quả Máy #${chunkId}!`, 'success');
+      fetchChunksAndResults(selectedSwissRound);
+      fetchDashboardData();
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi hủy kết quả máy chấm', 'error');
+    }
+  };
+
+  // ────────────────────────────────────────────────────────────
+  // PHASE 04 HANDLERS (TOP 32 & KNOCKOUT BRACKET)
+  // ────────────────────────────────────────────────────────────
   const toggleObstacleCell = (sq) => {
     const cleanSq = sq.toLowerCase().trim();
     if (top32Obstacles.includes(cleanSq)) {
@@ -310,7 +348,6 @@ export function AdminDashboardPage() {
     }
   };
 
-  // 8. Save Top 32 Obstacles
   const handleSaveTop32Config = async () => {
     setIsSavingObstacles(true);
     try {
@@ -326,829 +363,346 @@ export function AdminDashboardPage() {
     }
   };
 
-  // 9. Sync demo data
-  const handleSyncSeedData = async () => {
-    if (!window.confirm('Bạn có muốn đồng bộ lại toàn bộ dữ liệu bài nộp mẫu cho các thí sinh vào cơ sở dữ liệu hiện tại?')) {
-      return;
-    }
-    setIsSyncingData(true);
+  const handleFinalizeTop32Seeds = async () => {
+    setIsFinalizingSeeds(true);
     try {
-      showToast('Đang đồng bộ dữ liệu bài nộp mẫu lên cơ sở dữ liệu...', 'info');
-      const res = await apiClient.post('/admin/seed-data');
-      showToast(res.message || 'Đồng bộ bài nộp mẫu thành công!', 'success');
+      showToast('Đang chốt danh sách 32 hạt giống từ BXH Swiss (loại trừ Admin 100%)...', 'info');
+      const res = await apiClient.post('/admin/top32/finalize-seeds');
+      showToast(res.message || 'Đã chốt danh sách hạt giống Top 32!', 'success');
+      if (res.seeds) setTop32Seeds(res.seeds);
+      if (res.bracket) setBracketData(res.bracket);
       fetchDashboardData();
     } catch (err) {
-      showToast(err.message || 'Lỗi khi đồng bộ dữ liệu bài nộp', 'error');
+      showToast(err.message || 'Lỗi khi chốt hạt giống Top 32', 'error');
     } finally {
-      setIsSyncingData(false);
+      setIsFinalizingSeeds(false);
+    }
+  };
+
+  const handleRunRound = async (roundType, forceRerun = false) => {
+    setIsRunningRound(true);
+    let pollTimer = null;
+    try {
+      showToast(
+        forceRerun
+          ? `Đang thiết lập lại và chạy thi đấu BO2 vòng '${roundType}'...`
+          : `Đang chạy thi đấu BO2 vòng '${roundType}' trên bàn cờ có ô cản...`,
+        'info'
+      );
+
+      // Định kỳ 1.2s thăm dò kết quả trận đấu live để cập nhật giao diện nhánh đấu theo thời gian thực
+      pollTimer = setInterval(async () => {
+        try {
+          const liveBracket = await apiClient.get('/admin/top32/bracket');
+          if (liveBracket) {
+            setBracketData(liveBracket);
+          }
+        } catch {
+          // Bỏ qua lỗi tạm thời khi polling
+        }
+      }, 1200);
+
+      const res = await apiClient.post('/admin/top32/run-round', {
+        round_type: roundType,
+        force_rerun: forceRerun,
+      });
+      showToast(res.message || `Đã hoàn thành thi đấu vòng ${roundType}!`, 'success');
+      if (res.bracket) setBracketData(res.bracket);
+    } catch (err) {
+      showToast(err.message || `Lỗi khi chạy vòng ${roundType}`, 'error');
+    } finally {
+      if (pollTimer) clearInterval(pollTimer);
+      try {
+        const finalBracket = await apiClient.get('/admin/top32/bracket');
+        if (finalBracket) setBracketData(finalBracket);
+      } catch {
+        // ignore
+      }
+      setIsRunningRound(false);
+    }
+  };
+
+  const handleResetBracket = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn thiết lập lại toàn bộ nhánh đấu Vòng Chung Kết?')) {
+      return;
+    }
+    setIsRunningRound(true);
+    try {
+      const res = await apiClient.post('/admin/top32/reset-bracket');
+      showToast(res.message || 'Đã reset nhánh đấu Top 32!', 'success');
+      if (res.bracket) setBracketData(res.bracket);
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi reset nhánh đấu', 'error');
+    } finally {
+      setIsRunningRound(false);
     }
   };
 
   return (
     <div className="admin-page animate-fade-in">
-      {/* Admin Header */}
-      <div className="admin-header">
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <div className="admin-badge-icon">
-              <ShieldCheck size={22} color="var(--primary-700)" />
-            </div>
-            <h1 className="admin-title">
-              Bảng Điều Khiển <span className="gradient-text">Ban Tổ Chức (Admin)</span>
-            </h1>
+      {/* ADMIN HEADER & SYSTEM STATUS */}
+      <header className="admin-hero-header">
+        <div className="admin-hero-main">
+          <div className="eyebrow-badge">
+            <span className="eyebrow-dot" />
+            <span>KHOA CNTT - TRƯỜNG ĐẠI HỌC CÔNG NGHỆ (VNU-UET)</span>
           </div>
-          <p className="admin-subtitle">
-            Hội đồng Chấm thi • Điều hành Giải đấu Thụy Sĩ (Swiss 13 Vòng) • Quản lý Cụm 10 Máy Chấm Phân Tán
+          <h1 className="admin-hero-title">
+            Quản Trị <span className="title-gradient-accent">Giải Đấu OTTv2</span>
+          </h1>
+          <p className="admin-hero-desc">
+            Bảng điều hành và giám sát giải đấu cờ thuật toán OTTv2.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={handleSyncSeedData}
-            disabled={isSyncingData}
-            title="Đồng bộ lại dữ liệu thí sinh mẫu"
-          >
-            <RotateCcw size={14} className={isSyncingData ? 'animate-spin' : ''} />
-            <span>Nạp Dữ Liệu Mẫu</span>
-          </button>
+        <div className="admin-hero-actions">
           <button
             id="btn-admin-refresh"
-            className="btn btn-outline btn-sm"
+            className="btn-island btn-island-secondary"
             onClick={() => {
               fetchDashboardData();
               if (activeAdminTab === 'tournament') fetchChunksAndResults(selectedSwissRound);
+              if (activeAdminTab === 'top32') {
+                fetchTop32Config();
+                fetchTop32Bracket();
+              }
             }}
             disabled={isLoading}
+            title="Làm mới trạng thái"
           >
-            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-            <span>Làm mới</span>
+            <span className="btn-island-text">Làm mới dữ liệu</span>
+            <span className="btn-island-badge">
+              <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            </span>
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Stats Cards Grid */}
-      <div className="admin-stats-grid">
-        <div className="glass-card stat-metric-card">
-          <div className="stat-metric-header">
-            <span className="stat-metric-title">Tổng Thí Sinh</span>
-            <Users size={18} color="var(--primary-600)" />
+      {/* ──────────────────────────────────────────────────────────── */}
+      {/* METRIC CARDS (DOUBLE-BEZEL ASYMMETRICAL BENTO) */}
+      {/* ──────────────────────────────────────────────────────────── */}
+      <section className="admin-metrics-bento" aria-label="Số liệu tổng quan">
+        <div className="doppelrand-shell metric-shell">
+          <div className="doppelrand-core metric-core">
+            <div className="metric-header">
+              <span className="metric-label">Tổng Thí Sinh CSDL</span>
+              <div className="metric-icon-wrap primary">
+                <Users size={16} />
+              </div>
+            </div>
+            <div className="metric-value">{studentList.length.toLocaleString('vi-VN')}</div>
+            <div className="metric-footer">
+              <span className="status-live-indicator">● Cập nhật từ Google Form</span>
+            </div>
           </div>
-          <div className="stat-metric-value">{usersList.length || 2000}</div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Toàn bộ sinh viên Khoa CNTT - UET
-          </span>
         </div>
 
-        <div className="glass-card stat-metric-card">
-          <div className="stat-metric-header">
-            <span className="stat-metric-title">Thể Thức Thi Đấu</span>
-            <Trophy size={18} color="var(--amber-600)" />
+        <div className="doppelrand-shell metric-shell">
+          <div className="doppelrand-core metric-core">
+            <div className="metric-header">
+              <span className="metric-label">Thể Thức Thi Đấu</span>
+              <div className="metric-icon-wrap gold">
+                <Trophy size={16} />
+              </div>
+            </div>
+            <div className="metric-value">Hệ Thống Thụy Sĩ</div>
+            <div className="metric-footer">
+              <span className="metric-highlight gold">Tiêu chuẩn FIDE</span>
+            </div>
           </div>
-          <div className="stat-metric-value">13 Vòng</div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--primary-700)', fontWeight: 600 }}>
-            Hệ Thống Thụy Sĩ (Swiss System)
-          </span>
         </div>
 
-        <div className="glass-card stat-metric-card">
-          <div className="stat-metric-header">
-            <span className="stat-metric-title">Cụm Máy Chấm</span>
-            <Laptop size={18} color="var(--emerald-600)" />
+        <div className="doppelrand-shell metric-shell">
+          <div className="doppelrand-core metric-core">
+            <div className="metric-header">
+              <span className="metric-label">Cụm Máy Chấm</span>
+              <div className="metric-icon-wrap emerald">
+                <Laptop size={16} />
+              </div>
+            </div>
+            <div className="metric-value">Máy Chấm Phân Tán</div>
+            <div className="metric-footer">
+              <span className="metric-highlight emerald">
+                {totalRoundMatches > 0
+                  ? `${totalRoundMatches.toLocaleString('vi-VN')} trận đấu / vòng`
+                  : 'Phân tải tự động'}
+              </span>
+            </div>
           </div>
-          <div className="stat-metric-value">10 Máy</div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--emerald-700)', fontWeight: 600 }}>
-            100 trận/chunk • Chấm phân tán 0đ
-          </span>
         </div>
 
-        <div className="glass-card stat-metric-card">
-          <div className="stat-metric-header">
-            <span className="stat-metric-title">Vòng Chung Kết</span>
-            <Award size={18} color="var(--primary-600)" />
+        <div className="doppelrand-shell metric-shell">
+          <div className="doppelrand-core metric-core">
+            <div className="metric-header">
+              <span className="metric-label">Vòng Chung Kết</span>
+              <div className="metric-icon-wrap cyan">
+                <Award size={16} />
+              </div>
+            </div>
+            <div className="metric-value">Top 32</div>
+            <div className="metric-footer">
+              <span className="metric-highlight cyan">
+                {top32Seeds.length > 0 ? `${top32Seeds.length} Hạt giống đã chốt` : 'Đấu loại trực tiếp'}
+              </span>
+            </div>
           </div>
-          <div className="stat-metric-value">Top 32</div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--amber-700)', fontWeight: 600 }}>
-            Knockout &amp; Ô chướng ngại vật
-          </span>
         </div>
-      </div>
+      </section>
 
-      {/* 4 MAIN ADMIN NAVIGATION TABS */}
-      <div className="admin-main-tabs-bar">
+      {/* 4-PHASE SEQUENTIAL STEPPER NAVIGATION */}
+      <nav className="admin-step-nav" aria-label="Quy trình 4 giai đoạn giải đấu">
         <button
           type="button"
-          className={`admin-main-tab-item ${activeAdminTab === 'tournament' ? 'active' : ''}`}
-          onClick={() => setActiveAdminTab('tournament')}
-        >
-          <Zap size={16} />
-          <span>Điều Hành Giải Đấu (Swiss &amp; 10 Máy Chấm)</span>
-          <span className="admin-tab-count-badge">Vòng {selectedSwissRound}</span>
-        </button>
-
-        <button
-          type="button"
-          className={`admin-main-tab-item ${activeAdminTab === 'import' ? 'active' : ''}`}
+          className={`step-tab-btn ${activeAdminTab === 'import' ? 'active' : ''}`}
           onClick={() => setActiveAdminTab('import')}
         >
-          <FileSpreadsheet size={16} />
-          <span>Thu Thập Google Form &amp; Repositories</span>
-          <span className="admin-tab-count-badge">CSV</span>
+          <div className="step-tab-top">
+            <span className="step-tab-indicator">01</span>
+            <span className="step-status-chip">
+              <RefreshCw size={12} className={isPipelineRunning ? 'animate-spin' : ''} />
+              <span>{isPipelineRunning ? 'Đang chạy' : 'Sẵn sàng'}</span>
+            </span>
+          </div>
+          <div className="step-tab-text">
+            <div className="step-title">Thu thập bài thi</div>
+            <div className="step-desc">Nhập dữ liệu bài thi</div>
+          </div>
         </button>
 
         <button
           type="button"
-          className={`admin-main-tab-item ${activeAdminTab === 'students' ? 'active' : ''}`}
+          className={`step-tab-btn ${activeAdminTab === 'students' ? 'active' : ''}`}
           onClick={() => setActiveAdminTab('students')}
         >
-          <Users size={16} />
-          <span>Quản Lý Thí Sinh &amp; Chấm Điểm</span>
-          <span className="admin-tab-count-badge">{usersList.length} SV</span>
+          <div className="step-tab-top">
+            <span className="step-tab-indicator">02</span>
+            <span className="step-status-chip">
+              <Users size={12} />
+              <span>{studentList.length} thí sinh</span>
+            </span>
+          </div>
+          <div className="step-tab-text">
+            <div className="step-title">Danh sách thí sinh</div>
+            <div className="step-desc">Hồ sơ thí sinh</div>
+          </div>
         </button>
 
         <button
           type="button"
-          className={`admin-main-tab-item ${activeAdminTab === 'top32' ? 'active' : ''}`}
+          className={`step-tab-btn ${activeAdminTab === 'tournament' ? 'active' : ''}`}
+          onClick={() => setActiveAdminTab('tournament')}
+        >
+          <div className="step-tab-top">
+            <span className="step-tab-indicator">03</span>
+            <span className="step-status-chip">
+              <Zap size={12} />
+              <span>Vòng {selectedSwissRound}</span>
+            </span>
+          </div>
+          <div className="step-tab-text">
+            <div className="step-title">Vòng Thụy Sĩ</div>
+            <div className="step-desc">Bốc thăm &amp; chấm điểm</div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className={`step-tab-btn ${activeAdminTab === 'top32' ? 'active' : ''}`}
           onClick={() => setActiveAdminTab('top32')}
         >
-          <Award size={16} />
-          <span>Vòng Chung Kết Top 32 &amp; Ô Chướng Ngại Vật</span>
-          <span className="admin-tab-count-badge">{top32Obstacles.length} Ô Cản</span>
+          <div className="step-tab-top">
+            <span className="step-tab-indicator">04</span>
+            <span className="step-status-chip">
+              <Award size={12} />
+              <span>{top32Obstacles.length} ô cản</span>
+            </span>
+          </div>
+          <div className="step-tab-text">
+            <div className="step-title">Chung kết Top 32</div>
+            <div className="step-desc">Ô cản &amp; nhánh đấu</div>
+          </div>
         </button>
-      </div>
+      </nav>
 
-      {/* TAB 1: TOURNAMENT & SWISS 10 CHUNKS OPERATIONS */}
-      {activeAdminTab === 'tournament' && (
-        <div className="glass-card tournament-hub-card" style={{ marginBottom: '2.5rem' }}>
-          <div className="hub-header">
-            <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
-                <span className="swiss-hub-badge">SWISS ENGINE CONTROLLER</span>
-                <span className="round-badge">VÒNG {selectedSwissRound} / 13</span>
-              </div>
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                Điều Hành Giải Đấu Thụy Sĩ (Swiss System)
-              </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem', margin: 0 }}>
-                Tự động bốc thăm theo điểm số, cắt nhỏ 1.000 trận thành 10 file chunk cho 10 máy chấm sinh viên và hợp nhất xuất bản bảng xếp hạng Jamstack.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Chọn Vòng:</span>
-                <select
-                  className="swiss-round-select"
-                  value={selectedSwissRound}
-                  onChange={(e) => setSelectedSwissRound(Number(e.target.value))}
-                  aria-label="Chọn vòng đấu Swiss"
-                >
-                  {Array.from({ length: 13 }, (_, i) => i + 1).map((r) => (
-                    <option key={r} value={r}>Vòng {r}</option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="button"
-                className="btn btn-outline btn-sm"
-                onClick={handleDownloadAllChunksZip}
-                title="Tải trọn gói 10 file chunk kèm script chấm thi"
-              >
-                <FolderArchive size={14} color="var(--primary-600)" />
-                <span>Tải Gói 10 Chunks (.ZIP)</span>
-              </button>
-
-              <Link to="/leaderboard" className="btn btn-outline btn-sm">
-                <ExternalLink size={14} />
-                <span>Xem Bảng Xếp Hạng</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Swiss 3-Step Action Workflow */}
-          <div className="swiss-actions-row">
-            {/* Step 1: Pair */}
-            <div className="swiss-step-box">
-              <div className="step-box-header">
-                <span className="step-number">BƯỚC 1</span>
-                <h4>Ghép Cặp &amp; Cắt Chunk</h4>
-              </div>
-              <p className="step-desc">
-                Ghép 1.000 trận theo nhóm điểm, tránh đối thủ cũ và chia đều thành 10 file chunk (chunk_01 .. chunk_10).
-              </p>
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
-                style={{ width: '100%', justifyContent: 'center' }}
-                onClick={handleTriggerSwissPair}
-                disabled={isPairingSwiss}
-              >
-                <Zap size={14} className={isPairingSwiss ? 'animate-spin' : ''} />
-                <span>{isPairingSwiss ? 'Đang ghép cặp...' : `Bốc Thăm Vòng ${selectedSwissRound}`}</span>
-              </button>
-            </div>
-
-            {/* Step 2: Distribute & Monitor */}
-            <div className="swiss-step-box">
-              <div className="step-box-header">
-                <span className="step-number">BƯỚC 2</span>
-                <h4>Phân Bổ &amp; Nhận Kết Quả</h4>
-              </div>
-              <p className="step-desc">
-                10 máy chấm chạy <code>run_batch.py</code> độc lập qua Sandbox (mỗi máy 100 trận, ~2-3 phút xong).
-              </p>
-              <div className="chunk-progress-summary">
-                <span>Tiến độ nộp kết quả:</span>
-                <strong>{resultsStatus?.ready_count || 0} / 10 Máy Chấm</strong>
-              </div>
-              <label
-                className="btn btn-outline btn-sm"
-                style={{ width: '100%', justifyContent: 'center', cursor: 'pointer' }}
-              >
-                <UploadCloud size={14} />
-                <span>{isUploadingResult ? 'Đang xử lý...' : 'Nộp Gói Kết Quả (File/ZIP)'}</span>
-                <input
-                  type="file"
-                  accept=".json,.zip"
-                  style={{ display: 'none' }}
-                  disabled={isUploadingResult}
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) handleUploadResultFile(e.target.files[0]);
-                  }}
-                />
-              </label>
-            </div>
-
-            {/* Step 3: Merge & Publish */}
-            <div className="swiss-step-box">
-              <div className="step-box-header">
-                <span className="step-number">BƯỚC 3</span>
-                <h4>Hợp Nhất &amp; Xuất Bản</h4>
-              </div>
-              <p className="step-desc">
-                Cập nhật điểm Match Points (3-1-0), tính hệ số Buchholz / SB, chốt Top 32 và xuất file JSON tĩnh.
-              </p>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                style={{ width: '100%', justifyContent: 'center' }}
-                onClick={handleTriggerSwissPublish}
-                disabled={isPublishingSwiss}
-              >
-                <CheckCircle2 size={14} className={isPublishingSwiss ? 'animate-spin' : ''} />
-                <span>{isPublishingSwiss ? 'Đang xuất bản...' : `Hợp Nhất & Xuất Bản Vòng ${selectedSwissRound}`}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* 10 Chunks Cluster Monitor Grid with Actions */}
-          <div className="chunks-monitor-wrap">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                <Laptop size={16} color="var(--primary-700)" />
-                <span>Trạng Thái Cụm 10 Máy Chấm Phân Tán (Vòng {selectedSwissRound})</span>
-              </h4>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Đã nhận kết quả: <strong>{resultsStatus?.total_matches_done || 0} / 1.000 trận đấu</strong>
-              </span>
-            </div>
-
-            <div className="chunks-grid">
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((chunkId) => {
-                const machine = resultsStatus?.machines?.find((m) => m.chunk_id === chunkId);
-                const isReady = machine?.is_ready || (swissStatus?.results_ready || 0) >= chunkId;
-
-                return (
-                  <div key={chunkId} className={`chunk-card ${isReady ? 'chunk-done' : 'chunk-pending'}`}>
-                    <div className="chunk-card-header">
-                      <span className="chunk-id-tag">MÁY #{String(chunkId).padStart(2, '0')}</span>
-                      {isReady ? (
-                        <span className="chunk-status-pill done">✓ Xong ({machine?.matches_count || 100} trận)</span>
-                      ) : (
-                        <span className="chunk-status-pill waiting">Chờ nộp</span>
-                      )}
-                    </div>
-                    <div className="chunk-matches-num">100 Trận</div>
-                    <div className="chunk-file-name">chunk_{String(chunkId).padStart(2, '0')}.json</div>
-
-                    {/* Machine Actions: Download chunk & Upload result */}
-                    <div className="chunk-actions-row">
-                      <button
-                        type="button"
-                        className="btn btn-outline btn-xs"
-                        style={{ fontSize: '0.72rem', padding: '0.2rem 0.45rem' }}
-                        onClick={() => handleDownloadSingleChunk(chunkId)}
-                        title={`Tải file chunk_${chunkId}.json`}
-                      >
-                        <Download size={11} />
-                        <span>Tải Chunk</span>
-                      </button>
-
-                      <label
-                        className="chunk-upload-label-btn"
-                        title={`Tải file result_${chunkId}.json cho Máy #${chunkId}`}
-                      >
-                        <UploadCloud size={11} />
-                        <span>{isReady ? 'Nộp Lại' : 'Nộp KQ'}</span>
-                        <input
-                          type="file"
-                          accept=".json"
-                          style={{ display: 'none' }}
-                          onChange={(e) => {
-                            if (e.target.files?.[0]) handleUploadResultFile(e.target.files[0], chunkId);
-                          }}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 2: GOOGLE FORM IMPORT & REPOSITORIES */}
+      {/* ──────────────────────────────────────────────────────────── */}
+      {/* RENDER ACTIVE PHASE COMPONENT */}
+      {/* ──────────────────────────────────────────────────────────── */}
       {activeAdminTab === 'import' && (
-        <div className="google-import-card animate-fade-in">
-          <div style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.35rem' }}>
-              <span className="swiss-hub-badge">TRỤ CỘT 1: THU THẬP BÀI THI</span>
-            </div>
-            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-              Nhập Danh Sách Bài Thi Từ Google Form
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-              Xuất file CSV từ Google Form (thu link GitHub Repository và Mã Sinh Viên) rồi tải lên hoặc dán trực tiếp bên dưới. Hệ thống sẽ tự động đối soát và cập nhật vào danh sách thí sinh.
-            </p>
-          </div>
-
-          <form onSubmit={handleImportGoogleForm}>
-            <div
-              className={`import-dropzone ${csvFile ? 'drag-active' : ''}`}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.txt"
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  if (e.target.files?.[0]) setCsvFile(e.target.files[0]);
-                }}
-              />
-              <div className="import-icon-wrap">
-                <FileSpreadsheet size={28} />
-              </div>
-              <div>
-                <strong>{csvFile ? csvFile.name : 'Nhấp hoặc kéo thả file CSV từ Google Form vào đây'}</strong>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.25rem 0 0' }}>
-                  Hỗ trợ định dạng: <code>.csv</code> (UTF-8). Tự động nhận diện các cột MSSV, Họ tên, Email, Link GitHub.
-                </p>
-              </div>
-            </div>
-
-            <div style={{ marginTop: '1.25rem' }}>
-              <label htmlFor="csv-raw-textarea" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
-                Hoặc dán trực tiếp nội dung CSV vào ô dưới đây:
-              </label>
-              <textarea
-                id="csv-raw-textarea"
-                rows={4}
-                className="form-control"
-                style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}
-                placeholder={`Dấu thời gian,Địa chỉ email,Họ và tên,Mã sinh viên,Lớp,Link GitHub Repository,Tên Bot\n2026/10/20 8:30:15 CH,21020001@vnu.edu.vn,Nguyễn Văn An,21020001,QH-2022-I/CQ-CLC1,https://github.com/annguyen/ottv2-bot,AlphaBot`}
-                value={csvText}
-                onChange={(e) => setCsvText(e.target.value)}
-              />
-            </div>
-
-            <div style={{ marginTop: '1.25rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-              <div>
-                <label htmlFor="pipeline-deadline-input" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.35rem' }}>
-                  ⏰ Hạn Chót Nộp Bài (Deadline Freeze):
-                </label>
-                <input
-                  id="pipeline-deadline-input"
-                  type="datetime-local"
-                  className="form-control"
-                  style={{ fontSize: '0.85rem' }}
-                  value={deadlineInput}
-                  onChange={(e) => setDeadlineInput(e.target.value)}
-                />
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
-                  Hệ thống tự động lọc bản nộp cuối trước giờ này và <code>git checkout</code> commit hợp lệ trước deadline.
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={handleExportValidationReport}
-                  title="Xuất danh sách thí sinh, mã commit chốt và tình trạng hợp lệ ra file CSV"
-                  style={{ width: '100%', fontSize: '0.85rem' }}
-                >
-                  <Download size={15} />
-                  <span>Xuất Báo Cáo Đối Soát (.CSV)</span>
-                </button>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleStartPipeline}
-                disabled={isPipelineRunning}
-                style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)', border: 'none' }}
-              >
-                <Zap size={16} className={isPipelineRunning ? 'animate-spin' : ''} />
-                <span>{isPipelineRunning ? 'Pipeline Đang Chạy Nền...' : '⚡ Khởi Động Pipeline Toàn Diện (Clone & Freeze)'}</span>
-              </button>
-
-              <button
-                type="submit"
-                className="btn btn-outline"
-                disabled={isImporting || isPipelineRunning}
-              >
-                <CheckCircle2 size={16} className={isImporting ? 'animate-spin' : ''} />
-                <span>{isImporting ? 'Đang Nạp...' : 'Nạp Nhanh Vào CSDL (Sync)'}</span>
-              </button>
-            </div>
-          </form>
-
-          {/* Pipeline Live Progress Box */}
-          {pipelineStatus && pipelineStatus.status !== 'idle' && (
-            <div style={{ marginTop: '1.5rem', padding: '1.25rem', background: 'rgba(15, 23, 42, 0.65)', border: '1px solid var(--border-subtle)', borderRadius: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <RefreshCw size={16} className={pipelineStatus.status === 'running' ? 'animate-spin' : ''} color="var(--primary-400)" />
-                  <strong>Tiến Trình Pipeline Thẩm Định Hàng Loạt</strong>
-                </div>
-                <span style={{ fontSize: '0.8rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: pipelineStatus.status === 'completed' ? 'rgba(16,185,129,0.15)' : 'rgba(99,102,241,0.15)', color: pipelineStatus.status === 'completed' ? '#10b981' : '#818cf8', fontWeight: 600 }}>
-                  {pipelineStatus.status === 'running' ? 'ĐANG CHẠY BẤT ĐỒNG BỘ' : pipelineStatus.status === 'completed' ? 'ĐÃ HOÀN THÀNH' : 'THẤT BẠI'}
-                </span>
-              </div>
-
-              {/* Progress bar */}
-              <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', overflow: 'hidden', margin: '0.75rem 0' }}>
-                <div style={{ width: `${pipelineStatus.percentage || 0}%`, height: '100%', background: 'linear-gradient(90deg, #4f46e5, #06b6d4)', transition: 'width 0.3s ease' }} />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                <span>Đã xử lý: <strong>{pipelineStatus.processed} / {pipelineStatus.total}</strong> ({pipelineStatus.percentage}%)</span>
-                <span>Hợp lệ: <strong style={{ color: '#10b981' }}>{pipelineStatus.valid_count}</strong> • Lỗi: <strong style={{ color: '#ef4444' }}>{pipelineStatus.invalid_count}</strong></span>
-              </div>
-
-              {pipelineStatus.current_student && (
-                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  Đang xử lý sinh viên: <code>{pipelineStatus.current_student}</code>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Import Preview Table */}
-          {importResult && (
-            <div className="import-preview-table-wrap">
-              <div style={{ padding: '0.85rem 1.25rem', background: 'var(--bg-surface-elevated)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--emerald-600)' }}>
-                  ✓ {importResult.message}
-                </span>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  Xem trước {importResult.preview?.length || 0} bản ghi đầu tiên
-                </span>
-              </div>
-              <div className="table-responsive" style={{ margin: 0, maxHeight: '320px', overflowY: 'auto' }}>
-                <table className="styled-table">
-                  <thead>
-                    <tr>
-                      <th>MSSV</th>
-                      <th>Họ và Tên</th>
-                      <th>Email VNU</th>
-                      <th>Lớp</th>
-                      <th>Tên Bot</th>
-                      <th>GitHub Repository</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {importResult.preview?.map((p, idx) => (
-                      <tr key={idx}>
-                        <td><code>{p.student_id || '—'}</code></td>
-                        <td><strong>{p.name}</strong></td>
-                        <td>{p.email}</td>
-                        <td>{p.class_name}</td>
-                        <td><span className="bot-name-chip">{p.bot_name}</span></td>
-                        <td>
-                          {p.github_repo_url ? (
-                            <a href={p.github_repo_url} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-600)', fontSize: '0.78rem' }}>
-                              {p.github_repo_url}
-                            </a>
-                          ) : '—'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 3: STUDENTS LIST & GRADING REVIEW TABLE */}
-      {activeAdminTab === 'students' && (
-        <div className="glass-card animate-fade-in" style={{ padding: 0, overflow: 'hidden' }}>
-          <div className="students-table-toolbar">
-            <div>
-              <h3 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 800 }}>Danh Sách Thí Sinh &amp; Chấm Thi</h3>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Hiển thị {filteredUsers.length} / {usersList.length} thí sinh
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <div className="admin-search-wrap">
-                <Search size={15} color="var(--text-muted)" />
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm theo MSSV, tên, email, lớp..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="admin-search-input"
-                />
-              </div>
-
-              <select
-                className="admin-filter-select"
-                value={submissionFilter}
-                onChange={(e) => setSubmissionFilter(e.target.value)}
-                aria-label="Lọc theo trạng thái nộp bot"
-              >
-                <option value="">Tất Cả Thí Sinh</option>
-                <option value="submitted">Đã Nộp Bot (Hợp Lệ)</option>
-                <option value="pending">Chưa Nộp Bot</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="table-responsive" style={{ margin: 0 }}>
-            <table className="styled-table" aria-label="Bảng quản lý thí sinh">
-              <thead>
-                <tr>
-                  <th>Thí Sinh / MSSV / Lớp</th>
-                  <th>Bot &amp; GitHub</th>
-                  <th style={{ textAlign: 'center' }}>Bài Nộp</th>
-                  <th style={{ textAlign: 'center' }}>Swiss 13 Vòng</th>
-                  <th style={{ textAlign: 'center' }}>Điểm HP Đề Xuất</th>
-                  <th style={{ textAlign: 'center' }}>Hội Đồng Chấm (Bot / AI / VD / BC)</th>
-                  <th style={{ textAlign: 'center' }}>Điểm Tổng</th>
-                  <th style={{ textAlign: 'center' }}>Thao Tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-                      Không tìm thấy thí sinh phù hợp
-                    </td>
-                  </tr>
-                ) : (
-                  filteredUsers.map((u) => (
-                    <tr key={u.id}>
-                      <td>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                            <strong style={{ fontSize: '0.92rem' }}>{u.name}</strong>
-                            {u.is_top32 && (
-                              <span className="swiss-hub-badge" style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
-                                ★ TOP 32
-                              </span>
-                            )}
-                            {u.is_admin && <span className="admin-tag">Admin</span>}
-                          </div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                            {u.student_id ? <code>MSSV: {u.student_id}</code> : <span style={{ color: 'var(--text-muted)' }}>Chưa có MSSV</span>}
-                            {u.class_name && <span> • {u.class_name}</span>}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{u.email}</div>
-                        </div>
-                      </td>
-
-                      <td>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600, color: 'var(--primary-700)' }}>
-                            <Bot size={13} />
-                            <span>{u.bot_name || 'Chưa đặt tên'}</span>
-                          </div>
-                          {u.github_repo_url ? (
-                            <a
-                              href={u.github_repo_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: 'var(--cyan-400)', marginTop: '2px' }}
-                            >
-                              <GitBranch size={11} />
-                              <span>GitHub Repo</span>
-                              <ExternalLink size={10} />
-                            </a>
-                          ) : (
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Chưa liên kết</span>
-                          )}
-                        </div>
-                      </td>
-
-                      <td style={{ textAlign: 'center' }}>
-                        <span className={`submission-status-badge ${u.has_submission ? 'valid' : 'none'}`}>
-                          {u.has_submission ? '✓ Đã Nộp' : 'Chưa Nộp'}
-                        </span>
-                      </td>
-
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                          {u.swiss_wins || 0} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>/ 13 thắng</span>
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                          {u.swiss_points || 0} pts
-                        </div>
-                      </td>
-
-                      <td style={{ textAlign: 'center' }}>
-                        <span
-                          className="admin-final-score-pill"
-                          style={{
-                            background: u.projected_grade_10 >= 8.5 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(59, 130, 246, 0.12)',
-                            borderColor: u.projected_grade_10 >= 8.5 ? 'rgba(16, 185, 129, 0.35)' : 'rgba(59, 130, 246, 0.35)',
-                            color: u.projected_grade_10 >= 8.5 ? '#10b981' : '#3b82f6',
-                            fontWeight: 700,
-                          }}
-                        >
-                          {u.projected_grade_10 !== undefined && u.projected_grade_10 !== null
-                            ? `${Number(u.projected_grade_10).toFixed(1)} / 10`
-                            : '—'}
-                        </span>
-                      </td>
-
-                      <td style={{ textAlign: 'center', fontSize: '0.85rem' }}>
-                        <span style={{ color: 'var(--text-secondary)' }}>
-                          {u.score_bot || 0} • {u.score_ai_profile || 0} • {u.score_interview || 0} • {u.score_report || 0}
-                        </span>
-                      </td>
-
-                      <td style={{ textAlign: 'center' }}>
-                        <span className="admin-final-score-pill">
-                          {u.final_score !== undefined ? u.final_score : '—'}
-                        </span>
-                      </td>
-
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
-                          <button
-                            type="button"
-                            className="btn btn-outline btn-xs"
-                            onClick={() => setSelectedUserForEdit(u)}
-                            title="Chỉnh sửa thông tin thí sinh"
-                          >
-                            <Edit2 size={12} />
-                            <span>Sửa</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-xs btn-review-action"
-                            onClick={() => setSelectedUserForReview(u)}
-                            title="Hội đồng chấm điểm và đánh giá"
-                          >
-                            <Award size={12} />
-                            <span>Chấm</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 4: TOP 32 FINALS & OBSTACLES CONFIGURATION */}
-      {activeAdminTab === 'top32' && (
-        <div className="google-import-card animate-fade-in">
-          <div style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.35rem' }}>
-              <span className="round-badge">VÒNG CHUNG KẾT TOP 32</span>
-            </div>
-            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-              Cấu Hình Địa Hình Ô Chướng Ngại Vật (Bot v2)
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-              Để thử thách thuật toán tìm đường (A*, Minimax) tại Vòng Chung kết, hãy chọn các vị trí ô cấm đi trên bàn cờ 9×9. Cấu hình này sẽ được công bố ngay sau khi chốt Top 32 để thí sinh có 01 tuần thay đổi mã nguồn.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', flexWrap: 'wrap' }}>
-            {/* Interactive 9x9 Obstacle Cell Selector */}
-            <div>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                Bàn Cờ 9×9 Chọn Vị Trí Ô Cấm (Nhấp để bật/tắt):
-              </h4>
-              <div className="obstacles-grid-selector">
-                {['9', '8', '7', '6', '5', '4', '3', '2', '1'].map((row) =>
-                  ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'].map((col) => {
-                    const sq = `${col}${row}`;
-                    const isObs = top32Obstacles.includes(sq);
-                    const isGoal = sq === 'i9' || sq === 'a1';
-
-                    return (
-                      <button
-                        key={sq}
-                        type="button"
-                        disabled={isGoal}
-                        className={`obstacle-cell-toggle ${isObs ? 'is-obstacle' : ''}`}
-                        onClick={() => toggleObstacleCell(sq)}
-                        title={isGoal ? `Ô đích ${sq} không thể đặt cản` : `Ô ${sq}: ${isObs ? 'ĐANG LÀ Ô CẢN' : 'Bình thường'}`}
-                      >
-                        {isObs ? '✕' : isGoal ? '★' : sq}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Các ô cản hiện tại ({top32Obstacles.length} ô): <strong>{top32Obstacles.join(', ') || 'Chưa chọn'}</strong>
-              </span>
-            </div>
-
-            {/* Announcement & Save */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label htmlFor="top32-announcement-input" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
-                  Thông báo đổi luật cho 32 Thí sinh:
-                </label>
-                <textarea
-                  id="top32-announcement-input"
-                  rows={4}
-                  className="form-control"
-                  value={top32Announcement}
-                  onChange={(e) => setTop32Announcement(e.target.value)}
-                  placeholder="Thông báo danh sách ô cản, thời hạn nộp Bot v2..."
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  style={{ width: 'fit-content' }}
-                  onClick={handleSaveTop32Config}
-                  disabled={isSavingObstacles}
-                >
-                  <Check size={16} />
-                  <span>{isSavingObstacles ? 'Đang lưu...' : 'Lưu Cấu Hình Ô Cản Top 32'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  style={{ borderColor: 'rgba(245, 158, 11, 0.5)', color: '#fbbf24' }}
-                  onClick={() => setIsBenchmarkOpen(true)}
-                >
-                  <Shield size={16} color="#fbbf24" />
-                  <span>Mở Sandbox Benchmark Kiểm Thử</span>
-                </button>
-              </div>
-
-              {/* Seeds Preview */}
-              <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
-                <h5 style={{ fontSize: '0.9rem', fontWeight: 700, margin: '0 0 0.5rem' }}>
-                  Hạt Giống Top 32 Dẫn Đầu ({top32Seeds.length} thí sinh):
-                </h5>
-                <div style={{ maxHeight: '180px', overflowY: 'auto', fontSize: '0.8rem' }}>
-                  {top32Seeds.slice(0, 10).map((s) => (
-                    <div key={s.seed} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.25rem 0', borderBottom: '1px dashed var(--border-subtle)' }}>
-                      <span><strong>#{s.seed}</strong>. {s.name} ({s.student_id})</span>
-                      <span style={{ color: 'var(--primary-700)', fontWeight: 600 }}>{s.swiss_wins} thắng • {s.swiss_points} pts</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Grade Review Modal */}
-      {selectedUserForReview && (
-        <GradeReviewModal
-          user={selectedUserForReview}
-          isOpen={!!selectedUserForReview}
-          onClose={() => setSelectedUserForReview(null)}
-          onGraded={() => {
+        <Phase01Import
+          csvFile={csvFile}
+          setCsvFile={setCsvFile}
+          csvText={csvText}
+          setCsvText={setCsvText}
+          fileInputRef={fileInputRef}
+          deadlineInput={deadlineInput}
+          setDeadlineInput={setDeadlineInput}
+          pipelineStatus={pipelineStatus}
+          isPipelineRunning={isPipelineRunning}
+          onStartPipeline={handleStartPipeline}
+          onExportReport={handleExportValidationReport}
+          onNavigateToStudents={() => {
+            setActiveAdminTab('students');
             fetchDashboardData();
-            setSelectedUserForReview(null);
           }}
+          formatFileSize={formatFileSize}
+        />
+      )}
+
+      {activeAdminTab === 'students' && (
+        <Phase02Students
+          usersList={studentList}
+          paginatedUsers={paginatedUsers}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          submissionFilter={submissionFilter}
+          setSubmissionFilter={setSubmissionFilter}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+          totalPages={totalPages}
+          totalFilteredUsers={totalFilteredUsers}
+          onEditUser={(u) => setSelectedUserForEdit(u)}
+        />
+      )}
+
+      {activeAdminTab === 'tournament' && (
+        <Phase03Swiss
+          selectedSwissRound={selectedSwissRound}
+          setSelectedSwissRound={setSelectedSwissRound}
+          usersList={usersList}
+          totalRoundMatches={totalRoundMatches}
+          avgMatchesPerChunk={avgMatchesPerChunk}
+          swissStatus={swissStatus}
+          resultsStatus={resultsStatus}
+          isPairingSwiss={isPairingSwiss}
+          isPublishingSwiss={isPublishingSwiss}
+          isUploadingResult={isUploadingResult}
+          onTriggerSwissPair={handleTriggerSwissPair}
+          onTriggerSwissPublish={handleTriggerSwissPublish}
+          onDownloadAllChunksZip={handleDownloadAllChunksZip}
+          onDownloadSingleChunk={handleDownloadSingleChunk}
+          onUploadResultFile={handleUploadResultFile}
+          onResetRoundResults={handleResetRoundResults}
+          onDeleteChunkResult={handleDeleteChunkResult}
+        />
+      )}
+
+      {activeAdminTab === 'top32' && (
+        <Phase04Top32
+          top32Obstacles={top32Obstacles}
+          top32Announcement={top32Announcement}
+          setTop32Announcement={setTop32Announcement}
+          top32Seeds={top32Seeds}
+          toggleObstacleCell={toggleObstacleCell}
+          handleSaveTop32Config={handleSaveTop32Config}
+          isSavingObstacles={isSavingObstacles}
+          bracketData={bracketData}
+          onRunRound={handleRunRound}
+          isRunningRound={isRunningRound}
+          onResetBracket={handleResetBracket}
+          onFinalizeSeeds={handleFinalizeTop32Seeds}
+          isFinalizingSeeds={isFinalizingSeeds}
         />
       )}
 
@@ -1173,5 +727,3 @@ export function AdminDashboardPage() {
 }
 
 export default AdminDashboardPage;
-
-

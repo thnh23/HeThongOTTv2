@@ -1,64 +1,64 @@
+/* StatusBadge.css — Pixel Art Status Badges */
+
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.2rem 0.65rem;
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: capitalize;
-  letter-spacing: 0.02em;
+  gap: 0.45rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 0;
+  font-family: var(--font-subheading);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1.5px solid #000000;
+  box-shadow: 1.5px 1.5px 0px #000000;
 }
 
 .status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 0;
+  border: 1px solid #000000;
 }
 
 .status-pending {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--amber-400);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: #FEF3C7;
+  color: #B45309;
 }
 .status-pending .status-dot {
-  background: var(--amber-400);
+  background: #F59E0B;
 }
 
 .status-running {
-  background: rgba(34, 211, 238, 0.15);
-  color: var(--cyan-400);
-  border: 1px solid rgba(34, 211, 238, 0.3);
+  background: #E0F2FE;
+  color: #0369A1;
 }
 .status-running .status-dot {
-  background: var(--cyan-400);
-  box-shadow: 0 0 8px var(--cyan-400);
-  animation: pulseGlow 1.5s infinite;
+  background: #0284C7;
+  animation: pixelBlink 0.8s infinite steps(1);
 }
 
 .status-done, .status-valid, .status-win {
-  background: rgba(52, 211, 153, 0.15);
-  color: var(--emerald-400);
-  border: 1px solid rgba(52, 211, 153, 0.3);
+  background: #DCFCE7;
+  color: #15803D;
 }
 .status-done .status-dot, .status-valid .status-dot, .status-win .status-dot {
-  background: var(--emerald-400);
+  background: #16A34A;
 }
 
 .status-error, .status-invalid, .status-loss {
-  background: rgba(244, 63, 94, 0.15);
-  color: var(--rose-500);
-  border: 1px solid rgba(244, 63, 94, 0.3);
+  background: #FEE2E2;
+  color: #B91C1C;
 }
 .status-error .status-dot, .status-invalid .status-dot, .status-loss .status-dot {
-  background: var(--rose-500);
+  background: #DC2626;
 }
 
 .status-draw {
-  background: rgba(148, 163, 184, 0.15);
-  color: var(--text-secondary);
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: #F1F5F9;
+  color: #334155;
 }
 .status-draw .status-dot {
-  background: var(--text-secondary);
+  background: #64748B;
 }

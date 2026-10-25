@@ -154,11 +154,11 @@ export function GradeReviewModal({ isOpen, user, onClose, onGraded }) {
               <h2 className="review-modal-title">Hội Đồng Chấm Điểm &amp; Đánh Giá Học Phần</h2>
               {user.is_top32 ? (
                 <span className="top32-pill" style={{ background: '#f59e0b', color: '#000', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem' }}>
-                  ★ TOP 32 CHUNG KẾT
+                  TOP 32 CHUNG KẾT
                 </span>
               ) : (
                 <span className="swiss-hub-badge" style={{ fontSize: '0.75rem' }}>
-                  SWISS 13 VÒNG ({user.swiss_wins || 0}W - {user.swiss_points || 0} pts)
+                  VÒNG THỤY SĨ ({user.swiss_wins || 0}W - {user.swiss_points || 0} pts)
                 </span>
               )}
             </div>

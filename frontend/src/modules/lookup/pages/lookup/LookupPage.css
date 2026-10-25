@@ -1,5 +1,4 @@
-/* LookupPage CSS — Trang Tra Cứu Tình Trạng Bài Thi OTTv2 */
-/* Thiết kế chuẩn Light Academic Theme, tương phản cao, sắc nét, chống trùng màu */
+/* LookupPage CSS — Pixel Art Candidate & Submission Lookup */
 
 .lookup-page {
   padding: 2.5rem 1rem 4rem;
@@ -17,29 +16,33 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.35rem 0.95rem;
-  background: rgba(30, 58, 138, 0.08);
-  border: 1px solid rgba(30, 58, 138, 0.2);
-  border-radius: 999px;
-  font-size: 0.82rem;
+  padding: 0.35rem 0.85rem;
+  background: var(--bg-surface);
+  border: 1.5px solid #000000;
+  box-shadow: 1.5px 1.5px 0px #000000;
+  border-radius: 0;
+  font-family: var(--font-subheading);
+  font-size: 0.76rem;
   font-weight: 700;
-  color: var(--primary-500, #1E3A8A);
+  text-transform: uppercase;
+  color: var(--text-primary);
   margin-bottom: 1rem;
 }
 
 .lookup-title {
-  font-size: 2.2rem;
-  font-weight: 800;
+  font-size: 1.6rem;
+  font-weight: 700;
   margin-bottom: 0.75rem;
-  background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 55%, #0369A1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: -0.02em;
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.15);
+  letter-spacing: 0.02em;
 }
 
 .lookup-subtitle {
-  color: var(--text-secondary, #334155);
-  font-size: 0.98rem;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
   line-height: 1.6;
   max-width: 640px;
   margin: 0 auto 1.75rem;
@@ -64,46 +67,59 @@
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-muted, #64748B);
+  color: var(--text-muted);
   pointer-events: none;
 }
 
 .lookup-input {
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.75rem;
-  background: #FFFFFF !important;
-  border: 1.5px solid var(--border-subtle, #CBD5E1) !important;
-  border-radius: 10px;
-  color: var(--text-primary, #0F172A) !important;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
+  background: var(--bg-surface) !important;
+  border: 2px solid var(--border-bright) !important;
+  border-radius: 0;
+  color: var(--text-primary) !important;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
   outline: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: inset 2px 2px 0px rgba(0, 0, 0, 0.1);
 }
 
 .lookup-input:focus {
-  border-color: var(--primary-500, #1E3A8A) !important;
-  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12) !important;
+  border-color: var(--primary-500) !important;
 }
 
 .lookup-input::placeholder {
-  color: var(--text-muted, #94A3B8);
+  color: var(--text-muted);
 }
 
 .lookup-submit-btn {
   padding: 0.75rem 1.4rem;
-  font-weight: 600;
-  border-radius: 10px;
+  font-family: var(--font-subheading);
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  border-radius: 0;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   white-space: nowrap;
-  background: var(--primary-500, #1E3A8A);
+  background: var(--primary-500);
   color: #FFFFFF;
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
 .lookup-submit-btn:hover {
-  background: var(--primary-600, #172554);
+  background: var(--primary-400);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.lookup-submit-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #000000;
 }
 
 /* Loading Box */
@@ -114,56 +130,63 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  background: #FFFFFF;
-  border: 1px solid var(--border-subtle, #CBD5E1);
-  border-radius: 16px;
-  box-shadow: var(--shadow-sm);
-  color: var(--text-secondary, #334155);
+  background: var(--bg-surface);
+  border: 2px solid var(--border-bright);
+  border-radius: 0;
+  box-shadow: 3px 3px 0px #000000;
+  font-family: var(--font-subheading);
+  color: var(--text-secondary);
 }
 
 /* Not Found Box */
 .lookup-notfound-box {
   padding: 2.5rem 2rem;
   text-align: center;
-  border: 1px solid #FECDD3;
-  background: #FFFFFF;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(244, 63, 94, 0.08);
+  border: 2px solid #DC2626;
+  background: var(--bg-surface);
+  border-radius: 0;
+  box-shadow: 4px 4px 0px #000000;
 }
 
 .lookup-notfound-box h3 {
-  font-size: 1.35rem;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
   margin: 1rem 0 0.5rem;
-  color: #BE123C;
+  color: #DC2626;
 }
 
 .notfound-desc {
-  color: var(--text-secondary, #334155);
-  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
   margin-bottom: 1.5rem;
 }
 
 .notfound-desc strong {
-  color: #0F172A;
+  color: var(--text-primary);
 }
 
 .notfound-guide {
   text-align: left;
   max-width: 540px;
   margin: 0 auto;
-  background: #F8FAFC;
+  background: var(--bg-surface-elevated);
   padding: 1.1rem 1.35rem;
-  border-radius: 10px;
-  border: 1px solid var(--border-subtle, #CBD5E1);
-  font-size: 0.88rem;
-  color: var(--text-secondary, #334155);
+  border-radius: 0;
+  border: 1.5px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  color: var(--text-secondary);
 }
 
 .notfound-guide strong {
-  color: var(--text-primary, #0F172A);
+  color: var(--text-primary);
   display: block;
+  font-family: var(--font-subheading);
+  text-transform: uppercase;
   margin-bottom: 0.5rem;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
 }
 
 .notfound-guide ul {
@@ -179,10 +202,10 @@
 /* Result Card */
 .lookup-card {
   padding: 2.25rem 2rem;
-  border: 1px solid var(--border-subtle, #CBD5E1);
-  border-radius: 16px;
-  background: #FFFFFF;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+  border: 3px solid var(--border-bright);
+  border-radius: 0;
+  background: var(--bg-surface);
+  box-shadow: 4px 4px 0px #000000;
 }
 
 /* Status Banner */
@@ -191,18 +214,20 @@
   align-items: flex-start;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
-  border-radius: 12px;
+  border-radius: 0;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
   margin-bottom: 1.75rem;
 }
 
 .banner-valid {
-  background: #ECFDF5;
-  border: 1.5px solid #6EE7B7;
+  background: #DCFCE7;
+  color: #15803D;
 }
 
 .banner-invalid {
-  background: #FFFBEB;
-  border: 1.5px solid #FCD34D;
+  background: #FEF3C7;
+  color: #B45309;
 }
 
 .banner-icon {
@@ -211,31 +236,34 @@
 }
 
 .banner-text h3 {
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
   margin: 0 0 0.3rem;
-  letter-spacing: -0.01em;
+  text-transform: uppercase;
 }
 
 .banner-valid .banner-text h3 {
-  color: #065F46;
+  color: #15803D;
 }
 
 .banner-invalid .banner-text h3 {
-  color: #92400E;
+  color: #B45309;
 }
 
 .banner-valid .banner-text p {
   margin: 0;
-  font-size: 0.88rem;
-  color: #047857;
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  color: #166534;
   line-height: 1.5;
 }
 
 .banner-invalid .banner-text p {
   margin: 0;
-  font-size: 0.88rem;
-  color: #78350F;
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  color: #92400E;
   line-height: 1.5;
 }
 
@@ -245,9 +273,10 @@
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
   padding: 1.25rem;
-  background: #F8FAFC;
-  border: 1px solid var(--border-subtle, #CBD5E1);
-  border-radius: 10px;
+  background: var(--bg-surface-elevated);
+  border: 2px solid var(--border-bright);
+  box-shadow: 2px 2px 0px #000000;
+  border-radius: 0;
   margin-bottom: 1.5rem;
 }
 
@@ -258,28 +287,30 @@
 }
 
 .info-label {
-  font-size: 0.75rem;
-  color: var(--text-muted, #64748B);
+  font-family: var(--font-subheading);
+  font-size: 0.7rem;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   font-weight: 700;
 }
 
 .info-value {
   font-size: 0.95rem;
-  color: var(--text-primary, #0F172A);
+  color: var(--text-primary);
   font-weight: 700;
 }
 
 .bot-tag {
   display: inline-block;
-  background: rgba(30, 58, 138, 0.08);
-  color: var(--primary-500, #1E3A8A);
-  border: 1px solid rgba(30, 58, 138, 0.2);
+  background: var(--bg-surface);
+  color: var(--primary-500);
+  border: 1.5px solid #000000;
+  box-shadow: 1px 1px 0px #000000;
   padding: 0.15rem 0.5rem;
-  border-radius: 4px;
+  border-radius: 0;
   font-weight: 700;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   width: fit-content;
 }
@@ -287,9 +318,10 @@
 /* Commit Lock Box */
 .commit-lock-box {
   padding: 1.25rem;
-  background: #F8FAFC;
-  border: 1px solid var(--border-subtle, #CBD5E1);
-  border-radius: 10px;
+  background: var(--bg-surface-elevated);
+  border: 2px solid var(--border-bright);
+  box-shadow: 2px 2px 0px #000000;
+  border-radius: 0;
   margin-bottom: 1.75rem;
 }
 
@@ -300,22 +332,19 @@
   margin-bottom: 0.85rem;
   flex-wrap: wrap;
   gap: 0.5rem;
-  color: var(--text-primary, #0F172A);
+  font-family: var(--font-subheading);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  color: var(--text-primary);
 }
 
 .repo-link {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  color: var(--primary-500, #1E3A8A);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.repo-link:hover {
-  color: var(--primary-400, #1D4ED8);
+  color: var(--primary-500);
+  font-size: 0.82rem;
+  font-weight: 700;
   text-decoration: underline;
 }
 
@@ -324,48 +353,51 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 1.5rem;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
 }
 
 .commit-metric {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  color: var(--text-primary, #0F172A);
+  color: var(--text-primary);
 }
 
 .metric-title {
-  color: var(--text-secondary, #475569);
-  font-weight: 500;
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .commit-hash-code {
   padding: 0.2rem 0.5rem;
-  background: #E2E8F0 !important;
-  border: 1px solid #CBD5E1 !important;
-  border-radius: 4px;
-  font-family: var(--font-mono, monospace);
-  color: #0F172A !important;
+  background: var(--bg-surface) !important;
+  border: 1.5px solid #000000 !important;
+  box-shadow: 1px 1px 0px #000000;
+  border-radius: 0;
+  font-family: var(--font-mono);
+  color: var(--text-primary) !important;
   font-weight: 700;
 }
 
 .commit-badge {
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 0;
+  border: 1.5px solid #000000;
+  box-shadow: 1px 1px 0px #000000;
+  font-family: var(--font-subheading);
+  font-size: 0.72rem;
   font-weight: 700;
+  text-transform: uppercase;
 }
 
 .badge-green {
-  background: #ECFDF5;
-  color: #065F46;
-  border: 1px solid #A7F3D0;
+  background: #DCFCE7;
+  color: #15803D;
 }
 
 .badge-yellow {
-  background: #FFFBEB;
-  color: #92400E;
-  border: 1px solid #FDE68A;
+  background: #FEF3C7;
+  color: #B45309;
 }
 
 /* Criteria Cards */
@@ -374,10 +406,12 @@
 }
 
 .checklist-heading {
-  font-size: 1.05rem;
-  font-weight: 800;
+  font-family: var(--font-subheading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
   margin: 0 0 1rem;
-  color: var(--text-primary, #0F172A);
+  color: var(--text-primary);
 }
 
 .criteria-cards-grid {
@@ -388,16 +422,18 @@
 
 .criteria-card {
   padding: 1.2rem;
-  border-radius: 10px;
+  border-radius: 0;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform var(--transition-fast);
 }
 
 .criteria-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
 }
 
 .criteria-card-top {
@@ -408,51 +444,44 @@
 }
 
 .card-pass {
-  background: #F0FDF4;
-  border: 1.5px solid #BBF7D0;
-  color: #065F46;
-}
-
-.card-pass .criteria-card-top {
-  color: #10B981;
+  background: #DCFCE7;
+  color: #15803D;
 }
 
 .card-pass strong {
-  font-size: 0.92rem;
-  color: #065F46;
+  font-family: var(--font-subheading);
+  font-size: 0.88rem;
+  text-transform: uppercase;
 }
 
 .card-pass span {
-  font-size: 0.82rem;
-  color: #047857;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
 }
 
 .card-fail {
-  background: #FFF1F2;
-  border: 1.5px solid #FECDD3;
-  color: #9F1239;
-}
-
-.card-fail .criteria-card-top {
-  color: #F43F5E;
+  background: #FEE2E2;
+  color: #B91C1C;
 }
 
 .card-fail strong {
-  font-size: 0.92rem;
-  color: #9F1239;
+  font-family: var(--font-subheading);
+  font-size: 0.88rem;
+  text-transform: uppercase;
 }
 
 .card-fail span {
-  font-size: 0.82rem;
-  color: #BE123C;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
 }
 
 /* Errors Box */
 .lookup-errors-box {
   padding: 1.35rem;
-  background: #FFF1F2;
-  border: 1.5px solid #FECDD3;
-  border-radius: 12px;
+  background: #FEE2E2;
+  border: 2px solid #DC2626;
+  box-shadow: 3px 3px 0px #000000;
+  border-radius: 0;
   margin-bottom: 1.25rem;
 }
 
@@ -461,8 +490,11 @@
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
-  color: #BE123C;
-  font-size: 0.95rem;
+  color: #DC2626;
+  font-family: var(--font-subheading);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .errors-list {
@@ -476,22 +508,26 @@
   align-items: flex-start;
   gap: 0.5rem;
   margin-bottom: 0.4rem;
-  font-size: 0.9rem;
-  color: #9F1239;
-  font-weight: 500;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: #991B1B;
+  font-weight: 600;
 }
 
 .how-to-fix {
   padding: 1rem 1.25rem;
-  background: #FFFFFF;
-  border: 1px solid #FECDD3;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  color: var(--text-secondary, #334155);
+  background: var(--bg-surface);
+  border: 1.5px solid #000000;
+  border-radius: 0;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
 }
 
 .how-to-fix strong {
-  color: var(--text-primary, #0F172A);
+  color: var(--text-primary);
+  font-family: var(--font-subheading);
+  text-transform: uppercase;
 }
 
 .how-to-fix ol {
@@ -505,20 +541,22 @@
 }
 
 .how-to-fix code {
-  background: #E2E8F0;
-  color: #0F172A;
-  border: 1px solid #CBD5E1;
+  background: var(--bg-surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid #000000;
   padding: 0.1rem 0.35rem;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 /* Warnings Box */
 .lookup-warnings-box {
   padding: 1rem 1.25rem;
-  background: #FFFBEB;
-  border: 1.5px solid #FDE68A;
-  border-radius: 10px;
-  font-size: 0.88rem;
+  background: #FEF3C7;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  border-radius: 0;
+  font-size: 0.85rem;
+  font-family: var(--font-body);
 }
 
 .lookup-warnings-box .box-title {
@@ -538,19 +576,15 @@
     flex-direction: column;
     align-items: stretch;
   }
-
   .lookup-title {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
   }
-
   .candidate-info-grid {
     grid-template-columns: 1fr;
   }
-
   .criteria-cards-grid {
     grid-template-columns: 1fr;
   }
-
   .lookup-card {
     padding: 1.25rem;
   }

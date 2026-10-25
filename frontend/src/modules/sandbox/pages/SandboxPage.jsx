@@ -18,6 +18,7 @@ import {
   Clock,
   Swords,
   Award,
+  X,
 } from 'lucide-react';
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
 import { INITIAL_BOARD } from '@/shared/constants/gameState.js';
@@ -215,7 +216,7 @@ export function SandboxPage() {
                         onClick={() => handleToggleObstacle(sq)}
                         title="Bấm để gỡ bỏ"
                       >
-                        {sq.toUpperCase()} ✕
+                        {sq.toUpperCase()} <X size={11} style={{ marginLeft: '3px' }} />
                       </span>
                     ))}
                     <button
@@ -331,7 +332,7 @@ export function SandboxPage() {
                       result.is_latency_compliant ? 'badge-success' : 'badge-danger'
                     }`}
                   >
-                    {result.is_latency_compliant ? '✓ Đạt (≤300ms)' : '✕ Quá 300ms (Thua T1)'}
+                    {result.is_latency_compliant ? 'Đạt chuẩn (≤300ms)' : 'Vượt 300ms (Thua T1)'}
                   </span>
                 </div>
 
@@ -369,7 +370,7 @@ export function SandboxPage() {
                         result.is_obstacle_compliant ? 'badge-success' : 'badge-danger'
                       }`}
                     >
-                      {result.is_obstacle_compliant ? '✓ Đạt' : '✕ Thua T1'}
+                      {result.is_obstacle_compliant ? 'Đạt chuẩn' : 'Xử thua T1'}
                     </span>
                   </div>
                 )}

@@ -2,6 +2,7 @@
 OTTv2 Tournament — FastAPI Main Application
 """
 
+import asyncio
 from contextlib import asynccontextmanager
 import logging
 from fastapi import FastAPI, Request
@@ -11,7 +12,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import create_all_tables
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.routers import auth, submit, matches, leaderboard, admin
+from app.features import (
+    auth_router,
+    submission_router,
+    sandbox_router,
+    matches_router,
+    leaderboard_router,
+    admin_router,
+)
 from app.websocket import websocket_router
 
 logger = logging.getLogger("ottv2.api")
@@ -24,7 +32,7 @@ async def lifespan(app: FastAPI):
     try:
         from app.database import SessionLocal
         from app.models.user import User
-        from app.routers.auth import hash_password
+        from app.features.auth.service import hash_password
         with SessionLocal() as db:
             admin_user = db.query(User).filter(User.is_admin == True).first()
             if not admin_user:
@@ -41,9 +49,25 @@ async def lifespan(app: FastAPI):
                 db.add(admin_user)
                 db.commit()
                 logger.info("Đã khởi tạo tài khoản Admin mặc định: admin@uet.vnu.edu.vn / admin123")
+
+            # Đồng bộ mật khẩu mặc định (MSSV) cho các tài khoản sinh viên được import từ Google Form
+            unhashed_students = db.query(User).filter(User.hashed_password == "student_auto_hash").all()
+            if unhashed_students:
+                for stu in unhashed_students:
+                    default_pwd = stu.student_id or (stu.email.split("@")[0] if "@" in stu.email else stu.id[:8])
+                    stu.hashed_password = hash_password(default_pwd)
+                db.commit()
+                logger.info(f"Đã đồng bộ mật khẩu mặc định (MSSV) cho {len(unhashed_students)} tài khoản sinh viên.")
     except Exception as e:
-        logger.warning("Không thể tự động nạp tài khoản admin: %s", e)
-    yield
+        logger.warning("Không thể tự động nạp tài khoản admin hoặc sửa mật khẩu: %s", e)
+
+
+    try:
+        yield
+    except (asyncio.CancelledError, KeyboardInterrupt):
+        pass
+    finally:
+        logger.info("Đã dọn dẹp và dừng backend an toàn.")
 
 
 
@@ -71,28 +95,49 @@ async def global_exception_handler(request: Request, exc: Exception):
 # ── Rate Limiting Middleware ────────────────────
 app.add_middleware(RateLimitMiddleware, default_limit=180, window_seconds=60)
 
-# ── CORS ────────────────────────────────────────
+# ── Production Security Headers Middleware ──────
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+    return response
+
+# ── CORS Hardening ──────────────────────────────
+cors_origins = [
+    settings.FRONTEND_URL,
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8000",
+]
+if getattr(settings, "ALLOWED_ORIGINS", ""):
+    for origin in settings.ALLOWED_ORIGINS.split(","):
+        orig_clean = origin.strip()
+        if orig_clean and orig_clean not in cors_origins:
+            cors_origins.append(orig_clean)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        settings.FRONTEND_URL,
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://localhost:8000",
-    ],
-    allow_origin_regex=r"https?://.*",
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
     allow_headers=["*"],
 )
 
 
-# ── Routers ─────────────────────────────────────
-app.include_router(auth.router)
-app.include_router(submit.router)
-app.include_router(matches.router)
-app.include_router(leaderboard.router)
-app.include_router(admin.router)
+# ── Feature Routers ─────────────────────────────
+app.include_router(auth_router)
+app.include_router(submission_router)
+app.include_router(sandbox_router)
+app.include_router(matches_router)
+app.include_router(leaderboard_router)
+app.include_router(admin_router)
 app.include_router(websocket_router)
 
 

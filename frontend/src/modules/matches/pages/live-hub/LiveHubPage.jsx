@@ -10,6 +10,7 @@ import {
   AlertCircle,
   CheckCircle2,
   ArrowRight,
+  Trophy,
 } from 'lucide-react';
 import { apiClient } from '@/shared/api-client/index.js';
 import { StatusBadge } from '@/shared/components/StatusBadge/StatusBadge.jsx';
@@ -114,12 +115,12 @@ export function LiveHubPage() {
 
                 <div className="live-card-players">
                   <div className="live-player-item white">
-                    <span className="player-side-icon">⚪</span>
+                    <span className="player-side-icon" style={{ fontWeight: 700, fontSize: '0.8rem' }}>W</span>
                     <span className="player-label-name">{m.bot_a_name || 'Bot White'}</span>
                   </div>
                   <span className="live-vs-text">VS</span>
                   <div className="live-player-item black">
-                    <span className="player-side-icon">🔴</span>
+                    <span className="player-side-icon" style={{ fontWeight: 700, fontSize: '0.8rem' }}>B</span>
                     <span className="player-label-name">{m.bot_b_name || 'Bot Black'}</span>
                   </div>
                 </div>
@@ -165,12 +166,12 @@ export function LiveHubPage() {
                 </div>
 
                 <div className="recent-opponents-text">
-                  <span style={{ fontWeight: m.winner === 'W' ? 700 : 400, color: m.winner === 'W' ? 'var(--cyan-400)' : 'inherit' }}>
-                    {m.bot_a_name} {m.winner === 'W' && '🏆'}
+                  <span style={{ fontWeight: m.winner === 'W' ? 700 : 400, color: m.winner === 'W' ? 'var(--cyan-400)' : 'inherit', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                    {m.bot_a_name} {m.winner === 'W' && <Trophy size={13} className="text-amber-500" />}
                   </span>
                   <span className="vs-muted">vs</span>
-                  <span style={{ fontWeight: m.winner === 'B' ? 700 : 400, color: m.winner === 'B' ? 'var(--cyan-400)' : 'inherit' }}>
-                    {m.bot_b_name} {m.winner === 'B' && '🏆'}
+                  <span style={{ fontWeight: m.winner === 'B' ? 700 : 400, color: m.winner === 'B' ? 'var(--cyan-400)' : 'inherit', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                    {m.bot_b_name} {m.winner === 'B' && <Trophy size={13} className="text-amber-500" />}
                   </span>
                 </div>
 

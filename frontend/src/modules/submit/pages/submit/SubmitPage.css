@@ -1,5 +1,5 @@
 /* =========================================================================
-   SubmitPage CSS — Cổng Nộp Bài & Tra Cứu Thẩm Định (Google Form + GitHub)
+   SubmitPage CSS — Pixel Art Cổng Nộp Bài & Hướng Dẫn
    ========================================================================= */
 
 .submit-page {
@@ -24,34 +24,40 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.35rem 0.95rem;
-  font-size: 0.825rem;
-  font-weight: 600;
-  color: var(--cyan-400);
-  background: rgba(34, 211, 238, 0.08);
-  border: 1px solid rgba(34, 211, 238, 0.25);
-  border-radius: var(--radius-full);
-  letter-spacing: 0.02em;
+  padding: 0.35rem 0.85rem;
+  font-family: var(--font-subheading);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--primary-500);
+  background: var(--bg-surface);
+  border: 1.5px solid #000000;
+  box-shadow: 1.5px 1.5px 0px #000000;
+  border-radius: 0;
+  letter-spacing: 0.05em;
 }
 
 .submit-main-title {
-  font-size: 2.5rem;
-  font-weight: 800;
-  line-height: 1.2;
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.35;
   margin: 0 0 0.85rem;
-  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.15);
 }
 
 .submit-subtitle {
   color: var(--text-secondary);
-  font-size: 1.05rem;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
   line-height: 1.6;
   max-width: 760px;
   margin: 0 auto 1.5rem;
 }
 
 .highlight-danger {
-  color: #f43f5e;
+  color: #DC2626;
   font-weight: 700;
 }
 
@@ -64,49 +70,44 @@
 }
 
 .btn-glow {
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-  transition: all var(--transition-normal);
-}
-
-.btn-glow:hover {
-  box-shadow: 0 0 30px rgba(99, 102, 241, 0.65);
-  transform: translateY(-2px);
+  box-shadow: 3px 3px 0px #000000;
 }
 
 .btn-amber {
-  border-color: rgba(245, 158, 11, 0.45) !important;
-  color: #fbbf24 !important;
+  border-color: #000000 !important;
+  background: #FEF3C7 !important;
+  color: #B45309 !important;
 }
 
 .btn-amber:hover {
-  background: rgba(245, 158, 11, 0.12) !important;
-  border-color: #fbbf24 !important;
+  background: #FDE68A !important;
 }
 
-/* ── FORFEIT RULE CARD (CẢNH BÁO XỬ THUA) ── */
+/* ── FORFEIT RULE CARD ── */
 .forfeit-rule-card {
   display: flex;
   gap: 1.25rem;
-  background: #fff1f2;
-  border: 1px solid #fecdd3;
-  border-left: 4px solid #e11d48;
-  border-radius: var(--radius-lg);
+  background: #FEE2E2;
+  border: 2px solid #DC2626;
+  border-left: 6px solid #DC2626;
+  border-radius: 0;
   padding: 1.25rem 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 10px rgba(225, 29, 72, 0.06);
+  box-shadow: 3px 3px 0px #000000;
 }
 
 .forfeit-icon-wrap {
   flex-shrink: 0;
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-md);
-  background: #ffe4e6;
-  border: 1px solid #fecdd3;
+  border-radius: 0;
+  background: var(--bg-surface);
+  border: 2px solid #DC2626;
+  box-shadow: 2px 2px 0px #000000;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #e11d48;
+  color: #DC2626;
 }
 
 .forfeit-content {
@@ -123,21 +124,24 @@
 }
 
 .forfeit-title-row h3 {
-  font-size: 1.1rem;
+  font-family: var(--font-subheading);
+  font-size: 0.95rem;
   font-weight: 700;
+  text-transform: uppercase;
   margin: 0;
-  color: #9f1239;
+  color: #991B1B;
 }
 
 .forfeit-tag {
-  background: #ffe4e6;
-  color: #be123c;
-  border: 1px solid #fda4af;
-  padding: 0.15rem 0.6rem;
-  border-radius: var(--radius-full);
-  font-size: 0.725rem;
+  background: #DC2626;
+  color: #FFFFFF;
+  border: 1px solid #000000;
+  padding: 0.15rem 0.55rem;
+  border-radius: 0;
+  font-family: var(--font-subheading);
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -151,33 +155,35 @@
 }
 
 .forfeit-list li {
-  font-size: 0.875rem;
-  color: #334155;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: #7F1D1D;
   line-height: 1.5;
   padding-left: 1.25rem;
   position: relative;
 }
 
 .forfeit-list li::before {
-  content: '•';
+  content: '>';
   position: absolute;
-  left: 0.3rem;
-  font-size: 1.1rem;
-  color: #e11d48;
-  line-height: 1;
+  left: 0.2rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #DC2626;
 }
 
 .forfeit-list strong {
-  color: #0f172a;
+  color: #991B1B;
 }
 
 .forfeit-list code {
-  background: #f1f5f9;
-  color: #0369a1;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-surface);
+  color: #DC2626;
+  border: 1px solid #DC2626;
   padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-  font-size: 0.825rem;
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
 }
 
 /* ── 2-Column Info Grid ── */
@@ -196,39 +202,33 @@
 }
 
 .card-title {
-  font-size: 1.25rem;
+  font-family: var(--font-subheading);
+  font-size: 1.05rem;
   font-weight: 700;
+  text-transform: uppercase;
   margin: 0;
   color: var(--text-primary);
 }
 
 .card-subtitle {
-  font-size: 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
   color: var(--text-muted);
 }
 
-.icon-badge-cyan {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  background: rgba(34, 211, 238, 0.1);
-  border: 1px solid rgba(34, 211, 238, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
+.icon-badge-cyan,
 .icon-badge-indigo {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  background: rgba(99, 102, 241, 0.12);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  width: 40px;
+  height: 40px;
+  border-radius: 0;
+  background: var(--primary-500);
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  color: #FFFFFF;
 }
 
 /* Form Structure List */
@@ -243,25 +243,28 @@
   display: flex;
   gap: 0.85rem;
   padding: 0.85rem 1rem;
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: var(--bg-surface-elevated);
+  border: 1.5px solid var(--border-bright);
+  box-shadow: 1.5px 1.5px 0px #000000;
   transition: all var(--transition-fast);
 }
 
 .form-field-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: var(--border-bright);
+  background: var(--bg-card-hover);
+  transform: translate(-1px, -1px);
 }
 
 .field-number {
   width: 26px;
   height: 26px;
-  border-radius: 50%;
-  background: rgba(34, 211, 238, 0.15);
-  color: var(--cyan-400);
+  border-radius: 0;
+  background: var(--primary-500);
+  border: 1px solid #000000;
+  color: #FFFFFF;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -281,24 +284,28 @@
 }
 
 .field-name {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-family: var(--font-subheading);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
   color: var(--text-primary);
 }
 
 .field-required {
-  font-size: 0.675rem;
+  font-family: var(--font-subheading);
+  font-size: 0.65rem;
   padding: 0.1rem 0.4rem;
-  border-radius: var(--radius-full);
-  background: rgba(244, 63, 94, 0.15);
-  color: #fb7185;
-  border: 1px solid rgba(244, 63, 94, 0.3);
+  border-radius: 0;
+  background: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #DC2626;
   text-transform: uppercase;
   font-weight: 700;
 }
 
 .field-desc {
-  font-size: 0.825rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
   color: var(--text-muted);
   line-height: 1.4;
   display: block;
@@ -320,10 +327,12 @@
 .step-circle {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
-  background: rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(99, 102, 241, 0.4);
-  color: var(--primary-400);
+  border-radius: 0;
+  background: var(--primary-500);
+  border: 1px solid #000000;
+  box-shadow: 1.5px 1.5px 0px #000000;
+  color: #FFFFFF;
+  font-family: var(--font-mono);
   font-weight: 700;
   font-size: 0.85rem;
   display: flex;
@@ -334,24 +343,29 @@
 }
 
 .step-body h4 {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-family: var(--font-subheading);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
   margin: 0 0 0.25rem;
   color: var(--text-primary);
 }
 
 .step-body p {
-  font-size: 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.84rem;
   color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;
 }
 
 .step-body code {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface-elevated);
   padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-  color: var(--cyan-400);
+  border-radius: 0;
+  border: 1px solid #000000;
+  font-family: var(--font-mono);
+  color: var(--primary-500);
 }
 
 /* ── Redirect CTA to Lookup Page ── */
@@ -362,10 +376,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  background: var(--bg-surface);
+  border: 2px solid var(--border-bright);
+  box-shadow: 3px 3px 0px #000000;
+  border-radius: 0;
 }
 
 .lookup-redirect-content {
@@ -382,15 +396,18 @@
 }
 
 .redirect-title {
-  font-size: 1.15rem;
+  font-family: var(--font-subheading);
+  font-size: 1.05rem;
   font-weight: 700;
+  text-transform: uppercase;
   margin: 0 0 0.25rem;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .redirect-desc {
-  font-size: 0.875rem;
-  color: #64748b;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;
 }
@@ -400,20 +417,14 @@
 }
 
 .lookup-redirect-actions .btn {
-  padding: 0.85rem 1.6rem;
-  font-size: 0.95rem;
+  padding: 0.75rem 1.4rem;
+  font-size: 0.85rem;
 }
 
 /* ── Responsive adjustments ── */
 @media (max-width: 900px) {
   .form-guide-grid {
     grid-template-columns: 1fr;
-  }
-  .git-checkout-strip {
-    grid-template-columns: 1fr;
-  }
-  .validation-grid-badges {
-    grid-template-columns: repeat(2, 1fr);
   }
   .forfeit-rule-card {
     flex-direction: column;
@@ -423,19 +434,6 @@
 
 @media (max-width: 600px) {
   .submit-main-title {
-    font-size: 1.85rem;
-  }
-  .lookup-search-form {
-    flex-direction: column;
-  }
-  .validation-grid-badges {
-    grid-template-columns: 1fr;
-  }
-  .lookup-actions-row {
-    justify-content: stretch;
-  }
-  .lookup-actions-row > * {
-    width: 100%;
-    justify-content: center;
+    font-size: 1.5rem;
   }
 }

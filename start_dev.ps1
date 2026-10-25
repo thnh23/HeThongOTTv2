@@ -13,7 +13,7 @@ Write-Host ""
 
 # 1. Khởi động Backend (FastAPI :8000)
 Write-Host "[*] Đang khởi động Backend FastAPI (Port 8000)..." -ForegroundColor Yellow
-$BackendCmd = "cd '$RootDir\backend'; if (Test-Path .venv\Scripts\Activate.ps1) { . .venv\Scripts\Activate.ps1 }; uvicorn app.main:app --reload --port 8000"
+$BackendCmd = "cd '$RootDir\backend'; if (Test-Path .venv\Scripts\Activate.ps1) { . .venv\Scripts\Activate.ps1 }; uvicorn app.main:app --reload --reload-dir app --port 8000"
 Start-Process powershell -ArgumentList "-NoExit", "-Command", $BackendCmd
 
 # 2. Khởi động Frontend (Vite :5173)

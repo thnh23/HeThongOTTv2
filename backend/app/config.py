@@ -26,6 +26,7 @@ class Settings(BaseSettings):
 
     # 4. CORS & Địa chỉ Web Client
     FRONTEND_URL: str = "http://localhost:5173"
+    ALLOWED_ORIGINS: str = ""
 
     # 5. Kênh nộp bài giải đấu (Trụ cột 1)
     GOOGLE_FORM_URL: str = "https://forms.gle/uak6BpK1RExMs41M8"

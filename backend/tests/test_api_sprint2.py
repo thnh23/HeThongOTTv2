@@ -12,7 +12,7 @@ from app.main import app
 from app.database import Base, engine, get_db
 from app.models.user import User
 from app.models.match import Match, Replay
-from app.routers.auth import hash_password, create_access_token
+from app.features.auth.service import hash_password, create_access_token
 
 
 @pytest.fixture

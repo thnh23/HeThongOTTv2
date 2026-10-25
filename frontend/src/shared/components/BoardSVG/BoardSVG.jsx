@@ -164,7 +164,10 @@ export function BoardSVG({
             const isDark = (cIdx + rIdx) % 2 === 0;
             const isWhiteGoal = sqName === 'i9';
             const isBlackGoal = sqName === 'a1';
-            const isObstacle = obstacles.includes(sqName);
+            const effectiveObstacles = (obstacles && obstacles.length > 0)
+              ? obstacles
+              : (boardState?.obstacles || []);
+            const isObstacle = effectiveObstacles.includes(sqName);
 
             const isSelected = selectedSquare === sqName;
             const isHighlighted = highlightedSquares.includes(sqName);
@@ -262,10 +265,12 @@ export function BoardSVG({
                     <text
                       x={x + cellSize / 2}
                       y={y + cellSize / 2 + 5}
-                      fontSize="17"
+                      fontSize="14"
+                      fontWeight="bold"
+                      fill="#94A3B8"
                       textAnchor="middle"
                     >
-                      🧱
+                      X
                     </text>
                   </g>
                 )}
@@ -292,11 +297,13 @@ export function BoardSVG({
                         <circle cx={x + cellSize / 2} cy={y + cellSize / 2} r="14" fill="rgba(245, 158, 11, 0.22)" />
                         <text
                           x={x + cellSize / 2}
-                          y={y + cellSize / 2 + 5}
-                          fontSize="15"
+                          y={y + cellSize / 2 + 4}
+                          fontSize="11"
+                          fontWeight="800"
+                          fill="#D97706"
                           textAnchor="middle"
                         >
-                          👑
+                          W2
                         </text>
                       </g>
                     )}
@@ -324,11 +331,13 @@ export function BoardSVG({
                         <circle cx={x + cellSize / 2} cy={y + cellSize / 2} r="14" fill="rgba(2, 132, 199, 0.22)" />
                         <text
                           x={x + cellSize / 2}
-                          y={y + cellSize / 2 + 5}
-                          fontSize="15"
+                          y={y + cellSize / 2 + 4}
+                          fontSize="11"
+                          fontWeight="800"
+                          fill="#0284C7"
                           textAnchor="middle"
                         >
-                          🎯
+                          B2
                         </text>
                       </g>
                     )}
@@ -361,16 +370,12 @@ export function BoardSVG({
                       strokeDasharray="4 2"
                       className="capturable-target-pulse"
                     />
-                    <text
-                      x={x + cellSize - 3}
-                      y={y + 11}
-                      fontSize="9"
-                      textAnchor="end"
+                    <circle
+                      cx={x + cellSize - 6}
+                      cy={y + 6}
+                      r="3"
                       fill="#DC2626"
-                      fontWeight="bold"
-                    >
-                      ⚔️
-                    </text>
+                    />
                   </g>
                 )}
 
@@ -554,25 +559,25 @@ export function BoardSVG({
           </div>
           {obstacles.length > 0 && (
             <div className="legend-item">
-              <span className="legend-obstacle">🧱</span>
+              <span className="legend-obstacle" style={{ fontWeight: 800 }}>X</span>
               <span>Ô Cản Top 32</span>
             </div>
           )}
         </div>
         <div className="legend-group goal-legend-group">
           <span className="goal-tag gold-tag" title="Nếu quân Trắng vào ô i9, Trắng thắng ngay (Mã W2)">
-            👑 i9: Đích Trắng
+            i9: Đích Trắng (W2)
           </span>
           <span className="goal-tag cyan-tag" title="Nếu quân Đen vào ô a1, Đen thắng ngay (Mã B2)">
-            🎯 a1: Đích Đen
+            a1: Đích Đen (B2)
           </span>
         </div>
         <div className="legend-group rules-mini-legend">
-          <span>👊 R ăn ✂️ S</span>
+          <span>R thắng S</span>
           <span>•</span>
-          <span>✂️ S ăn ✋ P</span>
+          <span>S thắng P</span>
           <span>•</span>
-          <span>✋ P ăn 👊 R</span>
+          <span>P thắng R</span>
         </div>
       </div>
     </div>

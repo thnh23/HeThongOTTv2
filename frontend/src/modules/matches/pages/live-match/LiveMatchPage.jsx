@@ -43,16 +43,16 @@ function getInitialBoardState() {
 }
 
 const END_CODE_EXPLANATIONS = {
-  W1: 'Trắng Thắng do Đen mất toàn bộ 1 loại quân (Kéo ✂️ / Búa 👊 / Bao ✋)',
-  W2: 'Trắng Thắng do đưa quân vào ô đích i9 👑',
-  W4: 'Trắng Thắng do Đen không còn nước đi hợp lệ (Stalemate)',
-  W5: 'Trắng Thắng do Đen quá thời gian (Timeout)',
-  W6: 'Trắng Thắng do Đen vi phạm quy tắc / ném ngoại lệ',
-  B1: 'Đen Thắng do Trắng mất toàn bộ 1 loại quân (Kéo ✂️ / Búa 👊 / Bao ✋)',
-  B2: 'Đen Thắng do đưa quân vào ô đích a1 🎯',
-  B4: 'Đen Thắng do Trắng không còn nước đi hợp lệ (Stalemate)',
-  B5: 'Đen Thắng do Trắng quá thời gian (Timeout)',
-  B6: 'Đen Thắng do Trắng vi phạm quy tắc / ném ngoại lệ',
+  W1: 'Trắng thắng do Đen mất toàn bộ 1 loại quân (Kéo / Búa / Bao)',
+  W2: 'Trắng thắng do đưa quân vào ô đích i9',
+  W4: 'Trắng thắng do Đen không còn nước đi hợp lệ (Stalemate)',
+  W5: 'Trắng thắng do Đen quá thời gian (Timeout)',
+  W6: 'Trắng thắng do Đen vi phạm quy tắc / ném ngoại lệ',
+  B1: 'Đen thắng do Trắng mất toàn bộ 1 loại quân (Kéo / Búa / Bao)',
+  B2: 'Đen thắng do đưa quân vào ô đích a1',
+  B4: 'Đen thắng do Trắng không còn nước đi hợp lệ (Stalemate)',
+  B5: 'Đen thắng do Trắng quá thời gian (Timeout)',
+  B6: 'Đen thắng do Trắng vi phạm quy tắc / ném ngoại lệ',
   D1: 'Bên hết nước đi bị xử thua',
   D2: 'Hòa cờ do vượt quá 200 nước hoặc lặp thế 3 lần',
   T1: 'Bot bị quá giờ (timeout) hoặc lỗi cú pháp',
@@ -432,13 +432,13 @@ export function LiveMatchPage() {
             <div className="player-subtitle">Quân Trắng (Đi trước) • {totalWhitePieces}/18 quân</div>
             <div className="piece-pills">
               <span className={`piece-pill ${pieceCounts.white.R === 0 ? 'zero' : ''}`} title="Búa (R)">
-                👊 {pieceCounts.white.R}/6
+                Búa: {pieceCounts.white.R}/6
               </span>
               <span className={`piece-pill ${pieceCounts.white.S === 0 ? 'zero' : ''}`} title="Kéo (S)">
-                ✂️ {pieceCounts.white.S}/6
+                Kéo: {pieceCounts.white.S}/6
               </span>
               <span className={`piece-pill ${pieceCounts.white.P === 0 ? 'zero' : ''}`} title="Bao (P)">
-                ✋ {pieceCounts.white.P}/6
+                Bao: {pieceCounts.white.P}/6
               </span>
             </div>
           </div>
@@ -464,11 +464,11 @@ export function LiveMatchPage() {
             <>
               <div className="outcome-text">
                 {matchData.winner === 'W' ? (
-                  <span className="text-white-win">Trắng Thắng 🏆</span>
+                  <span className="text-white-win">Trắng Thắng</span>
                 ) : matchData.winner === 'B' ? (
-                  <span className="text-black-win">Đen Thắng 🏆</span>
+                  <span className="text-black-win">Đen Thắng</span>
                 ) : (
-                  <span className="text-draw">Hòa Cờ 🤝</span>
+                  <span className="text-draw">Hòa Cờ</span>
                 )}
               </div>
               <div className="end-reason-badge" title={endExplanation}>
@@ -486,13 +486,13 @@ export function LiveMatchPage() {
             <div className="player-subtitle">Quân Đen • {totalBlackPieces}/18 quân</div>
             <div className="piece-pills" style={{ justifyContent: 'flex-end' }}>
               <span className={`piece-pill ${pieceCounts.black.r === 0 ? 'zero' : ''}`} title="Búa (r)">
-                👊 {pieceCounts.black.r}/6
+                Búa: {pieceCounts.black.r}/6
               </span>
               <span className={`piece-pill ${pieceCounts.black.s === 0 ? 'zero' : ''}`} title="Kéo (s)">
-                ✂️ {pieceCounts.black.s}/6
+                Kéo: {pieceCounts.black.s}/6
               </span>
               <span className={`piece-pill ${pieceCounts.black.p === 0 ? 'zero' : ''}`} title="Bao (p)">
-                ✋ {pieceCounts.black.p}/6
+                Bao: {pieceCounts.black.p}/6
               </span>
             </div>
           </div>
@@ -528,6 +528,7 @@ export function LiveMatchPage() {
             boardState={matchData.current_board}
             lastMove={matchData.last_move}
             size={isCinemaMode ? 620 : 520}
+            obstacles={matchData?.current_board?.obstacles || []}
           />
 
           {matchData.status === 'done' && (
@@ -607,7 +608,7 @@ export function LiveMatchPage() {
                   </span>
                   {m.captured && (
                     <span className="feed-captured-tag">
-                      ăn {m.captured === 'R' ? 'Búa 👊' : m.captured === 'S' ? 'Kéo ✂️' : 'Bao ✋'}
+                      ăn {m.captured === 'R' ? 'Búa' : m.captured === 'S' ? 'Kéo' : 'Bao'}
                     </span>
                   )}
                 </div>

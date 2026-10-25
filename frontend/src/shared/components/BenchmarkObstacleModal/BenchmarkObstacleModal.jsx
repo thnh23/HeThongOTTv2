@@ -49,8 +49,8 @@ export function BenchmarkObstacleModal({ isOpen, onClose, initialStudentId = '' 
       } else if (user?.student_id) {
         setStudentId(user.student_id);
       }
-      // Load top 32 obstacles from server if available
-      apiClient.get('/admin/top32/config')
+      // Load top 32 obstacles from public submit endpoint
+      apiClient.get('/submit/benchmark-obstacle/config')
         .then(res => {
           if (res?.obstacles && Array.isArray(res.obstacles)) {
             setObstacles(res.obstacles);
@@ -260,7 +260,7 @@ export function BenchmarkObstacleModal({ isOpen, onClose, initialStudentId = '' 
             {result && (
               <div className="benchmark-metrics-card animate-fade-in">
                 <h4 style={{ margin: '0 0 0.75rem', fontSize: '1rem', color: 'var(--amber-400)' }}>
-                  📊 Chỉ Số Hiệu Năng &amp; Tuân Thủ (Audit)
+                  Chỉ Số Hiệu Năng &amp; Tuân Thủ (Audit)
                 </h4>
 
                 <div className="metrics-grid">
@@ -268,7 +268,7 @@ export function BenchmarkObstacleModal({ isOpen, onClose, initialStudentId = '' 
                     <span className="metric-label">Độ trễ trung bình</span>
                     <strong className="metric-val">{result.average_move_time_ms} ms</strong>
                     <span className={`compliance-tag ${result.is_latency_compliant ? 'pass' : 'fail'}`}>
-                      {result.is_latency_compliant ? '✓ Đạt chuẩn (≤300ms)' : '⚠️ Vượt 300ms (Thua T1)'}
+                      {result.is_latency_compliant ? 'Đạt chuẩn (≤300ms)' : 'Vượt 300ms (Thua T1)'}
                     </span>
                   </div>
 
@@ -278,7 +278,7 @@ export function BenchmarkObstacleModal({ isOpen, onClose, initialStudentId = '' 
                       {result.is_obstacle_compliant ? '100% Hợp lệ' : 'Vi phạm ô cản'}
                     </strong>
                     <span className={`compliance-tag ${result.is_obstacle_compliant ? 'pass' : 'fail'}`}>
-                      {result.is_obstacle_compliant ? '✓ Không phạm luật' : '❌ Xử thua T1'}
+                      {result.is_obstacle_compliant ? 'Không phạm luật' : 'Xử thua T1'}
                     </span>
                   </div>
 
@@ -331,7 +331,7 @@ export function BenchmarkObstacleModal({ isOpen, onClose, initialStudentId = '' 
                   </span>
                   {currentMove && (
                     <span className="move-detail-pill">
-                      Lượt {currentMove.player === 'W' ? '⚪ Trắng' : '⚫ Đen'}: <strong>{currentMove.from} &rarr; {currentMove.to}</strong> ({currentMove.duration_ms}ms)
+                      Lượt {currentMove.player === 'W' ? 'Trắng' : 'Đen'}: <strong>{currentMove.from} &rarr; {currentMove.to}</strong> ({currentMove.duration_ms}ms)
                     </span>
                   )}
                 </div>

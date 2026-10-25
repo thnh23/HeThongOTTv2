@@ -225,6 +225,10 @@ def main():
         base_dir = os.path.dirname(args.chunk_file)
         output_path = os.path.join(base_dir, f"result_{str(chunk_id).zfill(2)}.json")
 
+    output_dir = os.path.dirname(output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
     payload = {
         "chunk_id": chunk_id,
         "round": round_num,

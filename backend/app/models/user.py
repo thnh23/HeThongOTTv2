@@ -42,12 +42,6 @@ class User(Base):
     moss_similarity: Mapped[float] = mapped_column(Float, default=0.0)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    # Điểm thành phần môn học (Thang điểm 100)
-    score_bot: Mapped[float] = mapped_column(Float, default=0.0)
-    score_ai_profile: Mapped[float] = mapped_column(Float, default=0.0)
-    score_interview: Mapped[float] = mapped_column(Float, default=0.0)
-    score_report: Mapped[float] = mapped_column(Float, default=0.0)
-
     # Quyền & Trạng thái
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -55,18 +49,6 @@ class User(Base):
     registered_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow
     )
-
-    @property
-    def final_score(self) -> float:
-        """Tính điểm tổng kết học phần theo trọng số chuẩn (Thang 100)."""
-        weights = {"bot": 0.40, "ai": 0.20, "interview": 0.25, "report": 0.15}
-        total = (
-            (self.score_bot or 0.0) * weights["bot"] +
-            (self.score_ai_profile or 0.0) * weights["ai"] +
-            (self.score_interview or 0.0) * weights["interview"] +
-            (self.score_report or 0.0) * weights["report"]
-        )
-        return round(total, 2)
 
     @property
     def projected_grade_10(self) -> str:

@@ -49,9 +49,28 @@ export function AuthProvider({ children }) {
     return userData;
   };
 
-  const register = async (name, email, password) => {
-    await apiClient.post('/auth/register', { name, email, password });
-    return login(email, password);
+  const reloadUser = async () => {
+    if (!token) return null;
+    try {
+      const userData = await apiClient.get('/auth/me');
+      setUser(userData);
+      return userData;
+    } catch {
+      return null;
+    }
+  };
+
+  const updateProfile = async (profileData) => {
+    const updated = await apiClient.put('/auth/profile', profileData);
+    setUser(updated);
+    return updated;
+  };
+
+  const changePassword = async (oldPassword, newPassword) => {
+    return await apiClient.post('/auth/change-password', {
+      old_password: oldPassword,
+      new_password: newPassword,
+    });
   };
 
   const logout = () => {
@@ -68,13 +87,16 @@ export function AuthProvider({ children }) {
         isAuthenticated: !!user,
         isLoading,
         login,
-        register,
         logout,
+        reloadUser,
+        updateProfile,
+        changePassword,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
+
 }
 
 export function useAuth() {

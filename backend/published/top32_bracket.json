@@ -1,0 +1,1641 @@
+{
+  "status": "initialized",
+  "total_seeds": 32,
+  "rounds": {
+    "r32": [
+      {
+        "id": "R32_M01",
+        "round": "r32",
+        "label": "1/16 - Trận 01",
+        "player_a": {
+          "seed": 1,
+          "id": "26108624-0232-4e96-b7c3-05825adb2a0f",
+          "name": "Dương Thanh Mai",
+          "student_id": "22021143",
+          "class_name": "INT3304 3",
+          "bot_name": "BetaBreaker_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 32,
+          "id": "a13c53f4-45bd-49a4-a908-bdaf76ad2a34",
+          "name": "Võ Trọng Nam",
+          "student_id": "22021124",
+          "class_name": "INT3304 5",
+          "bot_name": "HyperKnight_v2",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 2.0,
+        "score_b": 0.0,
+        "status": "completed",
+        "winner_id": "26108624-0232-4e96-b7c3-05825adb2a0f",
+        "winner_name": "Dương Thanh Mai",
+        "winner_seed": 1,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Dương Thanh Mai",
+            "black": "Võ Trọng Nam",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 120,
+            "reason": "Võ Trọng Nam (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Võ Trọng Nam",
+            "black": "Dương Thanh Mai",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 1,
+            "reason": "Võ Trọng Nam (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          }
+        ],
+        "loser_id": "a13c53f4-45bd-49a4-a908-bdaf76ad2a34",
+        "loser_name": "Võ Trọng Nam",
+        "loser_seed": 32
+      },
+      {
+        "id": "R32_M02",
+        "round": "r32",
+        "label": "1/16 - Trận 02",
+        "player_a": {
+          "seed": 16,
+          "id": "fe6b8195-e3fb-4fe6-a161-eba29916bd82",
+          "name": "Mai Đức Giáp",
+          "student_id": "22021051",
+          "class_name": "INT3304 5",
+          "bot_name": "NeoStriker_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 17,
+          "id": "f5247306-2f87-4638-ad21-f1e7bd575658",
+          "name": "Vũ Xuân Giáp",
+          "student_id": "22021180",
+          "class_name": "INT3304 5",
+          "bot_name": "ChronoAgent_v2",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.0,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "f5247306-2f87-4638-ad21-f1e7bd575658",
+        "winner_name": "Vũ Xuân Giáp",
+        "winner_seed": 17,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Mai Đức Giáp",
+            "black": "Vũ Xuân Giáp",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 91,
+            "reason": "Mai Đức Giáp (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Vũ Xuân Giáp",
+            "black": "Mai Đức Giáp",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 3,
+            "reason": "Vũ Xuân Giáp (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 3,
+            "type": "Blitz Tiebreaker",
+            "winner": "B",
+            "end_code": "T1",
+            "reason": "Mai Đức Giáp (Blitz) (W) xử thua T1: Bot tính toán quá giờ (0.1s timeout)."
+          }
+        ],
+        "loser_id": "fe6b8195-e3fb-4fe6-a161-eba29916bd82",
+        "loser_name": "Mai Đức Giáp",
+        "loser_seed": 16
+      },
+      {
+        "id": "R32_M03",
+        "round": "r32",
+        "label": "1/16 - Trận 03",
+        "player_a": {
+          "seed": 9,
+          "id": "978f606c-4b22-45e3-8fd3-b65da23baff0",
+          "name": "Đinh Gia Đạt",
+          "student_id": "22021158",
+          "class_name": "INT3304 4",
+          "bot_name": "VortexGuard_Lite",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 24,
+          "id": "43b76243-fb80-432a-b674-c0e9deb15fbe",
+          "name": "Đinh Bảo Giáp",
+          "student_id": "22021078",
+          "class_name": "INT3304 3",
+          "bot_name": "PhoenixAI_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.0,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "43b76243-fb80-432a-b674-c0e9deb15fbe",
+        "winner_name": "Đinh Bảo Giáp",
+        "winner_seed": 24,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Đinh Gia Đạt",
+            "black": "Đinh Bảo Giáp",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 1,
+            "reason": "Đinh Gia Đạt (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Đinh Bảo Giáp",
+            "black": "Đinh Gia Đạt",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 31,
+            "reason": "Đinh Bảo Giáp (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 3,
+            "type": "Blitz Tiebreaker",
+            "winner": "B",
+            "end_code": "T1",
+            "reason": "Đinh Gia Đạt (Blitz) (W) xử thua T1: Bot tính toán quá giờ (0.1s timeout)."
+          }
+        ],
+        "loser_id": "978f606c-4b22-45e3-8fd3-b65da23baff0",
+        "loser_name": "Đinh Gia Đạt",
+        "loser_seed": 9
+      },
+      {
+        "id": "R32_M04",
+        "round": "r32",
+        "label": "1/16 - Trận 04",
+        "player_a": {
+          "seed": 8,
+          "id": "c00594cc-ae88-4022-b9b0-b76d45693e91",
+          "name": "Hồ Quốc Phong",
+          "student_id": "22021071",
+          "class_name": "INT3304 1",
+          "bot_name": "MysticThinker_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 25,
+          "id": "d06ed4a6-f724-47db-8953-0a6055b2894e",
+          "name": "Trịnh Bảo Triết",
+          "student_id": "22021187",
+          "class_name": "INT3304 1",
+          "bot_name": "GreedyEngine_X",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.0,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "d06ed4a6-f724-47db-8953-0a6055b2894e",
+        "winner_name": "Trịnh Bảo Triết",
+        "winner_seed": 25,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Hồ Quốc Phong",
+            "black": "Trịnh Bảo Triết",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 1,
+            "reason": "Hồ Quốc Phong (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Trịnh Bảo Triết",
+            "black": "Hồ Quốc Phong",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 1,
+            "reason": "Trịnh Bảo Triết (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 3,
+            "type": "Blitz Tiebreaker",
+            "winner": "B",
+            "end_code": "T1",
+            "reason": "Hồ Quốc Phong (Blitz) (W) xử thua T1: Bot tính toán quá giờ (0.1s timeout)."
+          }
+        ],
+        "loser_id": "c00594cc-ae88-4022-b9b0-b76d45693e91",
+        "loser_name": "Hồ Quốc Phong",
+        "loser_seed": 8
+      },
+      {
+        "id": "R32_M05",
+        "round": "r32",
+        "label": "1/16 - Trận 05",
+        "player_a": {
+          "seed": 4,
+          "id": "a61a070e-8de8-48a2-a685-b9a4590193c8",
+          "name": "Hồ Thành Tú",
+          "student_id": "22021169",
+          "class_name": "INT3304 2",
+          "bot_name": "BlazeBreaker_Max",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 29,
+          "id": "0dd4ea97-45f7-4210-8e69-701c624d8e3e",
+          "name": "Hoàng Minh Khoa",
+          "student_id": "22021096",
+          "class_name": "INT3304 4",
+          "bot_name": "BlazeSniper_Prime",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.5,
+        "score_b": 0.5,
+        "status": "completed",
+        "winner_id": "a61a070e-8de8-48a2-a685-b9a4590193c8",
+        "winner_name": "Hồ Thành Tú",
+        "winner_seed": 4,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Hồ Thành Tú",
+            "black": "Hoàng Minh Khoa",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 180,
+            "reason": "Hoàng Minh Khoa (B) xử thua T1: Bot tính toán quá giờ (308ms > 300ms)."
+          },
+          {
+            "game": 2,
+            "white": "Hoàng Minh Khoa",
+            "black": "Hồ Thành Tú",
+            "winner": null,
+            "end_code": "D2",
+            "total_moves": 200,
+            "reason": "Hòa cờ theo luật D2: Ván đấu vượt quá 200 nước đi."
+          }
+        ],
+        "loser_id": "0dd4ea97-45f7-4210-8e69-701c624d8e3e",
+        "loser_name": "Hoàng Minh Khoa",
+        "loser_seed": 29
+      },
+      {
+        "id": "R32_M06",
+        "round": "r32",
+        "label": "1/16 - Trận 06",
+        "player_a": {
+          "seed": 13,
+          "id": "19fe2503-0b06-4782-a4b6-c27ccf6d695e",
+          "name": "Mai Gia Thắng",
+          "student_id": "22021009",
+          "class_name": "INT3304 2",
+          "bot_name": "BlazeKnight_v1",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 20,
+          "id": "85f3b76a-1045-42fd-9a91-5057acdf1bd6",
+          "name": "Ngô Tuấn Phong",
+          "student_id": "22021068",
+          "class_name": "INT3304 2",
+          "bot_name": "OmegaAI_v1",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 2.0,
+        "score_b": 0.0,
+        "status": "completed",
+        "winner_id": "19fe2503-0b06-4782-a4b6-c27ccf6d695e",
+        "winner_name": "Mai Gia Thắng",
+        "winner_seed": 13,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Mai Gia Thắng",
+            "black": "Ngô Tuấn Phong",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 22,
+            "reason": "Ngô Tuấn Phong (B) xử thua T1: Bot tính toán quá giờ (302ms > 300ms)."
+          },
+          {
+            "game": 2,
+            "white": "Ngô Tuấn Phong",
+            "black": "Mai Gia Thắng",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 71,
+            "reason": "Ngô Tuấn Phong (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          }
+        ],
+        "loser_id": "85f3b76a-1045-42fd-9a91-5057acdf1bd6",
+        "loser_name": "Ngô Tuấn Phong",
+        "loser_seed": 20
+      },
+      {
+        "id": "R32_M07",
+        "round": "r32",
+        "label": "1/16 - Trận 07",
+        "player_a": {
+          "seed": 12,
+          "id": "2c063d99-b6f4-45ae-9a55-9ab7b8594927",
+          "name": "Võ Thành Tài",
+          "student_id": "22021183",
+          "class_name": "INT3304 1",
+          "bot_name": "DragonAgent_X_Final",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 21,
+          "id": "8cd27891-3799-469d-905f-5d0052aa6c88",
+          "name": "Hồ Quốc An",
+          "student_id": "22021122",
+          "class_name": "INT3304 4",
+          "bot_name": "MiniMaxSolver_v2",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 0.5,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "8cd27891-3799-469d-905f-5d0052aa6c88",
+        "winner_name": "Hồ Quốc An",
+        "winner_seed": 21,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Võ Thành Tài",
+            "black": "Hồ Quốc An",
+            "winner": null,
+            "end_code": "D2",
+            "total_moves": 200,
+            "reason": "Hòa cờ theo luật D2: Ván đấu vượt quá 200 nước đi."
+          },
+          {
+            "game": 2,
+            "white": "Hồ Quốc An",
+            "black": "Võ Thành Tài",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 182,
+            "reason": "Võ Thành Tài (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          }
+        ],
+        "loser_id": "2c063d99-b6f4-45ae-9a55-9ab7b8594927",
+        "loser_name": "Võ Thành Tài",
+        "loser_seed": 12
+      },
+      {
+        "id": "R32_M08",
+        "round": "r32",
+        "label": "1/16 - Trận 08",
+        "player_a": {
+          "seed": 5,
+          "id": "129308c0-03cb-45f3-8425-84332a94433a",
+          "name": "Đỗ Bảo Khoa",
+          "student_id": "22021070",
+          "class_name": "INT3304 2",
+          "bot_name": "AlphaEngine_v2",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 28,
+          "id": "de718dff-885c-4480-b529-06e9410f653b",
+          "name": "Nguyễn Tuấn Tuấn",
+          "student_id": "22021109",
+          "class_name": "INT3304 1",
+          "bot_name": "GhostSniper_v2",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.0,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "de718dff-885c-4480-b529-06e9410f653b",
+        "winner_name": "Nguyễn Tuấn Tuấn",
+        "winner_seed": 28,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Đỗ Bảo Khoa",
+            "black": "Nguyễn Tuấn Tuấn",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 43,
+            "reason": "Đỗ Bảo Khoa (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Nguyễn Tuấn Tuấn",
+            "black": "Đỗ Bảo Khoa",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 1,
+            "reason": "Nguyễn Tuấn Tuấn (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 3,
+            "type": "Blitz Tiebreaker",
+            "winner": "B",
+            "end_code": "T1",
+            "reason": "Đỗ Bảo Khoa (Blitz) (W) xử thua T1: Bot tính toán quá giờ (0.1s timeout)."
+          }
+        ],
+        "loser_id": "129308c0-03cb-45f3-8425-84332a94433a",
+        "loser_name": "Đỗ Bảo Khoa",
+        "loser_seed": 5
+      },
+      {
+        "id": "R32_M09",
+        "round": "r32",
+        "label": "1/16 - Trận 09",
+        "player_a": {
+          "seed": 2,
+          "id": "f9e0d7f9-166f-43e0-8a30-c9bb8417d49b",
+          "name": "Trịnh Hữu Nga",
+          "student_id": "22021153",
+          "class_name": "INT3304 1",
+          "bot_name": "ZenithSolver_X",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 31,
+          "id": "8eb909da-a184-4189-9eed-4abc17b8e129",
+          "name": "Đinh Thanh Bích",
+          "student_id": "22021030",
+          "class_name": "INT3304 2",
+          "bot_name": "TigerStriker_Lite",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 0.5,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "8eb909da-a184-4189-9eed-4abc17b8e129",
+        "winner_name": "Đinh Thanh Bích",
+        "winner_seed": 31,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Trịnh Hữu Nga",
+            "black": "Đinh Thanh Bích",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 185,
+            "reason": "Trịnh Hữu Nga (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Đinh Thanh Bích",
+            "black": "Trịnh Hữu Nga",
+            "winner": null,
+            "end_code": "D2",
+            "total_moves": 200,
+            "reason": "Hòa cờ theo luật D2: Ván đấu vượt quá 200 nước đi."
+          }
+        ],
+        "loser_id": "f9e0d7f9-166f-43e0-8a30-c9bb8417d49b",
+        "loser_name": "Trịnh Hữu Nga",
+        "loser_seed": 2
+      },
+      {
+        "id": "R32_M10",
+        "round": "r32",
+        "label": "1/16 - Trận 10",
+        "player_a": {
+          "seed": 15,
+          "id": "b680da7e-aaaa-4e19-885e-a468c181ad8b",
+          "name": "Phạm Quang Hậu",
+          "student_id": "22021112",
+          "class_name": "INT3304 1",
+          "bot_name": "NeoBot_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 18,
+          "id": "ff0c86af-e0fb-4139-8d39-f771ead5708f",
+          "name": "Phạm Hải Nghĩa",
+          "student_id": "22021141",
+          "class_name": "INT3304 3",
+          "bot_name": "ChronoKnight_v2",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.5,
+        "score_b": 0.5,
+        "status": "completed",
+        "winner_id": "b680da7e-aaaa-4e19-885e-a468c181ad8b",
+        "winner_name": "Phạm Quang Hậu",
+        "winner_seed": 15,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Phạm Quang Hậu",
+            "black": "Phạm Hải Nghĩa",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 92,
+            "reason": "Phạm Hải Nghĩa (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Phạm Hải Nghĩa",
+            "black": "Phạm Quang Hậu",
+            "winner": null,
+            "end_code": "D2",
+            "total_moves": 200,
+            "reason": "Hòa cờ theo luật D2: Ván đấu vượt quá 200 nước đi."
+          }
+        ],
+        "loser_id": "ff0c86af-e0fb-4139-8d39-f771ead5708f",
+        "loser_name": "Phạm Hải Nghĩa",
+        "loser_seed": 18
+      },
+      {
+        "id": "R32_M11",
+        "round": "r32",
+        "label": "1/16 - Trận 11",
+        "player_a": {
+          "seed": 10,
+          "id": "85dba092-5824-4357-be1c-24f28c913e12",
+          "name": "Võ Văn Thắng",
+          "student_id": "22021188",
+          "class_name": "INT3304 1",
+          "bot_name": "TigerMaster_Prime",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 23,
+          "id": "5067203b-3386-4367-85f1-c64f933509e2",
+          "name": "Hồ Thị Mai",
+          "student_id": "22021069",
+          "class_name": "INT3304 2",
+          "bot_name": "HyperCore_X",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.5,
+        "score_b": 0.5,
+        "status": "completed",
+        "winner_id": "85dba092-5824-4357-be1c-24f28c913e12",
+        "winner_name": "Võ Văn Thắng",
+        "winner_seed": 10,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Võ Văn Thắng",
+            "black": "Hồ Thị Mai",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 36,
+            "reason": "Hồ Thị Mai (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Hồ Thị Mai",
+            "black": "Võ Văn Thắng",
+            "winner": null,
+            "end_code": "D2",
+            "total_moves": 200,
+            "reason": "Hòa cờ theo luật D2: Ván đấu vượt quá 200 nước đi."
+          }
+        ],
+        "loser_id": "5067203b-3386-4367-85f1-c64f933509e2",
+        "loser_name": "Hồ Thị Mai",
+        "loser_seed": 23
+      },
+      {
+        "id": "R32_M12",
+        "round": "r32",
+        "label": "1/16 - Trận 12",
+        "player_a": {
+          "seed": 7,
+          "id": "c3405c57-d7f1-43ea-83f6-d466b4bc64fd",
+          "name": "Hoàng Gia Huy",
+          "student_id": "22021055",
+          "class_name": "INT3304 2",
+          "bot_name": "ViperThinker_v2",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 26,
+          "id": "b55feb60-7d03-4f6d-b740-26fbfdc139af",
+          "name": "Lê Thành Giáp",
+          "student_id": "22021086",
+          "class_name": "INT3304 5",
+          "bot_name": "HyperAI_Prime",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.0,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "b55feb60-7d03-4f6d-b740-26fbfdc139af",
+        "winner_name": "Lê Thành Giáp",
+        "winner_seed": 26,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Hoàng Gia Huy",
+            "black": "Lê Thành Giáp",
+            "winner": null,
+            "end_code": "D2",
+            "total_moves": 200,
+            "reason": "Hòa cờ theo luật D2: Ván đấu vượt quá 200 nước đi."
+          },
+          {
+            "game": 2,
+            "white": "Lê Thành Giáp",
+            "black": "Hoàng Gia Huy",
+            "winner": null,
+            "end_code": "D2",
+            "total_moves": 200,
+            "reason": "Hòa cờ theo luật D2: Ván đấu vượt quá 200 nước đi."
+          },
+          {
+            "game": 3,
+            "type": "Blitz Tiebreaker",
+            "winner": "B",
+            "end_code": "T1",
+            "reason": "Hoàng Gia Huy (Blitz) (W) xử thua T1: Bot tính toán quá giờ (0.1s timeout)."
+          }
+        ],
+        "loser_id": "c3405c57-d7f1-43ea-83f6-d466b4bc64fd",
+        "loser_name": "Hoàng Gia Huy",
+        "loser_seed": 7
+      },
+      {
+        "id": "R32_M13",
+        "round": "r32",
+        "label": "1/16 - Trận 13",
+        "player_a": {
+          "seed": 3,
+          "id": "8d8be756-5739-4873-972c-46c517f51d0c",
+          "name": "Dương Minh Bích",
+          "student_id": "22021118",
+          "class_name": "INT3304 2",
+          "bot_name": "FrostStriker_Prime",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 30,
+          "id": "20ee2c45-2ef4-4232-ad1d-eeed9e530859",
+          "name": "Trần Đức Bích",
+          "student_id": "22021060",
+          "class_name": "INT3304 3",
+          "bot_name": "BetaBot_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.0,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "20ee2c45-2ef4-4232-ad1d-eeed9e530859",
+        "winner_name": "Trần Đức Bích",
+        "winner_seed": 30,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Dương Minh Bích",
+            "black": "Trần Đức Bích",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 152,
+            "reason": "Trần Đức Bích (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Trần Đức Bích",
+            "black": "Dương Minh Bích",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 32,
+            "reason": "Dương Minh Bích (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 3,
+            "type": "Blitz Tiebreaker",
+            "winner": "B",
+            "end_code": "T1",
+            "reason": "Dương Minh Bích (Blitz) (W) xử thua T1: Bot tính toán quá giờ (0.1s timeout)."
+          }
+        ],
+        "loser_id": "8d8be756-5739-4873-972c-46c517f51d0c",
+        "loser_name": "Dương Minh Bích",
+        "loser_seed": 3
+      },
+      {
+        "id": "R32_M14",
+        "round": "r32",
+        "label": "1/16 - Trận 14",
+        "player_a": {
+          "seed": 14,
+          "id": "3f5c0a59-c588-473f-85ab-e4d107a000fb",
+          "name": "Đinh Thành Đức",
+          "student_id": "22021089",
+          "class_name": "INT3304 5",
+          "bot_name": "DeepTactician_Lite",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 19,
+          "id": "66fad027-4eab-4409-9d15-09579d410f81",
+          "name": "Hoàng Thế Khôi",
+          "student_id": "22021110",
+          "class_name": "INT3304 5",
+          "bot_name": "HyperGuard_Prime",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 0.5,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "66fad027-4eab-4409-9d15-09579d410f81",
+        "winner_name": "Hoàng Thế Khôi",
+        "winner_seed": 19,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Đinh Thành Đức",
+            "black": "Hoàng Thế Khôi",
+            "winner": null,
+            "end_code": "D2",
+            "total_moves": 200,
+            "reason": "Hòa cờ theo luật D2: Ván đấu vượt quá 200 nước đi."
+          },
+          {
+            "game": 2,
+            "white": "Hoàng Thế Khôi",
+            "black": "Đinh Thành Đức",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 158,
+            "reason": "Đinh Thành Đức (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          }
+        ],
+        "loser_id": "3f5c0a59-c588-473f-85ab-e4d107a000fb",
+        "loser_name": "Đinh Thành Đức",
+        "loser_seed": 14
+      },
+      {
+        "id": "R32_M15",
+        "round": "r32",
+        "label": "1/16 - Trận 15",
+        "player_a": {
+          "seed": 11,
+          "id": "55af814f-141e-442a-9e3e-814e2d7a3405",
+          "name": "Lý Trọng Cường",
+          "student_id": "22021176",
+          "class_name": "INT3304 5",
+          "bot_name": "MegaBreaker_Prime",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 22,
+          "id": "5a9e767b-2c05-4c77-8006-9f71adf4e719",
+          "name": "Bùi Quốc Long",
+          "student_id": "22021154",
+          "class_name": "INT3304 2",
+          "bot_name": "FalconHunter_Prime",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 2.0,
+        "score_b": 0.0,
+        "status": "completed",
+        "winner_id": "55af814f-141e-442a-9e3e-814e2d7a3405",
+        "winner_name": "Lý Trọng Cường",
+        "winner_seed": 11,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Lý Trọng Cường",
+            "black": "Bùi Quốc Long",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 170,
+            "reason": "Bùi Quốc Long (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Bùi Quốc Long",
+            "black": "Lý Trọng Cường",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 1,
+            "reason": "Bùi Quốc Long (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          }
+        ],
+        "loser_id": "5a9e767b-2c05-4c77-8006-9f71adf4e719",
+        "loser_name": "Bùi Quốc Long",
+        "loser_seed": 22
+      },
+      {
+        "id": "R32_M16",
+        "round": "r32",
+        "label": "1/16 - Trận 16",
+        "player_a": {
+          "seed": 6,
+          "id": "1e5403b1-b275-4d9f-9bd7-2e6fd1d52fde",
+          "name": "Võ Thanh Châu",
+          "student_id": "22021119",
+          "class_name": "INT3304 4",
+          "bot_name": "NexusHunter_Lite",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 27,
+          "id": "e760a073-ae17-409b-a505-f5ab502a6638",
+          "name": "Trịnh Hữu Hậu",
+          "student_id": "22021140",
+          "class_name": "INT3304 5",
+          "bot_name": "GhostBot_Max",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 0.5,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "e760a073-ae17-409b-a505-f5ab502a6638",
+        "winner_name": "Trịnh Hữu Hậu",
+        "winner_seed": 27,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Võ Thanh Châu",
+            "black": "Trịnh Hữu Hậu",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 1,
+            "reason": "Võ Thanh Châu (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Trịnh Hữu Hậu",
+            "black": "Võ Thanh Châu",
+            "winner": null,
+            "end_code": "D2",
+            "total_moves": 200,
+            "reason": "Hòa cờ theo luật D2: Ván đấu vượt quá 200 nước đi."
+          }
+        ],
+        "loser_id": "1e5403b1-b275-4d9f-9bd7-2e6fd1d52fde",
+        "loser_name": "Võ Thanh Châu",
+        "loser_seed": 6
+      }
+    ],
+    "r16": [
+      {
+        "id": "R16_M01",
+        "round": "r16",
+        "label": "1/8 - Trận 01",
+        "player_a": {
+          "seed": 1,
+          "id": "26108624-0232-4e96-b7c3-05825adb2a0f",
+          "name": "Dương Thanh Mai",
+          "student_id": "22021143",
+          "class_name": "INT3304 3",
+          "bot_name": "BetaBreaker_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 17,
+          "id": "f5247306-2f87-4638-ad21-f1e7bd575658",
+          "name": "Vũ Xuân Giáp",
+          "student_id": "22021180",
+          "class_name": "INT3304 5",
+          "bot_name": "ChronoAgent_v2",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.0,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "f5247306-2f87-4638-ad21-f1e7bd575658",
+        "winner_name": "Vũ Xuân Giáp",
+        "winner_seed": 17,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Dương Thanh Mai",
+            "black": "Vũ Xuân Giáp",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 130,
+            "reason": "Vũ Xuân Giáp (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Vũ Xuân Giáp",
+            "black": "Dương Thanh Mai",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 40,
+            "reason": "Dương Thanh Mai (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 3,
+            "type": "Blitz Tiebreaker",
+            "winner": "B",
+            "end_code": "T1",
+            "reason": "Dương Thanh Mai (Blitz) (W) xử thua T1: Bot tính toán quá giờ (0.1s timeout)."
+          }
+        ],
+        "loser_id": "26108624-0232-4e96-b7c3-05825adb2a0f",
+        "loser_name": "Dương Thanh Mai",
+        "loser_seed": 1
+      },
+      {
+        "id": "R16_M02",
+        "round": "r16",
+        "label": "1/8 - Trận 02",
+        "player_a": {
+          "seed": 24,
+          "id": "43b76243-fb80-432a-b674-c0e9deb15fbe",
+          "name": "Đinh Bảo Giáp",
+          "student_id": "22021078",
+          "class_name": "INT3304 3",
+          "bot_name": "PhoenixAI_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 25,
+          "id": "d06ed4a6-f724-47db-8953-0a6055b2894e",
+          "name": "Trịnh Bảo Triết",
+          "student_id": "22021187",
+          "class_name": "INT3304 1",
+          "bot_name": "GreedyEngine_X",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.5,
+        "score_b": 0.5,
+        "status": "completed",
+        "winner_id": "43b76243-fb80-432a-b674-c0e9deb15fbe",
+        "winner_name": "Đinh Bảo Giáp",
+        "winner_seed": 24,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Đinh Bảo Giáp",
+            "black": "Trịnh Bảo Triết",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 2,
+            "reason": "Trịnh Bảo Triết (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Trịnh Bảo Triết",
+            "black": "Đinh Bảo Giáp",
+            "winner": null,
+            "end_code": "D2",
+            "total_moves": 200,
+            "reason": "Hòa cờ theo luật D2: Ván đấu vượt quá 200 nước đi."
+          }
+        ],
+        "loser_id": "d06ed4a6-f724-47db-8953-0a6055b2894e",
+        "loser_name": "Trịnh Bảo Triết",
+        "loser_seed": 25
+      },
+      {
+        "id": "R16_M03",
+        "round": "r16",
+        "label": "1/8 - Trận 03",
+        "player_a": {
+          "seed": 4,
+          "id": "a61a070e-8de8-48a2-a685-b9a4590193c8",
+          "name": "Hồ Thành Tú",
+          "student_id": "22021169",
+          "class_name": "INT3304 2",
+          "bot_name": "BlazeBreaker_Max",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 13,
+          "id": "19fe2503-0b06-4782-a4b6-c27ccf6d695e",
+          "name": "Mai Gia Thắng",
+          "student_id": "22021009",
+          "class_name": "INT3304 2",
+          "bot_name": "BlazeKnight_v1",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 0.0,
+        "score_b": 2.0,
+        "status": "completed",
+        "winner_id": "19fe2503-0b06-4782-a4b6-c27ccf6d695e",
+        "winner_name": "Mai Gia Thắng",
+        "winner_seed": 13,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Hồ Thành Tú",
+            "black": "Mai Gia Thắng",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 123,
+            "reason": "Hồ Thành Tú (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Mai Gia Thắng",
+            "black": "Hồ Thành Tú",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 4,
+            "reason": "Hồ Thành Tú (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          }
+        ],
+        "loser_id": "a61a070e-8de8-48a2-a685-b9a4590193c8",
+        "loser_name": "Hồ Thành Tú",
+        "loser_seed": 4
+      },
+      {
+        "id": "R16_M04",
+        "round": "r16",
+        "label": "1/8 - Trận 04",
+        "player_a": {
+          "seed": 21,
+          "id": "8cd27891-3799-469d-905f-5d0052aa6c88",
+          "name": "Hồ Quốc An",
+          "student_id": "22021122",
+          "class_name": "INT3304 4",
+          "bot_name": "MiniMaxSolver_v2",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 28,
+          "id": "de718dff-885c-4480-b529-06e9410f653b",
+          "name": "Nguyễn Tuấn Tuấn",
+          "student_id": "22021109",
+          "class_name": "INT3304 1",
+          "bot_name": "GhostSniper_v2",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.0,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "de718dff-885c-4480-b529-06e9410f653b",
+        "winner_name": "Nguyễn Tuấn Tuấn",
+        "winner_seed": 28,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Hồ Quốc An",
+            "black": "Nguyễn Tuấn Tuấn",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 32,
+            "reason": "Nguyễn Tuấn Tuấn (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Nguyễn Tuấn Tuấn",
+            "black": "Hồ Quốc An",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 138,
+            "reason": "Hồ Quốc An (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 3,
+            "type": "Blitz Tiebreaker",
+            "winner": "B",
+            "end_code": "T1",
+            "reason": "Hồ Quốc An (Blitz) (W) xử thua T1: Bot tính toán quá giờ (0.1s timeout)."
+          }
+        ],
+        "loser_id": "8cd27891-3799-469d-905f-5d0052aa6c88",
+        "loser_name": "Hồ Quốc An",
+        "loser_seed": 21
+      },
+      {
+        "id": "R16_M05",
+        "round": "r16",
+        "label": "1/8 - Trận 05",
+        "player_a": {
+          "seed": 31,
+          "id": "8eb909da-a184-4189-9eed-4abc17b8e129",
+          "name": "Đinh Thanh Bích",
+          "student_id": "22021030",
+          "class_name": "INT3304 2",
+          "bot_name": "TigerStriker_Lite",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 15,
+          "id": "b680da7e-aaaa-4e19-885e-a468c181ad8b",
+          "name": "Phạm Quang Hậu",
+          "student_id": "22021112",
+          "class_name": "INT3304 1",
+          "bot_name": "NeoBot_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.0,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "b680da7e-aaaa-4e19-885e-a468c181ad8b",
+        "winner_name": "Phạm Quang Hậu",
+        "winner_seed": 15,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Đinh Thanh Bích",
+            "black": "Phạm Quang Hậu",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 11,
+            "reason": "Đinh Thanh Bích (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Phạm Quang Hậu",
+            "black": "Đinh Thanh Bích",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 1,
+            "reason": "Phạm Quang Hậu (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 3,
+            "type": "Blitz Tiebreaker",
+            "winner": "B",
+            "end_code": "T1",
+            "reason": "Đinh Thanh Bích (Blitz) (W) xử thua T1: Bot tính toán quá giờ (0.1s timeout)."
+          }
+        ],
+        "loser_id": "8eb909da-a184-4189-9eed-4abc17b8e129",
+        "loser_name": "Đinh Thanh Bích",
+        "loser_seed": 31
+      },
+      {
+        "id": "R16_M06",
+        "round": "r16",
+        "label": "1/8 - Trận 06",
+        "player_a": {
+          "seed": 10,
+          "id": "85dba092-5824-4357-be1c-24f28c913e12",
+          "name": "Võ Văn Thắng",
+          "student_id": "22021188",
+          "class_name": "INT3304 1",
+          "bot_name": "TigerMaster_Prime",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 26,
+          "id": "b55feb60-7d03-4f6d-b740-26fbfdc139af",
+          "name": "Lê Thành Giáp",
+          "student_id": "22021086",
+          "class_name": "INT3304 5",
+          "bot_name": "HyperAI_Prime",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 1.0,
+        "score_b": 1.5,
+        "status": "completed",
+        "winner_id": "b55feb60-7d03-4f6d-b740-26fbfdc139af",
+        "winner_name": "Lê Thành Giáp",
+        "winner_seed": 26,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Võ Văn Thắng",
+            "black": "Lê Thành Giáp",
+            "winner": null,
+            "end_code": "D2",
+            "total_moves": 200,
+            "reason": "Hòa cờ theo luật D2: Ván đấu vượt quá 200 nước đi."
+          },
+          {
+            "game": 2,
+            "white": "Lê Thành Giáp",
+            "black": "Võ Văn Thắng",
+            "winner": null,
+            "end_code": "D2",
+            "total_moves": 200,
+            "reason": "Hòa cờ theo luật D2: Ván đấu vượt quá 200 nước đi."
+          },
+          {
+            "game": 3,
+            "type": "Blitz Tiebreaker",
+            "winner": "B",
+            "end_code": "T1",
+            "reason": "Võ Văn Thắng (Blitz) (W) xử thua T1: Bot tính toán quá giờ (0.1s timeout)."
+          }
+        ],
+        "loser_id": "85dba092-5824-4357-be1c-24f28c913e12",
+        "loser_name": "Võ Văn Thắng",
+        "loser_seed": 10
+      },
+      {
+        "id": "R16_M07",
+        "round": "r16",
+        "label": "1/8 - Trận 07",
+        "player_a": {
+          "seed": 30,
+          "id": "20ee2c45-2ef4-4232-ad1d-eeed9e530859",
+          "name": "Trần Đức Bích",
+          "student_id": "22021060",
+          "class_name": "INT3304 3",
+          "bot_name": "BetaBot_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 19,
+          "id": "66fad027-4eab-4409-9d15-09579d410f81",
+          "name": "Hoàng Thế Khôi",
+          "student_id": "22021110",
+          "class_name": "INT3304 5",
+          "bot_name": "HyperGuard_Prime",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 2.0,
+        "score_b": 0.0,
+        "status": "completed",
+        "winner_id": "20ee2c45-2ef4-4232-ad1d-eeed9e530859",
+        "winner_name": "Trần Đức Bích",
+        "winner_seed": 30,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Trần Đức Bích",
+            "black": "Hoàng Thế Khôi",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 8,
+            "reason": "Hoàng Thế Khôi (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Hoàng Thế Khôi",
+            "black": "Trần Đức Bích",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 41,
+            "reason": "Hoàng Thế Khôi (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          }
+        ],
+        "loser_id": "66fad027-4eab-4409-9d15-09579d410f81",
+        "loser_name": "Hoàng Thế Khôi",
+        "loser_seed": 19
+      },
+      {
+        "id": "R16_M08",
+        "round": "r16",
+        "label": "1/8 - Trận 08",
+        "player_a": {
+          "seed": 11,
+          "id": "55af814f-141e-442a-9e3e-814e2d7a3405",
+          "name": "Lý Trọng Cường",
+          "student_id": "22021176",
+          "class_name": "INT3304 5",
+          "bot_name": "MegaBreaker_Prime",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 27,
+          "id": "e760a073-ae17-409b-a505-f5ab502a6638",
+          "name": "Trịnh Hữu Hậu",
+          "student_id": "22021140",
+          "class_name": "INT3304 5",
+          "bot_name": "GhostBot_Max",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 0.0,
+        "score_b": 2.0,
+        "status": "completed",
+        "winner_id": "e760a073-ae17-409b-a505-f5ab502a6638",
+        "winner_name": "Trịnh Hữu Hậu",
+        "winner_seed": 27,
+        "game_results": [
+          {
+            "game": 1,
+            "white": "Lý Trọng Cường",
+            "black": "Trịnh Hữu Hậu",
+            "winner": "B",
+            "end_code": "T1",
+            "total_moves": 7,
+            "reason": "Lý Trọng Cường (W) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          },
+          {
+            "game": 2,
+            "white": "Trịnh Hữu Hậu",
+            "black": "Lý Trọng Cường",
+            "winner": "W",
+            "end_code": "T1",
+            "total_moves": 28,
+            "reason": "Lý Trọng Cường (B) xử thua T1: Bot tính toán quá giờ (0.3s timeout)."
+          }
+        ],
+        "loser_id": "55af814f-141e-442a-9e3e-814e2d7a3405",
+        "loser_name": "Lý Trọng Cường",
+        "loser_seed": 11
+      }
+    ],
+    "qf": [
+      {
+        "id": "QF_M01",
+        "round": "qf",
+        "label": "Tứ Kết - Trận 01",
+        "player_a": {
+          "seed": 17,
+          "id": "f5247306-2f87-4638-ad21-f1e7bd575658",
+          "name": "Vũ Xuân Giáp",
+          "student_id": "22021180",
+          "class_name": "INT3304 5",
+          "bot_name": "ChronoAgent_v2",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 24,
+          "id": "43b76243-fb80-432a-b674-c0e9deb15fbe",
+          "name": "Đinh Bảo Giáp",
+          "student_id": "22021078",
+          "class_name": "INT3304 3",
+          "bot_name": "PhoenixAI_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 0.0,
+        "score_b": 0.0,
+        "status": "pending",
+        "winner_id": null,
+        "winner_name": null,
+        "winner_seed": null,
+        "game_results": []
+      },
+      {
+        "id": "QF_M02",
+        "round": "qf",
+        "label": "Tứ Kết - Trận 02",
+        "player_a": {
+          "seed": 13,
+          "id": "19fe2503-0b06-4782-a4b6-c27ccf6d695e",
+          "name": "Mai Gia Thắng",
+          "student_id": "22021009",
+          "class_name": "INT3304 2",
+          "bot_name": "BlazeKnight_v1",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 28,
+          "id": "de718dff-885c-4480-b529-06e9410f653b",
+          "name": "Nguyễn Tuấn Tuấn",
+          "student_id": "22021109",
+          "class_name": "INT3304 1",
+          "bot_name": "GhostSniper_v2",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 0.0,
+        "score_b": 0.0,
+        "status": "pending",
+        "winner_id": null,
+        "winner_name": null,
+        "winner_seed": null,
+        "game_results": []
+      },
+      {
+        "id": "QF_M03",
+        "round": "qf",
+        "label": "Tứ Kết - Trận 03",
+        "player_a": {
+          "seed": 15,
+          "id": "b680da7e-aaaa-4e19-885e-a468c181ad8b",
+          "name": "Phạm Quang Hậu",
+          "student_id": "22021112",
+          "class_name": "INT3304 1",
+          "bot_name": "NeoBot_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 26,
+          "id": "b55feb60-7d03-4f6d-b740-26fbfdc139af",
+          "name": "Lê Thành Giáp",
+          "student_id": "22021086",
+          "class_name": "INT3304 5",
+          "bot_name": "HyperAI_Prime",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 0.0,
+        "score_b": 0.0,
+        "status": "pending",
+        "winner_id": null,
+        "winner_name": null,
+        "winner_seed": null,
+        "game_results": []
+      },
+      {
+        "id": "QF_M04",
+        "round": "qf",
+        "label": "Tứ Kết - Trận 04",
+        "player_a": {
+          "seed": 30,
+          "id": "20ee2c45-2ef4-4232-ad1d-eeed9e530859",
+          "name": "Trần Đức Bích",
+          "student_id": "22021060",
+          "class_name": "INT3304 3",
+          "bot_name": "BetaBot_Pro",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "player_b": {
+          "seed": 27,
+          "id": "e760a073-ae17-409b-a505-f5ab502a6638",
+          "name": "Trịnh Hữu Hậu",
+          "student_id": "22021140",
+          "class_name": "INT3304 5",
+          "bot_name": "GhostBot_Max",
+          "swiss_wins": 1,
+          "swiss_points": 3,
+          "github_repo_url": "https://github.com/thnh23/ottv2-bot-template.git"
+        },
+        "score_a": 0.0,
+        "score_b": 0.0,
+        "status": "pending",
+        "winner_id": null,
+        "winner_name": null,
+        "winner_seed": null,
+        "game_results": []
+      }
+    ],
+    "sf": [
+      {
+        "id": "SF_M01",
+        "round": "sf",
+        "label": "Bán Kết - Trận 01",
+        "player_a": null,
+        "player_b": null,
+        "score_a": 0.0,
+        "score_b": 0.0,
+        "status": "pending",
+        "winner_id": null,
+        "winner_name": null,
+        "winner_seed": null,
+        "loser_id": null,
+        "loser_name": null,
+        "loser_seed": null,
+        "game_results": []
+      },
+      {
+        "id": "SF_M02",
+        "round": "sf",
+        "label": "Bán Kết - Trận 02",
+        "player_a": null,
+        "player_b": null,
+        "score_a": 0.0,
+        "score_b": 0.0,
+        "status": "pending",
+        "winner_id": null,
+        "winner_name": null,
+        "winner_seed": null,
+        "loser_id": null,
+        "loser_name": null,
+        "loser_seed": null,
+        "game_results": []
+      }
+    ],
+    "final": [
+      {
+        "id": "FINAL_CHAMPION",
+        "round": "final",
+        "label": "Trận Chung Kết Tranh Cúp Vàng",
+        "player_a": null,
+        "player_b": null,
+        "score_a": 0.0,
+        "score_b": 0.0,
+        "status": "pending",
+        "winner_id": null,
+        "winner_name": null,
+        "winner_seed": null,
+        "loser_id": null,
+        "loser_name": null,
+        "loser_seed": null,
+        "game_results": []
+      },
+      {
+        "id": "FINAL_THIRD_PLACE",
+        "round": "final",
+        "label": "Trận Tranh Hạng Ba (Huy Chương Đồng)",
+        "player_a": null,
+        "player_b": null,
+        "score_a": 0.0,
+        "score_b": 0.0,
+        "status": "pending",
+        "winner_id": null,
+        "winner_name": null,
+        "winner_seed": null,
+        "loser_id": null,
+        "loser_name": null,
+        "loser_seed": null,
+        "game_results": []
+      }
+    ]
+  },
+  "podium": {
+    "champion": null,
+    "runner_up": null,
+    "third_place": null,
+    "fourth_place": null
+  },
+  "updated_at": "2026-10-26T03:14:24.664690"
+}

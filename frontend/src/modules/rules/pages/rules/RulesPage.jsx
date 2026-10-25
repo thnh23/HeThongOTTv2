@@ -46,7 +46,7 @@ export function RulesPage() {
             Thế Trận Khởi Đầu Bàn Cờ 9×9 (Trực Quan &amp; Tương Tác)
           </h3>
           <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            💡 Nhấp vào quân bất kỳ để xem nước đi hợp lệ &amp; luật chặn quân
+            Nhấp vào quân bất kỳ để xem nước đi hợp lệ và quy tắc chặn quân.
           </span>
         </div>
 
@@ -73,10 +73,10 @@ export function RulesPage() {
                   Chi Tiết Ô: <code>{selectedSquare}</code>
                 </h4>
                 {isWhiteGoal && (
-                  <span className="goal-tag gold-tag">👑 ĐÍCH PHE TRẮNG (W2)</span>
+                  <span className="goal-tag gold-tag">ĐÍCH TRẮNG (W2)</span>
                 )}
                 {isBlackGoal && (
-                  <span className="goal-tag cyan-tag">🎯 ĐÍCH PHE ĐEN (W2)</span>
+                  <span className="goal-tag cyan-tag">ĐÍCH ĐEN (B2)</span>
                 )}
               </div>
 
@@ -96,7 +96,7 @@ export function RulesPage() {
                           border: currentPiece.player === 'B' ? '1px solid #38BDF8' : '1px solid #CBD5E1',
                         }}
                       >
-                        {currentPiece.player === 'W' ? '⚪ Phe Trắng (Đi trước)' : '🔴 Phe Đen'}
+                        {currentPiece.player === 'W' ? 'Phe Trắng (Đi trước)' : 'Phe Đen'}
                       </span>
                     </div>
                   </div>
@@ -124,7 +124,7 @@ export function RulesPage() {
                         ))}
                         {moveDetails.captureMoves.map((c) => (
                           <span key={c.sq} className="chip capture-move">
-                            ⚔️ {c.sq} (Ăn {c.piece.type})
+                            Ăn {c.piece.type} tại {c.sq}
                           </span>
                         ))}
                       </div>
@@ -145,12 +145,12 @@ export function RulesPage() {
                       <div className="square-chips-list">
                         {moveDetails.blockedFriendly.map((b) => (
                           <span key={b.sq} className="chip friendly-blocked-chip">
-                            ✕ {b.sq} ({b.piece.type})
+                            Chặn tại {b.sq} ({b.piece.type})
                           </span>
                         ))}
                       </div>
                       <p className="analysis-subtext">
-                        🛡️ <em>Luật OTTv2: Không được di chuyển vào ô đang có quân cùng phe.</em>
+                        <em>Luật OTTv2: Không được di chuyển vào ô đang có quân cùng phe.</em>
                       </p>
                     </div>
                   )}
@@ -158,12 +158,12 @@ export function RulesPage() {
                   {/* Goal Explanations when clicking a goal square */}
                   {isWhiteGoal && (
                     <div className="goal-callout gold">
-                      👑 <strong>Ô i9 là Đích của Trắng (Mã W2):</strong> Ban đầu do quân Đen <code>{currentPiece.type}</code> chốt giữ. Khi phe Trắng tiến được bất kỳ quân nào vào ô này, Trắng lập tức thắng ngay ván đấu.
+                      <strong>Ô i9 là Đích của Trắng (Mã W2):</strong> Ban đầu do quân Đen <code>{currentPiece.type}</code> chốt giữ. Khi phe Trắng tiến được bất kỳ quân nào vào ô này, Trắng lập tức thắng ván đấu.
                     </div>
                   )}
                   {isBlackGoal && (
                     <div className="goal-callout cyan">
-                      🎯 <strong>Ô a1 là Đích của Đen (Mã W2):</strong> Ban đầu do quân Trắng <code>{currentPiece.type}</code> chốt giữ. Khi phe Đen tiến được bất kỳ quân nào vào ô này, Đen lập tức thắng ngay ván đấu.
+                      <strong>Ô a1 là Đích của Đen (Mã B2):</strong> Ban đầu do quân Trắng <code>{currentPiece.type}</code> chốt giữ. Khi phe Đen tiến được bất kỳ quân nào vào ô này, Đen lập tức thắng ván đấu.
                     </div>
                   )}
                 </div>
@@ -174,16 +174,16 @@ export function RulesPage() {
                   </p>
                   {isWhiteGoal && (
                     <div className="goal-callout gold">
-                      👑 <strong>Ô i9 là Đích của Trắng (Mã W2):</strong> Trắng chỉ cần đưa quân vào ô này là Thắng ngay!
+                      <strong>Ô i9 là Đích của Trắng (Mã W2):</strong> Trắng chỉ cần đưa quân vào ô này là thắng ván đấu.
                     </div>
                   )}
                   {isBlackGoal && (
                     <div className="goal-callout cyan">
-                      🎯 <strong>Ô a1 là Đích của Đen (Mã W2):</strong> Đen chỉ cần đưa quân vào ô này là Thắng ngay!
+                      <strong>Ô a1 là Đích của Đen (Mã B2):</strong> Đen chỉ cần đưa quân vào ô này là thắng ván đấu.
                     </div>
                   )}
                   <p style={{ color: 'var(--cyan-400)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                    👉 Nhấp vào một quân cờ ở hàng 1, 2 (Trắng) hoặc hàng 8, 9 (Đen) để xem nước đi hợp lệ!
+                    Nhấp vào một quân cờ ở hàng 1, 2 (Trắng) hoặc hàng 8, 9 (Đen) để xem nước đi hợp lệ.
                   </p>
                 </div>
               )}
@@ -192,7 +192,7 @@ export function RulesPage() {
             {/* Black Team Starting Position */}
             <div className="board-info-block">
               <h4 style={{ color: '#BE123C' }}>
-                🔴 Phe Đen (Black) — Hàng 8 &amp; 9 (18 Quân)
+                Phe Đen (Black) — Hàng 8 &amp; 9 (18 Quân)
               </h4>
               <p>• <strong>Hàng 9:</strong> P – S – R – P – S – R – P – S – R (Bao, Kéo, Búa xen kẽ)</p>
               <p>• <strong>Hàng 8:</strong> S – R – P – S – R – P – S – R – P (Kéo, Búa, Bao xen kẽ)</p>
@@ -201,7 +201,7 @@ export function RulesPage() {
             {/* White Team Starting Position */}
             <div className="board-info-block">
               <h4 style={{ color: '#1E3A8A' }}>
-                ⚪ Phe Trắng (White) — Hàng 1 &amp; 2 (18 Quân)
+                Phe Trắng (White) — Hàng 1 &amp; 2 (18 Quân)
                 <span style={{ fontSize: '0.75rem', color: '#047857', marginLeft: 'auto', fontWeight: 'bold' }}>
                   ● ĐI TRƯỚC
                 </span>
@@ -217,10 +217,10 @@ export function RulesPage() {
                 Ô Góc Đích Chiến Thắng (Mã W2)
               </h4>
               <p>
-                👑 <strong>Trắng vào ô <code>i9</code></strong> (góc trên bên phải) ➔ Thắng ngay lập tức.
+                <strong>Trắng vào ô <code>i9</code></strong> (góc trên bên phải): Thắng ngay lập tức.
               </p>
               <p>
-                🎯 <strong>Đen vào ô <code>a1</code></strong> (góc dưới bên trái) ➔ Thắng ngay lập tức.
+                <strong>Đen vào ô <code>a1</code></strong> (góc dưới bên trái): Thắng ngay lập tức.
               </p>
             </div>
           </div>
@@ -229,15 +229,15 @@ export function RulesPage() {
 
       <div className="rules-grid">
         <div className="glass-card rule-box">
-          <h3><BookOpen size={20} /> 1. Bàn cờ & Quân cờ</h3>
+          <h3><BookOpen size={20} /> 1. Bàn cờ &amp; Quân cờ</h3>
           <p>
             Bàn cờ có kích thước <strong>9 × 9 ô vuông</strong> (cột từ <code>a</code> đến <code>i</code>, hàng từ <code>1</code> đến <code>9</code>).
           </p>
           <p>Mỗi đấu thủ điều khiển 18 quân cờ thuộc 3 loại:</p>
           <ul style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-            <li>👊 <strong>Búa (Rock - R):</strong> 6 quân</li>
-            <li>✂️ <strong>Kéo (Scissors - S):</strong> 6 quân</li>
-            <li>✋ <strong>Bao (Paper - P):</strong> 6 quân</li>
+            <li><strong>Búa (Rock - R):</strong> 6 quân</li>
+            <li><strong>Kéo (Scissors - S):</strong> 6 quân</li>
+            <li><strong>Bao (Paper - P):</strong> 6 quân</li>
           </ul>
         </div>
 

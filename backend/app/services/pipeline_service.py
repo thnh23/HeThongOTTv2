@@ -21,6 +21,7 @@ import sys
 import uuid
 import time
 import shutil
+import stat
 import threading
 import subprocess
 from datetime import datetime
@@ -121,6 +122,14 @@ class PipelineProgressManager:
                 "deadline": self.deadline_str,
                 "message": self.message,
             }
+
+    @property
+    def is_running(self) -> bool:
+        with self._lock:
+            return self.status == "running"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return self.get_status()
 
 
 global_pipeline_progress = PipelineProgressManager()
@@ -252,8 +261,9 @@ def parse_google_form_csv_with_dedup(
             continue
 
         if not s_id:
-            # Fallback lấy từ email
-            s_id = raw_email.split("@")[0] if raw_email else f"USER_{row_idx}"
+            # Fallback lấy từ email đã qua chuẩn hóa an toàn chống path traversal
+            email_user = clean_student_id(raw_email.split("@")[0]) if raw_email else ""
+            s_id = email_user or f"USER_{row_idx}"
 
         submit_dt = parse_flexible_datetime(raw_time)
 
@@ -355,51 +365,79 @@ def clone_and_freeze_single_repo(
     safe_env = os.environ.copy()
     safe_env["GIT_TERMINAL_PROMPT"] = "0"
 
-    # Nếu thư mục đã tồn tại -> xóa sạch để clone mới chính xác
-    if os.path.exists(target_path):
+    def remove_readonly(func, path, _exc_info):
         try:
-            shutil.rmtree(target_path, ignore_errors=True)
+            os.chmod(path, stat.S_IWRITE)
+            func(path)
         except Exception:
             pass
 
-    # Thực hiện git clone
-    # Dùng --filter=blob:none để tăng tốc (blobless clone)
-    cmd_clone = ["git", "clone", "--filter=blob:none", repo_url, target_path]
-    try:
-        proc = subprocess.run(
-            cmd_clone,
-            capture_output=True,
-            text=True,
-            timeout=timeout_sec,
-            env=safe_env
-        )
-        if proc.returncode != 0:
-            # Fallback nếu git server không hỗ trợ partial clone: thử clone thường
+    # Nếu thư mục đã tồn tại -> xóa sạch để clone mới chính xác
+    if os.path.exists(target_path):
+        try:
+            shutil.rmtree(target_path, onerror=remove_readonly)
+        except Exception:
+            pass
+
+    # ── Tối ưu hóa: Bộ đệm Template Repo (Tránh GitHub Rate Limit & Băng thông) ──
+    # Nếu nhiều thí sinh cùng trỏ về template chung (ví dụ dữ liệu demo hoặc starter kit),
+    # tải 1 lần duy nhất vào .template_cache và sao chép cục bộ với tốc độ ~5ms/repo.
+    used_template_cache = False
+    is_template_repo = "ottv2-bot-template" in repo_url.lower()
+    cache_dir = os.path.join(dest_dir, ".template_cache")
+
+    if is_template_repo:
+        template_bot = os.path.join(cache_dir, "bot.py")
+        if not os.path.exists(template_bot):
+            os.makedirs(cache_dir, exist_ok=True)
+            cmd_tmpl = ["git", "clone", "--filter=blob:none", repo_url, cache_dir]
+            subprocess.run(cmd_tmpl, capture_output=True, text=True, timeout=timeout_sec, env=safe_env)
+
+        if os.path.exists(template_bot):
+            try:
+                shutil.copytree(cache_dir, target_path, dirs_exist_ok=True)
+                used_template_cache = True
+            except Exception:
+                pass
+
+    if not used_template_cache:
+        # Thực hiện git clone thông thường từ GitHub
+        cmd_clone = ["git", "clone", "--filter=blob:none", repo_url, target_path]
+        try:
             proc = subprocess.run(
-                ["git", "clone", repo_url, target_path],
+                cmd_clone,
                 capture_output=True,
                 text=True,
                 timeout=timeout_sec,
                 env=safe_env
             )
-    except subprocess.TimeoutExpired:
-        res_data["error_code"] = "CLONE_TIMEOUT"
-        res_data["error_message"] = f"Quá thời gian kết nối (Timeout {timeout_sec}s)"
-        return res_data
-    except Exception as e:
-        res_data["error_code"] = "CLONE_EXCEPTION"
-        res_data["error_message"] = str(e)
-        return res_data
+            if proc.returncode != 0:
+                # Fallback nếu git server không hỗ trợ partial clone: thử clone thường
+                proc = subprocess.run(
+                    ["git", "clone", repo_url, target_path],
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout_sec,
+                    env=safe_env
+                )
+        except subprocess.TimeoutExpired:
+            res_data["error_code"] = "CLONE_TIMEOUT"
+            res_data["error_message"] = f"Quá thời gian kết nối (Timeout {timeout_sec}s)"
+            return res_data
+        except Exception as e:
+            res_data["error_code"] = "CLONE_EXCEPTION"
+            res_data["error_message"] = str(e)
+            return res_data
 
-    if proc.returncode != 0:
-        err_out = proc.stderr.strip()
-        if "Authentication failed" in err_out or "Repository not found" in err_out or "could not read Username" in err_out:
-            res_data["error_code"] = "REPO_PRIVATE_OR_404"
-            res_data["error_message"] = "Repository đang ở chế độ Private hoặc không tồn tại (404). Vui lòng chuyển repo sang Public."
-        else:
-            res_data["error_code"] = "CLONE_FAILED"
-            res_data["error_message"] = err_out[:180]
-        return res_data
+        if proc.returncode != 0:
+            err_out = proc.stderr.strip()
+            if "Authentication failed" in err_out or "Repository not found" in err_out or "could not read Username" in err_out:
+                res_data["error_code"] = "REPO_PRIVATE_OR_404"
+                res_data["error_message"] = "Repository đang ở chế độ Private hoặc không tồn tại (404). Vui lòng chuyển repo sang Public."
+            else:
+                res_data["error_code"] = "CLONE_FAILED"
+                res_data["error_message"] = err_out[:180]
+            return res_data
 
     res_data["clone_success"] = True
 
@@ -605,11 +643,12 @@ def validate_cloned_repo(
 # ─────────────────────────────────────────────────────────────────────────────
 
 def run_batch_import_pipeline(
-    raw_csv: str,
+    raw_csv: str = "",
     deadline_str: Optional[str] = None,
     dest_dir: str = DEFAULT_REPOS_STORAGE,
     max_workers: int = 16,
-    task_id: Optional[str] = None
+    task_id: Optional[str] = None,
+    csv_content: Optional[str] = None,
 ):
     """
     Tiến trình chạy nền (Background Task) điều phối toàn bộ chu trình 4 bước:
@@ -618,6 +657,8 @@ def run_batch_import_pipeline(
       3. Thẩm định bài nộp.
       4. Cập nhật kết quả vào DB.
     """
+    if not raw_csv and csv_content:
+        raw_csv = csv_content
     if not task_id:
         task_id = str(uuid.uuid4())
 
@@ -639,6 +680,7 @@ def run_batch_import_pipeline(
     from app.database import SessionLocal
     from app.models.user import User
     from app.models.submission import Submission
+    from app.features.auth.service import hash_password
 
     db = SessionLocal()
     try:
@@ -702,12 +744,15 @@ def run_batch_import_pipeline(
                         target_user.github_repo_url = st["github_repo_url"]
                         target_user.bot_name = st["bot_name"]
                         target_user.commit_count = val_res.commit_count
+                        # Nâng cấp mật khẩu mặc định nếu trước đây chưa được hash bcrypt
+                        if target_user.hashed_password == "student_auto_hash":
+                            target_user.hashed_password = hash_password(s_id)
                     else:
                         target_user = User(
                             id=str(uuid.uuid4()),
                             name=st["name"],
                             email=st["email"],
-                            hashed_password="student_auto_hash",
+                            hashed_password=hash_password(s_id),
                             student_id=s_id,
                             class_name=st["class_name"],
                             github_repo_url=st["github_repo_url"],
@@ -717,6 +762,7 @@ def run_batch_import_pipeline(
                         )
                         db.add(target_user)
                         db.flush()
+
 
                     # Cập nhật Submission
                     sub = db.query(Submission).filter(Submission.user_id == target_user.id).first()

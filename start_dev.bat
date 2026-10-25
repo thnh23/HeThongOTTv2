@@ -17,7 +17,7 @@ if not exist "%PYTHON_EXE%" (
 
 :: 2. Khoi dong Backend FastAPI (Port 8000)
 echo [*] Dang khoi dong Backend FastAPI (Port 8000)...
-start "OTTv2 Backend (FastAPI :8000)" /D "%ROOT_DIR%backend" cmd /k ""%PYTHON_EXE%" -m uvicorn app.main:app --reload --port 8000"
+start "OTTv2 Backend (FastAPI :8000)" /D "%ROOT_DIR%backend" cmd /k ""%PYTHON_EXE%" -m uvicorn app.main:app --reload --reload-dir app --port 8000"
 
 :: 3. Khoi dong Frontend Vite (Port 5173)
 echo [*] Dang khoi dong Frontend Vite (Port 5173)...

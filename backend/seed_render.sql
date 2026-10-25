@@ -34,10 +34,6 @@ CREATE TABLE IF NOT EXISTS users (
     commit_count INTEGER DEFAULT 0,
     moss_similarity DOUBLE PRECISION DEFAULT 0.0,
     notes TEXT,
-    score_bot DOUBLE PRECISION DEFAULT 0.0,
-    score_ai_profile DOUBLE PRECISION DEFAULT 0.0,
-    score_interview DOUBLE PRECISION DEFAULT 0.0,
-    score_report DOUBLE PRECISION DEFAULT 0.0,
     is_admin BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -56,10 +52,6 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS sonneborn_berger DOUBLE PRECISION DEF
 ALTER TABLE users ADD COLUMN IF NOT EXISTS commit_count INTEGER DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS moss_similarity DOUBLE PRECISION DEFAULT 0.0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS notes TEXT;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS score_bot DOUBLE PRECISION DEFAULT 0.0;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS score_ai_profile DOUBLE PRECISION DEFAULT 0.0;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS score_interview DOUBLE PRECISION DEFAULT 0.0;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS score_report DOUBLE PRECISION DEFAULT 0.0;
 
 -- 1.2 Bảng MATCHES (Quản lý các cặp đấu)
 CREATE TABLE IF NOT EXISTS matches (
@@ -118,7 +110,6 @@ INSERT INTO users (
     tier, test_score, is_top32,
     swiss_wins, swiss_points, buchholz, sonneborn_berger,
     commit_count, moss_similarity, notes,
-    score_bot, score_ai_profile, score_interview, score_report,
     is_admin, is_active, registered_at
 )
 VALUES
@@ -126,55 +117,55 @@ VALUES
   ('user-admin', 'Ban Tổ Chức Giải Đấu (Admin)', 'admin@uet.vnu.edu.vn', '$2b$12$Pi9F.pzKrhdSSzUB/91BBeLTTQWm7/d5QHrQXaOchDQvOr0840qNi',
    'BTC-ADMIN', 'Hội Đồng Chấm Thi VNU-UET', 'https://github.com/vnu-uet/ottv2-tournament', 'RefereeEngine',
    'SWISS', 100.0, FALSE, 0, 0, 0.0, 0.0, 48, 0.0, 'Tài khoản quản trị viên tối cao hệ thống',
-   100.0, 100.0, 100.0, 100.0, TRUE, TRUE, CURRENT_TIMESTAMP),
+   TRUE, TRUE, CURRENT_TIMESTAMP),
 
   -- 2.2 Nhóm Hạt Giống Hàng Đầu (Tier C - Lọt vào Top 32, 10-12 ván thắng, đã nâng cấp Bot v2)
   ('user-student-c2', 'Ngô Quang Huy', 'studentC2@uet.vnu.edu.vn', '$2b$12$3.R7B6Lzd0xUoac03npFUuMR5YmI8JlE9ND0rVezm9oKmDjq5tdja',
    '21020088', 'QH-2021-I/CQ-CNTT', 'https://github.com/ngoquanghuy-uet/ottv2-bot', 'ShadowBlade-v2',
    'C', 92.0, TRUE, 12, 36, 128.5, 102.0, 24, 8.5, 'Top 1 Vòng bảng Swiss — Thuật toán Minimax độ sâu 6 + Alpha-Beta',
-   95.0, 90.0, 95.0, 92.0, FALSE, TRUE, CURRENT_TIMESTAMP),
+   FALSE, TRUE, CURRENT_TIMESTAMP),
 
   ('user-student-c', 'Lê Hoàng Cường', 'studentC@uet.vnu.edu.vn', '$2b$12$bloQ1ygNSjkarIIgOZs6vO5Q/AcQZI8/nv3z2qDKAB48nzC7dxjSS',
    '21020077', 'QH-2021-I/CQ-KTPM', 'https://github.com/lehoangcuong/ottv2-minimax', 'CuongMinimax-v2',
    'C', 88.0, TRUE, 11, 33, 122.0, 95.5, 18, 12.0, 'Top 2 Vòng bảng — Heuristic kiểm soát trung tâm và né bẫy góc W2',
-   92.0, 88.0, 90.0, 88.0, FALSE, TRUE, CURRENT_TIMESTAMP),
+   FALSE, TRUE, CURRENT_TIMESTAMP),
 
   ('user-student-c3', 'Bùi Thanh Tùng', 'studentC3@uet.vnu.edu.vn', '$2b$12$viOYDN7de9ozRC8JXMuL4eIyEh6.tyrJit4wEVqdwcY/QVmy6E/MG',
    '21020099', 'QH-2021-I/CQ-ATTT', 'https://github.com/buithanhtung/ottv2-guardian', 'TungSecurityBot',
    'C', 85.0, TRUE, 10, 30, 116.5, 88.0, 15, 10.5, 'Top 3 Vòng bảng — Chiến thuật phòng ngự phản công vững chắc',
-   90.0, 85.0, 88.0, 85.0, FALSE, TRUE, CURRENT_TIMESTAMP),
+   FALSE, TRUE, CURRENT_TIMESTAMP),
 
   -- 2.3 Nhóm Khá Giỏi (Tier B - 7-9 ván thắng, tiệm cận Top 32)
   ('user-student-b3', 'Hoàng Đức Thắng', 'studentB3@uet.vnu.edu.vn', '$2b$12$WhMjx57Ix4maMWZRAzl6mO6oWXyTW1wS4fzINak25QbPOzkcqj3im',
    '21020066', 'QH-2022-I/CQ-KHMT', 'https://github.com/hoangducthang/ottv2-solver', 'ThangHeuristic',
    'B', 72.0, FALSE, 9, 27, 108.0, 78.5, 14, 14.0, 'Chiến thuật ăn quân chủ động, tối ưu thời gian di chuyển <50ms',
-   88.0, 82.0, 85.0, 82.0, FALSE, TRUE, CURRENT_TIMESTAMP),
+   FALSE, TRUE, CURRENT_TIMESTAMP),
 
   ('user-student-b2', 'Phạm Quốc Bảo', 'studentB2@uet.vnu.edu.vn', '$2b$12$z9XF0SATZbWqZL86Q8X.sOZHGjOl3UW7nEoXiw6/1cFNi0hwlA/ZS',
    '21020055', 'QH-2022-I/CQ-HTTT', 'https://github.com/phamquocbao/ottv2-bot', 'BaoGreedy',
    'B', 65.0, FALSE, 8, 24, 102.5, 72.0, 11, 16.5, 'Bot Greedy mở rộng, ưu tiên bảo vệ quân Kéo',
-   85.0, 80.0, 80.0, 80.0, FALSE, TRUE, CURRENT_TIMESTAMP),
+   FALSE, TRUE, CURRENT_TIMESTAMP),
 
   ('user-student-b', 'Trần Thị Bình', 'studentB@uet.vnu.edu.vn', '$2b$12$0Hs48tKIHaFZFrDFif9cHuwF8DVV4bVr9ZBiTpC51Dv9Ep2v1K5Cq',
    '21020044', 'QH-2022-I/CQ-CNTT', 'https://github.com/tranthibinh/ottv2-project', 'BinhBot',
    'B', 58.0, FALSE, 7, 21, 96.0, 65.0, 10, 15.0, 'Thuật toán Minimax 3 tầng kết hợp đánh giá tỷ lệ quân',
-   82.0, 78.0, 78.0, 78.0, FALSE, TRUE, CURRENT_TIMESTAMP),
+   FALSE, TRUE, CURRENT_TIMESTAMP),
 
   -- 2.4 Nhóm Cơ Bản (Tier A - Đạt yêu cầu môn học, 4-6 ván thắng)
   ('user-student-a3', 'Vũ Thị Mai', 'studentA3@uet.vnu.edu.vn', '$2b$12$tbN7plECzJzGOm.aY8c08.xv5A/FCGb.HfvgroknIYMQ6uV4TXP2a',
    '21020033', 'QH-2022-I/CQ-CLC', 'https://github.com/vuthimai/ottv2-starter', 'MaiBot',
    'A', 38.0, FALSE, 6, 18, 88.5, 56.0, 9, 18.0, 'Hoàn thành đúng hạn, thuật toán tìm đường cơ bản',
-   78.0, 75.0, 75.0, 75.0, FALSE, TRUE, CURRENT_TIMESTAMP),
+   FALSE, TRUE, CURRENT_TIMESTAMP),
 
   ('user-student-a', 'Nguyễn Văn An', 'studentA@uet.vnu.edu.vn', '$2b$12$B6tXcFoS5S2mqhDWtFRZPOnyOviQPr6KBStahhbfYOd2DGdU7SJ8m',
    '21020011', 'QH-2022-I/CQ-CACLC', 'https://github.com/nguyenvanan/ottv2-bot', 'AnRandomPlus',
    'A', 35.0, FALSE, 5, 15, 82.0, 48.0, 8, 19.5, 'Bot ngẫu nhiên có kiểm soát luật không lặp nước đi',
-   75.0, 70.0, 72.0, 72.0, FALSE, TRUE, CURRENT_TIMESTAMP),
+   FALSE, TRUE, CURRENT_TIMESTAMP),
 
   ('user-student-a2', 'Đỗ Minh Khang', 'studentA2@uet.vnu.edu.vn', '$2b$12$NUIv3DihoqE6EpGwfnN7eOd.fd02YN4KlrRzXHKfSnfZGN35Sh7fe',
    '21020022', 'QH-2022-I/CQ-KTPM', 'https://github.com/dominhkhang/ottv2-code', 'KhangBot',
    'A', 28.0, FALSE, 4, 12, 76.5, 40.0, 6, 22.0, 'Hoàn thành yêu cầu cơ bản, thi đấu đủ các vòng Swiss',
-   72.0, 68.0, 70.0, 70.0, FALSE, TRUE, CURRENT_TIMESTAMP)
+   FALSE, TRUE, CURRENT_TIMESTAMP)
 
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
@@ -194,10 +185,6 @@ ON CONFLICT (id) DO UPDATE SET
     commit_count = EXCLUDED.commit_count,
     moss_similarity = EXCLUDED.moss_similarity,
     notes = EXCLUDED.notes,
-    score_bot = EXCLUDED.score_bot,
-    score_ai_profile = EXCLUDED.score_ai_profile,
-    score_interview = EXCLUDED.score_interview,
-    score_report = EXCLUDED.score_report,
     is_admin = EXCLUDED.is_admin,
     is_active = EXCLUDED.is_active;
 

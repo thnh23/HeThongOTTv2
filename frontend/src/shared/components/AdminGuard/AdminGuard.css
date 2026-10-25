@@ -1,0 +1,111 @@
+.admin-guard-container {
+  min-height: calc(100vh - 180px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+}
+
+.admin-guard-card {
+  max-width: 540px;
+  width: 100%;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-bright);
+  box-shadow: 4px 4px 0px #000000;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.admin-guard-icon-box {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  margin-bottom: 1.25rem;
+}
+
+.admin-guard-icon-box.warn {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #F59E0B;
+}
+
+.admin-guard-icon-box.danger {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #EF4444;
+}
+
+.admin-guard-pill {
+  display: inline-block;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid currentColor;
+  margin-bottom: 0.85rem;
+}
+
+.admin-guard-pill.warn {
+  color: #F59E0B;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.admin-guard-pill.danger {
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.admin-guard-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem 0;
+  letter-spacing: 0.02em;
+}
+
+.admin-guard-text {
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 1.75rem 0;
+}
+
+.admin-guard-text code {
+  color: var(--cyan-400);
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--border-bright);
+}
+
+.admin-guard-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.admin-guard-spinner {
+  animation: spin 1s linear infinite;
+  color: var(--primary-400);
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

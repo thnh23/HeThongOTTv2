@@ -1,0 +1,253 @@
+/* ViewFilesModal.css — Pixel Art Code & Report Viewer */
+
+.view-files-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: modalFadeIn 0.15s ease-out forwards;
+}
+
+.view-files-modal-card {
+  background: #FFFFFF;
+  border: 3px solid #000000;
+  border-radius: 0;
+  width: 95%;
+  max-width: 940px;
+  height: 84vh;
+  max-height: 850px;
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 6px 6px 0px #000000;
+  overflow: hidden;
+  position: relative;
+}
+
+.view-files-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 3px solid #000000;
+  background: #EFF6FF;
+  flex-shrink: 0;
+}
+
+.view-files-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.view-files-icon-box {
+  width: 38px;
+  height: 38px;
+  background: #3B82F6;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.view-files-heading {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #0F172A;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.view-files-subheading {
+  font-family: var(--font-subheading);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  margin-top: 0.15rem;
+}
+
+.view-files-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.view-files-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0;
+  font-family: var(--font-subheading);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.view-files-action-btn.copy {
+  background: #FEF08A;
+  color: #854D0E;
+}
+
+.view-files-action-btn.copy:hover {
+  background: #FDE047;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.view-files-action-btn.zip {
+  background: #DCFCE7;
+  color: #166534;
+}
+
+.view-files-action-btn.zip:hover {
+  background: #BBF7D0;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.view-files-action-btn.github {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+.view-files-action-btn.github:hover {
+  background: #E2E8F0;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
+}
+
+/* Tab Bar */
+.view-files-nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1.5rem 0;
+  background: #F8FAFC;
+  border-bottom: 2px solid #000000;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.view-files-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border: 2px solid transparent;
+  border-bottom: none;
+  background: transparent;
+  font-family: var(--font-subheading);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748B;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all var(--transition-fast);
+}
+
+.view-files-tab-btn:hover {
+  color: #0F172A;
+  background: rgba(226, 232, 240, 0.5);
+}
+
+.view-files-tab-btn.active {
+  background: #FFFFFF;
+  color: #1E3A8A;
+  border: 2px solid #000000;
+  border-bottom: 2px solid #FFFFFF;
+  margin-bottom: -2px;
+  box-shadow: -2px -2px 0px rgba(0, 0, 0, 0.05);
+}
+
+/* Code Viewer Body */
+.view-files-content-body {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #0F172A;
+  color: #E2E8F0;
+  position: relative;
+}
+
+.view-files-code-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 1.25rem 1.5rem;
+}
+
+.view-files-code-pre {
+  margin: 0;
+  font-family: 'Consolas', 'Fira Code', 'Monaco', monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  tab-size: 4;
+}
+
+.view-files-loading-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 0.5rem;
+  background: rgba(30, 58, 138, 0.4);
+  color: #93C5FD;
+  font-family: var(--font-subheading);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.view-files-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 3rem 1rem;
+  color: #94A3B8;
+  gap: 0.75rem;
+}
+
+.view-files-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.5rem;
+  background: #FFFFFF;
+  border-top: 2px solid #000000;
+  flex-shrink: 0;
+}
+
+.view-files-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-subheading);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+}

@@ -202,7 +202,7 @@ def play_match(
         bot_black_name=bot_black_name,
         winner=winner,
         end_code=end_code,
-        total_moves=state.move_count,
+        total_moves=len(moves_history),
         duration_ms=total_duration_ms,
         moves=moves_history,
         states=states_history,

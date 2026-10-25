@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Public barrel imports per frontend-architecture skill
 import { HomePage } from '@/modules/home';
@@ -7,12 +7,14 @@ import { RulesPage } from '@/modules/rules';
 import { LeaderboardPage } from '@/modules/leaderboard';
 import { MatchesListPage, MatchDetailPage, LiveMatchPage, LiveHubPage } from '@/modules/matches';
 import { SubmitPage } from '@/modules/submit';
-import { LoginPage, RegisterPage } from '@/modules/auth';
+import { LoginPage } from '@/modules/auth';
+
 import { AdminDashboardPage } from '@/modules/admin';
 import { ProfilePage } from '@/modules/profile';
 import { LookupPage } from '@/modules/lookup';
 import { SandboxPage } from '@/modules/sandbox';
 import { NotFoundPage } from '@/shared/pages/NotFoundPage.jsx';
+import { AdminGuard } from '@/shared/components/AdminGuard/index.js';
 
 export function AppRouter() {
   return (
@@ -28,9 +30,16 @@ export function AppRouter() {
       <Route path="/sandbox" element={<SandboxPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/submit" element={<SubmitPage />} />
-      <Route path="/admin" element={<AdminDashboardPage />} />
+      <Route
+        path="/admin"
+        element={
+          <AdminGuard>
+            <AdminDashboardPage />
+          </AdminGuard>
+        }
+      />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/register" element={<Navigate to="/login" replace />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

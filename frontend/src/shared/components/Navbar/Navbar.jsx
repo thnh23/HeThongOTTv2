@@ -11,7 +11,6 @@ import {
   Sparkles,
   Menu,
   X,
-  ShieldCheck,
   Volume2,
   VolumeX,
   Search,
@@ -62,7 +61,9 @@ export function Navbar() {
       <header className="navbar">
         <div className="navbar-container">
           <Link to="/" className="navbar-brand">
-            <div className="brand-icon">⚔️</div>
+            <div className="brand-icon">
+              <Swords size={18} />
+            </div>
             <span>OTTv2</span>
             <span className="brand-badge">UET 2026</span>
           </Link>
@@ -106,19 +107,6 @@ export function Navbar() {
                   <span>Đấu Thử Bot</span>
                 </NavLink>
               </li>
-              {user?.is_admin && (
-                <li>
-                  <NavLink
-                    id="nav-admin-link"
-                    to="/admin"
-                    className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                    style={{ color: 'var(--amber-400)' }}
-                  >
-                    <ShieldCheck size={16} color="var(--amber-400)" />
-                    <span>Admin BTC</span>
-                  </NavLink>
-                </li>
-              )}
             </ul>
           </nav>
 
@@ -176,12 +164,9 @@ export function Navbar() {
               </div>
             ) : (
               <div className="guest-actions">
-                <Link id="nav-login-btn" to="/login" className="btn btn-outline btn-sm">
+                <Link id="nav-login-btn" to="/login" className="btn btn-primary btn-sm">
                   <LogIn size={15} />
                   <span>Đăng Nhập</span>
-                </Link>
-                <Link id="nav-register-btn" to="/register" className="btn btn-primary btn-sm">
-                  <span>Đăng Ký</span>
                 </Link>
               </div>
             )}
@@ -232,12 +217,6 @@ export function Navbar() {
                   <span>Trang Cá Nhân ({user?.name})</span>
                 </NavLink>
               )}
-              {user?.is_admin && (
-                <NavLink to="/admin" className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`} style={{ color: 'var(--amber-400)' }}>
-                  <ShieldCheck size={18} color="var(--amber-400)" />
-                  <span>Admin Ban Tổ Chức</span>
-                </NavLink>
-              )}
             </nav>
 
             <div className="mobile-drawer-footer">
@@ -278,13 +257,10 @@ export function Navbar() {
                   <span>Đăng Xuất ({user?.name})</span>
                 </button>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.75rem' }}>
-                  <Link to="/login" className="btn btn-outline" style={{ justifyContent: 'center' }}>
+                <div style={{ marginTop: '0.75rem' }}>
+                  <Link to="/login" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
                     <LogIn size={15} />
-                    <span>Đăng Nhập</span>
-                  </Link>
-                  <Link to="/register" className="btn btn-primary" style={{ justifyContent: 'center' }}>
-                    <span>Đăng Ký</span>
+                    <span>Đăng Nhập Thí Sinh / BTC</span>
                   </Link>
                 </div>
               )}

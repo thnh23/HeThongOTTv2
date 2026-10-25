@@ -111,8 +111,8 @@ pip install -r requirements.txt
 # 4. Nạp dữ liệu thi đấu mẫu (Admin + Bot mẫu)
 python seed_demo_data.py
 
-# 5. Khởi chạy máy chủ API
-uvicorn app.main:app --reload --port 8000
+# 5. Khởi chạy máy chủ API (Chỉ watch thư mục app để không reload khi tải bài nộp vào storage)
+uvicorn app.main:app --reload --reload-dir app --port 8000
 ```
 * API Docs: `http://localhost:8000/docs`
 * Kiểm tra Health: `http://localhost:8000/health`

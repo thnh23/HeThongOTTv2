@@ -23,6 +23,7 @@ import {
   GraduationCap,
   GitBranch,
   Check,
+  Medal,
 } from 'lucide-react';
 import { BoardSVG } from '@/shared/components/BoardSVG/BoardSVG.jsx';
 import { Countdown } from '@/shared/components/Countdown/Countdown.jsx';
@@ -41,7 +42,7 @@ const TACTICAL_PRESETS = [
   {
     id: 'initial',
     name: 'Khởi Đầu 9×9',
-    icon: '⚔️',
+    icon: '9×9',
     board: INITIAL_BOARD,
     selectedSq: 'b2',
     lastMove: null,
@@ -49,8 +50,8 @@ const TACTICAL_PRESETS = [
   },
   {
     id: 'rock_scissors',
-    name: '👊 Búa Ăn Kéo',
-    icon: '👊',
+    name: 'Búa Ăn Kéo',
+    icon: 'R>S',
     board: {
       ...INITIAL_BOARD,
       e5: { player: 'W', type: 'R' },
@@ -58,31 +59,31 @@ const TACTICAL_PRESETS = [
     },
     selectedSq: 'e5',
     lastMove: { from: 'e4', to: 'e5', player: 'W' },
-    desc: 'Búa Trắng ở ô e5 tấn công Kéo Đen ở ô e6 (ô viền đỏ) theo quy tắc Búa đập Kéo! Hãy nhấp vào ô e6 để thực hiện nước ăn quân.',
+    desc: 'Búa Trắng ở ô e5 tấn công Kéo Đen ở ô e6 (ô viền đỏ) theo quy tắc Búa đập Kéo. Hãy nhấp vào ô e6 để thực hiện nước ăn quân.',
   },
   {
     id: 'white_goal',
-    name: '👑 Chạy Đích i9',
-    icon: '👑',
+    name: 'Trắng Về Đích i9',
+    icon: 'W2',
     board: {
       ...INITIAL_BOARD,
       h8: { player: 'W', type: 'P' },
     },
     selectedSq: 'h8',
     lastMove: { from: 'g7', to: 'h8', player: 'W' },
-    desc: 'Quân Bao Trắng ở h8 chỉ cần 1 bước tiến chéo vào ô góc i9 (ô viền đỏ W2) ăn Búa Đen là giành chiến thắng ngay lập tức (Mã W2)!',
+    desc: 'Quân Bao Trắng ở h8 chỉ cần 1 bước tiến chéo vào ô góc i9 (ô viền đỏ W2) ăn Búa Đen là giành chiến thắng ngay lập tức (Mã W2).',
   },
   {
     id: 'black_goal',
-    name: '🎯 Đột Phá a1',
-    icon: '🎯',
+    name: 'Đen Đột Phá a1',
+    icon: 'B2',
     board: {
       ...INITIAL_BOARD,
       b2: { player: 'B', type: 'P' },
     },
     selectedSq: 'b2',
     lastMove: { from: 'c3', to: 'b2', player: 'B' },
-    desc: 'Quân Bao Đen ở b2 áp sát và ăn Búa Trắng tại ô góc a1 (ô viền đỏ B2) là kết liễu trận đấu (Mã B2)!',
+    desc: 'Quân Bao Đen ở b2 áp sát và ăn Búa Trắng tại ô góc a1 (ô viền đỏ B2) là kết liễu trận đấu (Mã B2).',
   },
 ];
 
@@ -145,14 +146,14 @@ export function HomePage() {
 
       if (isWhiteWinW2) {
         soundFx.playVictory();
-        setStatusMessage('👑 CHIẾN THẮNG MÃ W2: Quân Trắng đã đột phá thành công vào ô góc đích i9!');
+        setStatusMessage('CHIẾN THẮNG (MÃ W2): Quân Trắng đã về đích tại ô i9 thành công.');
       } else if (isBlackWinB2) {
         soundFx.playVictory();
-        setStatusMessage('🎯 CHIẾN THẮNG MÃ B2: Quân Đen đã kết liễu trận đấu khi tiến vào ô đích a1!');
+        setStatusMessage('CHIẾN THẮNG (MÃ B2): Quân Đen đã về đích tại ô a1 thành công.');
       } else if (isCapturable) {
         soundFx.playCapture();
         setStatusMessage(
-          `⚔️ ĂN QUÂN THÀNH CÔNG: ${PIECE_NAMES[movingPiece.type]} ăn ${PIECE_NAMES[capturedPiece.type]} tại ô ${sq}!`
+          `Ăn quân thành công: ${PIECE_NAMES[movingPiece.type]} ăn ${PIECE_NAMES[capturedPiece.type]} tại ô ${sq}.`
         );
       } else {
         soundFx.playMove();
@@ -213,7 +214,7 @@ export function HomePage() {
       <section className="home-hero">
         <div className="hero-ticker">
           <span className="ticker-badge">UET 2026</span>
-          <span className="ticker-text">Đấu Trường Thuật Toán &amp; Game Chiến Thuật OTTv2 • Khoa CNTT - VNU-UET • 13 Vòng Swiss</span>
+          <span className="ticker-text">Đấu Trường Thuật Toán &amp; Game Chiến Thuật OTTv2 • Khoa CNTT - VNU-UET</span>
         </div>
 
         <h1 className="hero-title">
@@ -222,8 +223,7 @@ export function HomePage() {
         </h1>
 
         <p className="hero-subtitle">
-          Sân chơi lập trình trí tuệ nhân tạo đối kháng 9×9 dành cho sinh viên Khoa CNTT - VNU-UET. Chấm thi tự động
-          trên Sandbox cô lập an toàn, phân hạng công bằng qua 13 Vòng Thụy Sĩ (Swiss System) và Vòng Chung Kết Top 32 Knockout.
+          Đấu trường lập trình trí tuệ nhân tạo đối kháng dành cho sinh viên Khoa CNTT — Trường Đại học Công nghệ (VNU-UET).
         </p>
 
         <div className="hero-cta">
@@ -241,7 +241,7 @@ export function HomePage() {
           </Link>
           <Link id="hero-leaderboard-btn" to="/leaderboard" className="btn btn-outline">
             <Trophy size={18} />
-            <span>Bảng Xếp Hạng 13 Vòng</span>
+            <span>Bảng Xếp Hạng</span>
           </Link>
           <Link to="/live" className="btn btn-outline">
             <Radio size={16} color="var(--rose-600)" className="animate-pulse" />
@@ -376,7 +376,7 @@ export function HomePage() {
               <div className="pillar-num">02</div>
               <h4>Tối Thiểu 4–5 Git Commits</h4>
               <p>
-                Repository GitHub nộp qua Google Form phải thể hiện rõ lịch sử commit liên tục qua các ngày/tuần (Khởi tạo ➔ Heuristic ➔ Tìm kiếm nước đi ➔ Tối ưu). Không chấp nhận repo chỉ có 1 commit duy nhất.
+                Repository GitHub nộp qua Google Form phải thể hiện rõ lịch sử commit liên tục qua các ngày/tuần (Khởi tạo &gt; Heuristic &gt; Tìm kiếm nước đi &gt; Tối ưu). Không chấp nhận repo chỉ có 1 commit duy nhất.
               </p>
             </div>
 
@@ -409,8 +409,8 @@ export function HomePage() {
 
           <h2>Trải nghiệm luật OTTv2 trực quan</h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-            Mỗi bên gồm các quân Búa 👊, Kéo ✂️, Bao ✋ (18 quân/bên). Quân cờ di chuyển 1 ô theo 8 hướng.
-            Cùng loại chặn nhau; khác loại thì quy tắc Búa đập Kéo, Kéo cắt Bao, Bao bọc Búa.
+            Mỗi bên gồm các quân Búa, Kéo, Bao (18 quân/bên). Quân cờ di chuyển 1 ô theo 8 hướng.
+            Cùng loại chặn nhau; khác loại tuân theo quy tắc: Búa thắng Kéo, Kéo thắng Bao, Bao thắng Búa.
           </p>
 
           {/* Tactical Scenario Quick Presets */}
@@ -497,9 +497,9 @@ export function HomePage() {
               Quy Đổi Điểm Học Phần
             </span>
           </div>
-          <h2 className="section-title">Thang Điểm Lũy Tiến 13 Vòng Swiss</h2>
+          <h2 className="section-title">Thang Điểm Lũy Tiến Vòng Thụy Sĩ</h2>
           <p className="section-subtitle">
-            Cơ chế tính điểm công bằng, minh bạch dựa trên số trận thắng và thứ hạng thực tế sau 13 vòng đấu Thụy Sĩ
+            Cơ chế tính điểm công bằng, minh bạch dựa trên số trận thắng và kết quả thi đấu thực tế
           </p>
         </div>
 
@@ -582,9 +582,9 @@ export function HomePage() {
               Vinh danh 32 cờ thủ xuất sắc nhất khoa bước vào Vòng Chung Kết.
             </p>
             <ul className="grading-reqs">
-              <li><Check size={15} color="var(--amber-600)" /> Lọt vào <strong>Top 32</strong> sau 13 vòng Swiss</li>
-              <li><Check size={15} color="var(--amber-600)" /> Vượt qua 5 phút vấn đáp kỹ thuật Hội đồng</li>
-              <li><Check size={15} color="var(--amber-600)" /> Nâng cấp Bot v2 thích ứng ô chướng ngại vật</li>
+              <li><Check size={15} color="#F59E0B" /> Lọt vào <strong>Top 32</strong> sau 13 vòng Swiss</li>
+              <li><Check size={15} color="#F59E0B" /> Vượt qua 5 phút vấn đáp kỹ thuật Hội đồng</li>
+              <li><Check size={15} color="#F59E0B" /> Nâng cấp Bot v2 thích ứng ô chướng ngại vật</li>
             </ul>
           </div>
         </div>
@@ -712,49 +712,81 @@ export function HomePage() {
       <section className="prizes-section">
         <div className="section-header">
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <Award size={18} color="var(--amber-600)" />
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--amber-700)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <Trophy size={18} color="var(--accent-amber)" />
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--accent-amber)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Vinh Danh &amp; Phần Thưởng
             </span>
           </div>
           <h2 className="section-title">Cơ Cấu Giải Thưởng Danh Dự</h2>
-          <p className="section-subtitle">Ghi nhận xứng đáng tài năng và nỗ lực sáng tạo của những cờ thủ xuất sắc nhất</p>
+          <p className="section-subtitle">Ghi nhận tài năng và nỗ lực sáng tạo của những cờ thủ thuật toán xuất sắc nhất</p>
         </div>
 
         <div className="prizes-grid">
+          {/* Gold: Quán Quân */}
           <div className="prize-card gold glass-card">
-            <div className="prize-badge-icon">🥇</div>
-            <span className="prize-tier-tag">Vô Địch Giải Đấu</span>
-            <h3 className="prize-title">Giải Nhất (Gold)</h3>
+            <div className="prize-header-badge">
+              <span className="prize-rank-pill pill-gold">HẠNG NHẤT</span>
+            </div>
+            <div className="prize-badge-icon">
+              <Trophy size={28} />
+            </div>
+            <h3 className="prize-title">Quán Quân OTTv2</h3>
+            <div className="prize-grade-tag grade-gold">
+              <span>ĐIỂM 10.0 (A+) TUYỆT ĐỐI</span>
+            </div>
             <p className="prize-reward">
-              Cúp OTTv2 Champion mạ vàng, Giấy khen của Khoa CNTT và điểm 10.0 A+ tuyệt đối học phần.
+              Cúp OTTv2 Champion mạ vàng danh giá, Giấy khen của Khoa CNTT và vinh danh trên Bảng vàng UET.
             </p>
           </div>
 
+          {/* Silver: Á Quân */}
           <div className="prize-card silver glass-card">
-            <div className="prize-badge-icon">🥈</div>
-            <span className="prize-tier-tag">Á Quân Toàn Giải</span>
-            <h3 className="prize-title">Giải Nhì (Silver)</h3>
+            <div className="prize-header-badge">
+              <span className="prize-rank-pill pill-silver">HẠNG NHÌ</span>
+            </div>
+            <div className="prize-badge-icon">
+              <Award size={28} />
+            </div>
+            <h3 className="prize-title">Á Quân Giải Đấu</h3>
+            <div className="prize-grade-tag grade-silver">
+              <span>ĐIỂM 10.0 (A+) HỌC PHẦN</span>
+            </div>
             <p className="prize-reward">
-              Kỷ niệm chương mạ bạc, Giấy khen Á quân và điểm 10.0 A+ học phần.
+              Kỷ niệm chương Á quân mạ bạc, Giấy khen thành tích xuất sắc từ Ban Tổ Chức khoa CNTT.
             </p>
           </div>
 
+          {/* Bronze: Quý Quân */}
           <div className="prize-card bronze glass-card">
-            <div className="prize-badge-icon">🥉</div>
-            <span className="prize-tier-tag">Top 3 &amp; Top 4</span>
-            <h3 className="prize-title">Giải Ba (Bronze)</h3>
+            <div className="prize-header-badge">
+              <span className="prize-rank-pill pill-bronze">HẠNG BA</span>
+            </div>
+            <div className="prize-badge-icon">
+              <Medal size={28} />
+            </div>
+            <h3 className="prize-title">Quý Quân (Top 3–4)</h3>
+            <div className="prize-grade-tag grade-bronze">
+              <span>ĐIỂM 10.0 (A+) HỌC PHẦN</span>
+            </div>
             <p className="prize-reward">
-              Kỷ niệm chương đồng danh dự, Giấy khen và điểm 10.0 A+ học phần.
+              Kỷ niệm chương Đồng danh dự, Giấy khen Top 4 xuất sắc toàn khóa và quà tặng công nghệ.
             </p>
           </div>
 
+          {/* Special: Thuật Toán Xuất Sắc */}
           <div className="prize-card special glass-card">
-            <div className="prize-badge-icon">⭐</div>
-            <span className="prize-tier-tag">Giải Kỹ Thuật Độc Quyền</span>
+            <div className="prize-header-badge">
+              <span className="prize-rank-pill pill-special">ĐỘC QUYỀN</span>
+            </div>
+            <div className="prize-badge-icon">
+              <Sparkles size={28} />
+            </div>
             <h3 className="prize-title">Best Algorithm</h3>
+            <div className="prize-grade-tag grade-special">
+              <span>GIẢI KỸ THUẬT XUẤT SẮC</span>
+            </div>
             <p className="prize-reward">
-              Vinh danh thuật toán heuristic / minimax độc đáo nhất cùng lịch sử Git commit chuẩn mực kỹ sư phần mềm.
+              Vinh danh chiến thuật Heuristic / Minimax độc đáo nhất cùng tác phong Git commit chuẩn mực kỹ sư.
             </p>
           </div>
         </div>
@@ -770,7 +802,7 @@ export function HomePage() {
             </span>
           </div>
           <h2 className="section-title">Câu Hỏi Thường Gặp (FAQ)</h2>
-          <p className="section-subtitle">Những điều thí sinh cần nắm vững trước khi bước vào 13 vòng đấu Swiss</p>
+          <p className="section-subtitle">Những điều thí sinh cần nắm vững trước khi bước vào giải đấu</p>
         </div>
 
         <div className="faq-list">

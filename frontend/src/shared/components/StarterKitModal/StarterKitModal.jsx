@@ -431,7 +431,7 @@ Tập trung vào năng lực tự lập trình và phát triển thuật toán c
             </div>
             <div>
               <h2 id="modal-title" className="modal-title">Bộ Khởi Động Bot (Starter Kit)</h2>
-              <p className="modal-subtitle">Gói mẫu chuẩn: Code sinh viên (bot.py), Ý tưởng (REPORT.md) &amp; Lịch sử Git commit (git_log.txt)</p>
+              <p className="modal-subtitle">Gói tài nguyên mẫu hỗ trợ sinh viên lập trình và kiểm thử bot.</p>
             </div>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Đóng cửa sổ">
@@ -441,7 +441,7 @@ Tập trung vào năng lực tự lập trình và phát triển thuật toán c
 
         <div className="modal-banner">
           <div className="banner-text">
-            <strong>💡 Tiêu chí đánh giá bài nộp:</strong>
+            <strong>Tiêu chí đánh giá bài nộp:</strong>
             <span> Gồm <code>bot.py</code> (hàm <code>choose_move</code>), báo cáo ý tưởng (<code>REPORT.md</code>), và lịch sử commit (<code>git_log.txt</code> ≥ 4 commits).</span>
           </div>
           <button
@@ -501,11 +501,11 @@ Tập trung vào năng lực tự lập trình và phát triển thuật toán c
 
         <div className="modal-footer">
           <div className="checklist-hints">
-            <span className="hint-pill">✓ Code Python Chuẩn 9×9</span>
-            <span className="hint-pill">✓ Báo Cáo Ý Tưởng REPORT.md</span>
-            <span className="hint-pill">✓ Lịch Sử Git (5 Commits)</span>
-            <span className="hint-pill">✓ Hỗ trợ Ô Cản Top 32</span>
-            <span className="hint-pill">✓ Test Offline 0 Dependency</span>
+            <span className="hint-pill">Code Python 9×9</span>
+            <span className="hint-pill">Báo Cáo REPORT.md</span>
+            <span className="hint-pill">Lịch Sử Git (≥4 Commits)</span>
+            <span className="hint-pill">Hỗ Trợ Ô Cản Top 32</span>
+            <span className="hint-pill">Kiểm Thử Offline</span>
           </div>
           <button className="btn btn-outline btn-sm" onClick={onClose}>
             Đóng

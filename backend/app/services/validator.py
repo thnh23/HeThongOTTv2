@@ -122,10 +122,16 @@ def validate_submission_zip(
     os.makedirs(extract_dir, exist_ok=True)
     try:
         with zipfile.ZipFile(zip_path, "r") as zf:
-            # Ngăn Zip Slip attack (đường dẫn chứa ../)
+            # Ngăn Zip Slip attack (đường dẫn chứa ../ hoặc thoát khỏi thư mục extract)
+            abs_extract = os.path.abspath(extract_dir)
             for member in zf.infolist():
                 norm = os.path.normpath(member.filename)
-                if norm.startswith("..") or os.path.isabs(norm):
+                target_dest = os.path.abspath(os.path.join(extract_dir, member.filename))
+                if (
+                    norm.startswith("..")
+                    or os.path.isabs(norm)
+                    or not (target_dest == abs_extract or target_dest.startswith(abs_extract + os.sep))
+                ):
                     return ValidationResult(
                         is_valid=False,
                         details=details,

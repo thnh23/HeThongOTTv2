@@ -38,6 +38,10 @@ def test_pipeline():
     publish_dir = os.path.join(test_dir, "published")
     os.makedirs(results_dir, exist_ok=True)
 
+    players_file = os.path.join(test_dir, "test_players.json")
+    with open(players_file, "w", encoding="utf-8") as f:
+        json.dump([{"id": f"p_{i}", "name": f"Player {i}", "bot_name": f"Bot_{i}"} for i in range(1, 41)], f)
+
     print("\n[BƯỚC 1] Chạy pair_swiss.py cho 40 thí sinh, chia 4 chunk...")
     pair_script = os.path.join(CURRENT_DIR, "pair_swiss.py")
     res = subprocess.run([
@@ -45,6 +49,7 @@ def test_pipeline():
         "--round", "1",
         "--player-count", "40",
         "--num-chunks", "4",
+        "--players-file", players_file,
         "--chunks-dir", chunks_dir
     ], capture_output=True, text=True, encoding="utf-8", cwd=BACKEND_DIR)
     assert res.returncode == 0, f"pair_swiss.py failed: {res.stderr}"

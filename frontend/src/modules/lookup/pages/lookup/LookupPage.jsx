@@ -87,9 +87,9 @@ export function LookupPage() {
           <Award size={15} color="var(--primary-400)" />
           <span>Cổng Tra Cứu Bài Thi Chính Thức</span>
         </div>
-        <h1 className="lookup-title">Tra Cứu Tình Trạng Gói Nộp Bài Thi</h1>
+        <h1 className="lookup-title">Tra Cứu Bài Thi Thí Sinh</h1>
         <p className="lookup-subtitle">
-          Nhập Mã Sinh Viên (MSSV) để kiểm tra tình trạng thẩm định mã nguồn, mã commit chốt trước hạn chót và 4 tiêu chí cốt lõi của giải đấu OTTv2.
+          Nhập Mã Sinh Viên để kiểm tra trạng thái bài nộp và kết quả thẩm định.
         </p>
 
         {/* Search Bar */}

@@ -2,18 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   Swords,
-  BookOpen,
   Trophy,
-  Upload,
-  Radio,
   FileCode,
   ShieldCheck,
   GraduationCap,
   MapPin,
   Mail,
   ExternalLink,
-  Laptop,
-  CheckCircle2,
 } from 'lucide-react';
 import './Footer.css';
 
@@ -25,7 +20,7 @@ export function Footer() {
         <div className="footer-brand-col">
           <div className="footer-brand-title">
             <div className="footer-logo-badge">
-              <Swords size={20} color="var(--primary-700)" />
+              <Swords size={20} color="#FFFFFF" />
             </div>
             <div>
               <span className="footer-brand-name">Đấu Trường OTTv2</span>
@@ -57,27 +52,24 @@ export function Footer() {
         {/* Column 2: Tournament Navigation */}
         <div className="footer-col">
           <h4 className="footer-col-title">
-            <Trophy size={16} color="var(--primary-700)" />
+            <Trophy size={16} color="var(--primary-500)" />
             <span>Giải Đấu</span>
           </h4>
           <ul className="footer-links">
             <li>
-              <Link to="/">Trang Chủ Giải Đấu</Link>
+              <Link to="/">Trang Chủ</Link>
             </li>
             <li>
               <Link to="/leaderboard">Bảng Xếp Hạng 13 Vòng</Link>
             </li>
             <li>
-              <Link to="/live">Xem Trực Tiếp (Live Hub)</Link>
+              <Link to="/sandbox">Đấu Thử Bot Sandbox</Link>
             </li>
             <li>
-              <Link to="/matches">Lịch Sử Đấu &amp; Replay</Link>
+              <Link to="/submit">Cổng Nộp Bài</Link>
             </li>
             <li>
-              <Link to="/submit">Cổng Nộp Bot &amp; Kiểm Thử</Link>
-            </li>
-            <li>
-              <Link to="/lookup">Tra Cứu Gói Bài Thi (MSSV)</Link>
+              <Link to="/lookup">Tra Cứu Kết Quả (MSSV)</Link>
             </li>
           </ul>
         </div>
@@ -85,8 +77,8 @@ export function Footer() {
         {/* Column 3: Academic Rules & Integrity */}
         <div className="footer-col">
           <h4 className="footer-col-title">
-            <ShieldCheck size={16} color="var(--emerald-600)" />
-            <span>Quy Chuẩn &amp; Học Thuật</span>
+            <ShieldCheck size={16} color="var(--emerald-500)" />
+            <span>Quy Chuẩn</span>
           </h4>
           <ul className="footer-links">
             <li>
@@ -98,37 +90,19 @@ export function Footer() {
             <li>
               <Link to="/rules#grading">Thang Điểm Lũy Tiến Học Phần</Link>
             </li>
-            <li>
-              <Link to="/rules#git">Lịch Sử Git &amp; Tiến Trình Code</Link>
-            </li>
-            <li>
-              <Link to="/admin">Cổng Quản Trị BTC (Admin)</Link>
-            </li>
           </ul>
         </div>
 
         {/* Column 4: Developer & API */}
         <div className="footer-col">
           <h4 className="footer-col-title">
-            <FileCode size={16} color="var(--amber-600)" />
-            <span>Tài Liệu Kỹ Thuật</span>
+            <FileCode size={16} color="var(--amber-500)" />
+            <span>Tài Liệu</span>
           </h4>
           <ul className="footer-links">
             <li>
-              <a href="/api/rules" target="_blank" rel="noreferrer" className="external-link">
-                <span>Đặc tả máy đọc (rules.json)</span>
-                <ExternalLink size={12} />
-              </a>
-            </li>
-            <li>
               <a href="/docs" target="_blank" rel="noreferrer" className="external-link">
                 <span>OpenAPI / Swagger Docs</span>
-                <ExternalLink size={12} />
-              </a>
-            </li>
-            <li>
-              <a href="/health" target="_blank" rel="noreferrer" className="external-link">
-                <span>Kiểm Tra Server (Health)</span>
                 <ExternalLink size={12} />
               </a>
             </li>
@@ -153,7 +127,7 @@ export function Footer() {
             <span>•</span>
             <span>Swiss Tournament Arena</span>
             <span>•</span>
-            <span style={{ color: 'var(--emerald-600)', fontWeight: 700 }}>Clean Light Theme</span>
+            <span style={{ color: 'var(--primary-500)', fontWeight: 700 }}>OTTv2 Platform</span>
           </div>
         </div>
       </div>
@@ -162,3 +136,4 @@ export function Footer() {
 }
 
 export default Footer;
+
