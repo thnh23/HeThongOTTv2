@@ -8,6 +8,8 @@ Môi trường cô lập thực thi bot:
   4. Trả về BotExecutionResult chuẩn hóa cho Trọng tài
   5. Chạy trên tiến trình con độc lập (Subprocess), ngắt dứt điểm bằng proc.kill(),
      không để lại zombie thread và dọn sạch biến môi trường (.env).
+  6. Bấm giờ đo đạc chuẩn xác riêng thời gian hàm choose_move() chạy, loại trừ
+     chi phí bật tiến trình Python của hệ điều hành / Cloud (Render).
 """
 
 import sys
@@ -225,8 +227,10 @@ def execute_bot_move(
         )
 
     # 4. Giao tiếp và xử lý Timeout
+    # Nới trần timeout của tiến trình con để bù trừ chi phí khởi tạo Python runtime trên Cloud (Render)
+    proc_timeout = max(2.5, timeout_sec + 2.0)
     try:
-        stdout_data, stderr_data = proc.communicate(input=payload_json, timeout=timeout_sec)
+        stdout_data, stderr_data = proc.communicate(input=payload_json, timeout=proc_timeout)
     except subprocess.TimeoutExpired:
         # DỨT ĐIỂM TIMEOUT: Kill tiến trình con ngay lập tức
         try:
@@ -257,32 +261,36 @@ def execute_bot_move(
 
     elapsed_ms = int((time.perf_counter() - start_time) * 1000)
 
-    # 5. Kiểm tra thời gian tối đa nếu vượt ngưỡng timeout_sec
-    if elapsed_ms > int(timeout_sec * 1000):
-        return BotExecutionResult(
-            is_success=False,
-            duration_ms=elapsed_ms,
-            error_code="TIMEOUT",
-            error_message=f"Bot tính toán quá giờ ({elapsed_ms}ms > {int(timeout_sec * 1000)}ms).",
-        )
-
-    # 6. Phân tích kết quả từ Delimiter
+    # 5. Phân tích kết quả từ Delimiter
     if "__SANDBOX_START__" in stdout_data and "__SANDBOX_END__" in stdout_data:
         try:
             json_str = stdout_data.split("__SANDBOX_START__")[1].split("__SANDBOX_END__")[0].strip()
             res_dict = json.loads(json_str)
 
+            # Ưu tiên lấy duration_ms đo nội bộ hàm choose_move() từ sandbox runner
+            pure_ms = res_dict.get("duration_ms")
+            actual_duration = pure_ms if pure_ms is not None else elapsed_ms
+
+            # Kiểm tra thời gian suy nghĩ thực tế của bot có vượt quá ngưỡng timeout quy định (vd: 300ms) không
+            if actual_duration > int(timeout_sec * 1000):
+                return BotExecutionResult(
+                    is_success=False,
+                    duration_ms=actual_duration,
+                    error_code="TIMEOUT",
+                    error_message=f"Bot tính toán quá giờ ({actual_duration}ms > {int(timeout_sec * 1000)}ms).",
+                )
+
             if res_dict.get("is_success", False):
                 move_list = res_dict["move"]
                 return BotExecutionResult(
                     move=(move_list[0], move_list[1]),
-                    duration_ms=elapsed_ms,
+                    duration_ms=actual_duration,
                     is_success=True,
                 )
             else:
                 return BotExecutionResult(
                     is_success=False,
-                    duration_ms=elapsed_ms,
+                    duration_ms=actual_duration,
                     error_code=res_dict.get("error_code", "CRASH"),
                     error_message=res_dict.get("error_message", "Unknown error"),
                 )
