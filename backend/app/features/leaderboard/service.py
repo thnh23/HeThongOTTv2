@@ -91,7 +91,22 @@ def compute_swiss_leaderboard(db: Session, top32_only: bool = False) -> list[Lea
             "opponents": [],  # list of (opp_id, result_for_user)
         }
 
-    matches = db.query(Match).filter(Match.status == "done").all()
+    # Chỉ tính các trận đấu hợp lệ của giải Swiss:
+    # 1. Thuộc thể thức Swiss R{N}_M{XXXX} (loại bỏ R32_, R16_, QF_, SF_, FINAL_)
+    # 2. Loại bỏ các ván đấu con phụ (_G1, _G2)
+    # 3. Trạng thái 'done'
+    matches = (
+        db.query(Match)
+        .filter(
+            Match.status == "done",
+            Match.id.like("R%_M%"),
+            ~Match.id.like("R32_%"),
+            ~Match.id.like("R16_%"),
+            ~Match.id.like("%_G1"),
+            ~Match.id.like("%_G2"),
+        )
+        .all()
+    )
 
     for m in matches:
         aid, bid = m.bot_a_id, m.bot_b_id
@@ -211,7 +226,11 @@ def get_player_match_history(user_id: str, db: Session) -> list[UserMatchHistory
     matches = (
         db.query(Match)
         .filter((Match.bot_a_id == user_id) | (Match.bot_b_id == user_id))
-        .filter(Match.status == "done")
+        .filter(
+            Match.status == "done",
+            ~Match.id.like("%_G1"),
+            ~Match.id.like("%_G2"),
+        )
         .order_by(Match.played_at.desc())
         .all()
     )

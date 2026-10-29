@@ -180,11 +180,29 @@ def trigger_swiss_publish(req: SwissPublishRequest, db: Session = Depends(get_db
 
         chunks_dir = os.path.join(round_dir, "chunks")
         players_file = os.path.join(chunks_dir, f"players_before_r{req.round_num}.json")
-        if not os.path.exists(players_file):
-            raise HTTPException(status_code=500, detail="Không tìm thấy file trạng thái người chơi trước vòng đấu!")
+        players = None
+        if os.path.exists(players_file):
+            try:
+                with open(players_file, "r", encoding="utf-8") as f:
+                    players = json.load(f)
+            except Exception:
+                players = None
 
-        with open(players_file, "r", encoding="utf-8") as f:
-            players = json.load(f)
+        if not players:
+            # Fallback thông minh: nếu chưa có file snapshot, lấy trực tiếp danh sách thí sinh từ DB
+            db_users = db.query(User).filter(User.is_admin == False).all()
+            players = [
+                {
+                    "id": u.id,
+                    "student_id": u.student_id or u.email.split("@")[0],
+                    "name": u.name,
+                    "bot_name": getattr(u, "bot_name", None) or f"Bot_{u.student_id or u.name}",
+                    "points": 0,
+                    "history": [],
+                    "opponents_history": [],
+                }
+                for u in db_users
+            ]
 
         updated_players = merge_and_calculate_standings(players, all_matches, req.round_num)
 
