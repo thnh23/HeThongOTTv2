@@ -222,8 +222,14 @@ export function AdminDashboardPage() {
     }
   };
 
-  const handleExportValidationReport = () => {
-    window.open('/api/admin/pipeline/export-report', '_blank');
+  const handleExportValidationReport = async () => {
+    try {
+      showToast('Đang tải báo cáo thẩm định CSV...', 'info');
+      await apiClient.download('/admin/pipeline/export-report', 'bao_cao_tham_dinh.csv');
+      showToast('Tải báo cáo thẩm định thành công!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Lỗi khi tải báo cáo thẩm định', 'error');
+    }
   };
 
   // ────────────────────────────────────────────────────────────
@@ -276,13 +282,31 @@ export function AdminDashboardPage() {
     }
   };
 
-  const handleDownloadAllChunksZip = () => {
-    window.open(`/api/admin/swiss/chunks/${selectedSwissRound}/download-zip`, '_blank');
-    showToast(`Đang tải file ZIP 4 chunks Vòng ${selectedSwissRound}...`, 'info');
+  const handleDownloadAllChunksZip = async () => {
+    try {
+      showToast(`Đang tải file ZIP 4 chunks Vòng ${selectedSwissRound}...`, 'info');
+      await apiClient.download(
+        `/admin/swiss/chunks/${selectedSwissRound}/download-zip`,
+        `swiss_round_${selectedSwissRound}_chunks.zip`
+      );
+      showToast(`Tải file ZIP Vòng ${selectedSwissRound} thành công!`, 'success');
+    } catch (err) {
+      showToast(err.message || `Lỗi khi tải gói ZIP Vòng ${selectedSwissRound}`, 'error');
+    }
   };
 
-  const handleDownloadSingleChunk = (chunkId) => {
-    window.open(`/api/admin/swiss/chunks/${selectedSwissRound}/${chunkId}/download`, '_blank');
+  const handleDownloadSingleChunk = async (chunkId) => {
+    try {
+      const paddedId = String(chunkId).padStart(2, '0');
+      showToast(`Đang tải file chunk_${paddedId}.json...`, 'info');
+      await apiClient.download(
+        `/admin/swiss/chunks/${selectedSwissRound}/${chunkId}/download`,
+        `chunk_${paddedId}.json`
+      );
+      showToast(`Tải file chunk_${paddedId}.json thành công!`, 'success');
+    } catch (err) {
+      showToast(err.message || `Lỗi khi tải chunk_${chunkId}`, 'error');
+    }
   };
 
   const handleUploadResultFile = async (file, chunkId = null) => {

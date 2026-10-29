@@ -10,6 +10,7 @@ import {
   Code,
   FileCode,
 } from 'lucide-react';
+import { apiClient } from '@/shared/api-client/index.js';
 import { ViewFilesModal } from '../ViewFilesModal/ViewFilesModal.jsx';
 
 export function Phase02Students({
@@ -185,16 +186,22 @@ export function Phase02Students({
                           <FileCode size={12} />
                           <span>Xem Tệp</span>
                         </button>
-                        <a
-                          href={`/api/admin/users/${u.id}/download-zip`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
                           className="action-icon-pill download-zip"
                           title="Tải toàn bộ tệp nộp bài .ZIP"
+                          onClick={() => {
+                            apiClient.download(
+                              `/admin/users/${u.id}/download-zip`,
+                              `${u.student_id || u.id}_submission.zip`
+                            ).catch((err) => {
+                              alert(err.message || 'Lỗi khi tải file ZIP');
+                            });
+                          }}
                         >
                           <FolderArchive size={12} />
                           <span>ZIP</span>
-                        </a>
+                        </button>
                       </div>
                     </td>
 

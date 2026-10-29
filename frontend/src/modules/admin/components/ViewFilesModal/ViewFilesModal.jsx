@@ -121,16 +121,22 @@ export function ViewFilesModal({ isOpen, user, onClose }) {
               <span>{copied ? 'Đã Chép!' : 'Sao Chép'}</span>
             </button>
 
-            <a
-              href={`/api/admin/users/${user.id}/download-zip`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
               className="view-files-action-btn zip"
               title="Tải toàn bộ bài nộp dưới dạng file .ZIP"
+              onClick={() => {
+                apiClient.download(
+                  `/admin/users/${user.id}/download-zip`,
+                  `${user.student_id || user.id}_submission.zip`
+                ).catch((err) => {
+                  alert(err.message || 'Lỗi khi tải file ZIP');
+                });
+              }}
             >
               <FolderArchive size={13} />
               <span>Tải ZIP</span>
-            </a>
+            </button>
 
             {user.github_repo_url && (
               <a

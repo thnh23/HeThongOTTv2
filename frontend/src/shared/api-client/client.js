@@ -68,4 +68,47 @@ export const apiClient = {
   post: (path, body, options) => request('POST', path, body, options),
   put: (path, body, options) => request('PUT', path, body, options),
   delete: (path, options) => request('DELETE', path, undefined, options),
+  download: async (path, defaultFilename = 'download') => {
+    let cleanPath = path.startsWith('/') ? path : `/${path}`;
+    if (API_BASE_URL.endsWith('/api') && cleanPath.startsWith('/api/')) {
+      cleanPath = cleanPath.slice(4);
+    }
+    const url = path.startsWith('http') ? path : `${API_BASE_URL}${cleanPath}`;
+    const headers = new Headers();
+    const token = localStorage.getItem('ottv2_token');
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    const res = await fetch(url, { headers });
+    if (!res.ok) {
+      let errorMsg = `Lỗi ${res.status}: ${res.statusText}`;
+      try {
+        const errJson = await res.json();
+        if (errJson?.detail) errorMsg = errJson.detail;
+      } catch {
+        // ignore
+      }
+      throw new ApiError(res.status, errorMsg, null, 'DOWNLOAD_ERROR');
+    }
+
+    // Lấy tên file từ Content-Disposition header nếu có
+    let filename = defaultFilename;
+    const disposition = res.headers.get('content-disposition');
+    if (disposition && disposition.includes('filename=')) {
+      const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (match && match[1]) {
+        filename = match[1].replace(/['"]/g, '').trim();
+      }
+    }
+
+    const blob = await res.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(blobUrl);
+  },
 };

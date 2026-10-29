@@ -238,9 +238,8 @@ export function LookupPage() {
                 <div className="commit-metric">
                   <span className="metric-title">Lịch Sử Tự Viết Code:</span>
                   <span
-                    className={`commit-badge ${
-                      commitCount >= 4 ? 'badge-green' : 'badge-yellow'
-                    }`}
+                    className={`commit-badge ${commitCount >= 4 ? 'badge-green' : 'badge-yellow'
+                      }`}
                   >
                     {commitCount > 0
                       ? `${commitCount} commits`
@@ -295,8 +294,8 @@ export function LookupPage() {
                     {commitCount >= 4
                       ? `Đạt chuẩn (${commitCount} commits)`
                       : v.git_log
-                      ? `Ít commit (${commitCount}/4 commits)`
-                      : 'Thiếu lịch sử commit'}
+                        ? `Ít commit (${commitCount}/4 commits)`
+                        : 'Thiếu lịch sử commit'}
                   </span>
                 </div>
               </div>
@@ -325,7 +324,7 @@ export function LookupPage() {
                   </div>
                   <ol>
                     <li>
-                      Nếu lỗi <strong>Repo Private</strong>: Vào GitHub repo của bạn $\rightarrow$ Chọn tab <strong>Settings</strong> $\rightarrow$ Cuộn xuống <strong>Danger Zone</strong> $\rightarrow$ Bấm <strong>Change visibility</strong> $\rightarrow$ Chuyển sang <strong>Public</strong>.
+                      Nếu lỗi <strong>Repo Private</strong>: Vào GitHub repo của bạn &rarr; Chọn tab <strong>Settings</strong> &rarr; Cuộn xuống <strong>Danger Zone</strong> &rarr; Bấm <strong>Change visibility</strong> &rarr; Chuyển sang <strong>Public</strong>.
                     </li>
                     <li>
                       Nếu thiếu file hoặc sai cấu trúc: Đẩy các file <code>bot.py</code> và <code>REPORT.md</code> lên nhánh chính (<code>main</code>) của repository.
