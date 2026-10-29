@@ -4,12 +4,14 @@ Ephemeral Subprocess Runner for Bot Execution (Sandbox T10)
 Tiến trình con độc lập để thực thi bot của thí sinh:
   - Cô lập không gian nhớ hoàn toàn với FastAPI server chính
   - Chặn kết nối mạng (socket) nếu block_network=True
+  - Bấm giờ đo đạc chính xác thời gian thực thi của hàm choose_move() (loại bỏ chi phí khởi động Python)
   - Bắt toàn bộ lỗi (Crash, Exception, Return type)
   - Trả về JSON kết quả qua stdout được bọc bởi delimiter
 """
 
 import sys
 import os
+import time
 import json
 import socket
 import pickle
@@ -39,13 +41,15 @@ def _output_result(res: Dict[str, Any]) -> None:
 
 
 def main():
+    pure_duration_ms = 0
     try:
         raw_input = sys.stdin.read()
         if not raw_input:
             _output_result({
                 "is_success": False,
                 "error_code": "CRASH",
-                "error_message": "Không nhận được payload dữ liệu trong sandbox runner."
+                "error_message": "Không nhận được payload dữ liệu trong sandbox runner.",
+                "duration_ms": 0,
             })
             return
 
@@ -98,13 +102,15 @@ def main():
         else:
             raise ValueError(f"Target type không hợp lệ: {target_type}")
 
-        # 3. Thực thi bot và bắt trọn output stdout để tránh làm hỏng JSON protocol
+        # 3. Thực thi bot và bấm giờ CHÍNH XÁC riêng cho hàm choose_move (loại bỏ overhead khởi động Python)
         orig_stdout = sys.stdout
         sys.stdout = sys.stderr
+        pure_t_start = time.perf_counter()
         try:
             raw_move = bot_fn(state)
         finally:
             sys.stdout = orig_stdout
+            pure_duration_ms = int((time.perf_counter() - pure_t_start) * 1000)
 
         # 4. Kiểm tra định dạng dữ liệu trả về
         if not isinstance(raw_move, (tuple, list)) or len(raw_move) != 2:
@@ -112,6 +118,7 @@ def main():
                 "is_success": False,
                 "error_code": "INVALID_FORMAT",
                 "error_message": f"Bot trả về dữ liệu sai định dạng: {raw_move!r}. Kỳ vọng tuple (from_sq, to_sq).",
+                "duration_ms": pure_duration_ms,
             }
         else:
             from_sq = str(raw_move[0]).strip().lower()
@@ -119,6 +126,7 @@ def main():
             result = {
                 "is_success": True,
                 "move": [from_sq, to_sq],
+                "duration_ms": pure_duration_ms,
             }
 
     except SecurityViolationError as sec_err:
@@ -126,12 +134,14 @@ def main():
             "is_success": False,
             "error_code": "SECURITY_VIOLATION",
             "error_message": str(sec_err),
+            "duration_ms": pure_duration_ms,
         }
     except Exception as exc:
         result = {
             "is_success": False,
             "error_code": "CRASH",
             "error_message": f"{type(exc).__name__}: {str(exc)}",
+            "duration_ms": pure_duration_ms,
         }
 
     _output_result(result)
