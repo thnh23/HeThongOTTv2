@@ -50,6 +50,12 @@ const PIECE_LABELS = {
   P: 'Bao',
 };
 
+const PIECE_EMOJIS = {
+  R: '✊ Búa',
+  S: '✌️ Kéo',
+  P: '✋ Bao',
+};
+
 const EMPTY_STATE = {};
 
 export function MatchDetailPage() {

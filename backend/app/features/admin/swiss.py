@@ -239,6 +239,8 @@ def trigger_swiss_publish(req: SwissPublishRequest, db: Session = Depends(get_db
                     )
                     db.add(match_obj)
                 else:
+                    existing.bot_a_id = m.get("white_id") or existing.bot_a_id
+                    existing.bot_b_id = m.get("black_id") or existing.bot_b_id
                     existing.status = "done"
                     existing.winner = m.get("winner")
                     existing.end_code = end_code
