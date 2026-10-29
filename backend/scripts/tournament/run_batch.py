@@ -119,6 +119,9 @@ def execute_single_match(
             "duration_ms": 0,
             "reason": reason,
             "status": "forfeit",
+            "moves": [],
+            "states": [],
+            "obstacles": match_item.get("obstacles", []),
         }
 
     try:
@@ -150,10 +153,12 @@ def execute_single_match(
             "duration_ms": elapsed_ms,
             "reason": res.reason,
             "status": "success",
+            "moves": res.moves,
+            "states": res.states,
+            "obstacles": res.obstacles,
         }
     except Exception as exc:
         return {
-
             "match_id": match_id,
             "round": match_item.get("round", 1),
             "white_id": white_info["id"],
@@ -166,6 +171,9 @@ def execute_single_match(
             "duration_ms": 0,
             "reason": f"Execution error: {str(exc)}",
             "status": "error",
+            "moves": [],
+            "states": [],
+            "obstacles": match_item.get("obstacles", []),
         }
 
 

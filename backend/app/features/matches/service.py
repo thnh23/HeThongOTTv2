@@ -5,6 +5,9 @@ Feature Matches — Service for Querying Matches and Loading Replays
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.services.engine.board import create_initial_board
+from app.services.engine.rules import step
+
 from app.models.match import Match, Replay
 from app.models.user import User
 from app.features.matches.schemas import (
@@ -164,14 +167,29 @@ def get_match_replay_data(match_id: str, db: Session) -> ReplayResponse:
         )
 
     replay = db.query(Replay).filter(Replay.match_id == match_id).first()
-    if not replay:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Trận đấu này chưa có dữ liệu Replay",
-        )
-
     user_a = db.query(User).filter(User.id == m.bot_a_id).first()
     user_b = db.query(User).filter(User.id == m.bot_b_id).first()
+
+    if not replay:
+        # Fallback tự động: nếu trận đấu chưa có bản ghi Replay trong DB (ví dụ trận chấm local chưa có replay),
+        # tự động khởi tạo trạng thái bàn cờ ban đầu để UI hiển thị bàn cờ và thông tin kết quả thay vì ném lỗi 404!
+        init_state = create_initial_board()
+        return ReplayResponse(
+            match_id=m.id,
+            tier=m.tier,
+            bot_a_id=m.bot_a_id,
+            bot_a_name=user_a.name if user_a else "Unknown",
+            bot_b_id=m.bot_b_id,
+            bot_b_name=user_b.name if user_b else "Unknown",
+            winner=m.winner,
+            end_code=m.end_code,
+            total_moves=m.total_moves,
+            duration_ms=m.duration_ms,
+            played_at=m.played_at,
+            moves=[],
+            states=[init_state.to_dict()],
+            obstacles=[],
+        )
 
     obs = []
     if replay.states and len(replay.states) > 0 and isinstance(replay.states[0], dict):

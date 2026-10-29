@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.models.match import Match
+from app.models.match import Match, Replay
 from app.features.admin.common import (
     SwissPairRequest,
     SwissPublishRequest,
@@ -244,6 +244,22 @@ def trigger_swiss_publish(req: SwissPublishRequest, db: Session = Depends(get_db
                     existing.end_code = end_code
                     existing.total_moves = m.get("total_moves", 0)
                     existing.duration_ms = m.get("duration_ms", 0)
+
+                # Đồng bộ Replay cho ván đấu nếu file kết quả có dữ liệu nước đi / replay
+                moves_data = m.get("moves")
+                states_data = m.get("states")
+                if moves_data is not None:
+                    rep_obj = db.query(Replay).filter(Replay.match_id == m_id).first()
+                    if not rep_obj:
+                        rep_obj = Replay(
+                            match_id=m_id,
+                            moves_json=json.dumps(moves_data, ensure_ascii=False),
+                            states_json=json.dumps(states_data or [], ensure_ascii=False),
+                        )
+                        db.add(rep_obj)
+                    else:
+                        rep_obj.moves_json = json.dumps(moves_data, ensure_ascii=False)
+                        rep_obj.states_json = json.dumps(states_data or [], ensure_ascii=False)
 
             # Cập nhật điểm và hệ số cho User trong CSDL
             for p in updated_players:
